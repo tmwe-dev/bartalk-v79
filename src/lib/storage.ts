@@ -10,6 +10,8 @@ const KEYS = {
   conversations: 'bartalk_conversations',
   studioRuns: 'bartalk_studio_runs',
   settings: 'bartalk_settings',
+  currentConversation: 'bartalk_current_conversation',
+  conversationList: 'bartalk_conversation_list',
 } as const;
 
 // ── Helpers generici ─────────────────────────────────────────────────
@@ -97,4 +99,37 @@ export function loadStudioRuns() {
 export function saveStudioRuns(runs: unknown[]): void {
   // Mantieni solo le ultime 50
   setJSON(KEYS.studioRuns, runs.slice(-50));
+}
+
+// ── Conversation list management ─────────────────────────────────────
+export interface ConversationMeta {
+  id: string;
+  title: string;
+  turnIndex: number;
+  createdAt: string;
+  updatedAt: string;
+  messageCount: number;
+  lastMessage?: string; // preview
+}
+
+export function loadConversationList(): ConversationMeta[] {
+  return getJSON<ConversationMeta[]>(KEYS.conversationList, []);
+}
+
+export function saveConversationList(list: ConversationMeta[]): void {
+  setJSON(KEYS.conversationList, list);
+}
+
+export function getCurrentConversationId(): string | null {
+  return localStorage.getItem(KEYS.currentConversation) || null;
+}
+
+export function setCurrentConversationId(id: string): void {
+  localStorage.setItem(KEYS.currentConversation, id);
+}
+
+export function deleteConversationData(id: string): void {
+  localStorage.removeItem(`bartalk_messages_${id}`);
+  const list = loadConversationList();
+  saveConversationList(list.filter(c => c.id !== id));
 }

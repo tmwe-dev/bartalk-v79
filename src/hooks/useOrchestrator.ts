@@ -11,24 +11,23 @@ import type { AgentResponse } from '../types/orchestrator';
 export function useOrchestrator() {
   const { messages, turnIndex, addMessage, setWaiting, incrementTurn, startTurn, conversationId } =
     useConversationContext();
-  const { conversationMode, turnStrategy, ttsEnabled } = useSettingsContext();
+  const { conversationMode, turnStrategy, ttsEnabled, language, temperature, maxTokens, wordRange } =
+    useSettingsContext();
   const { enabledAgents, getVoiceId } = useAgentContext();
   const { openSettings } = useUIContext();
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
-    // Controlla comandi slash prima di tutto
+    // Controlla comandi slash
     if (text.trim().startsWith('/')) {
       const cmd = handleCommand(text);
       if (cmd.handled) {
-        // Mostra il comando dell'utente
         addMessage({
           senderType: 'human',
           senderName: 'Tu',
           content: text,
         });
-        // Mostra la risposta del sistema
         if (cmd.systemMessage) {
           addMessage({
             senderType: 'system',
@@ -36,7 +35,6 @@ export function useOrchestrator() {
             content: cmd.systemMessage,
           });
         }
-        // /keys apre le impostazioni
         if (text.trim().toLowerCase() === '/keys') {
           openSettings();
         }
@@ -66,6 +64,10 @@ export function useOrchestrator() {
           mode: conversationMode,
           turnStrategy,
           enabledAgents,
+          language,
+          temperature,
+          maxTokens,
+          wordRange,
         },
         // Callback: ogni risposta agente arriva in tempo reale
         (response: AgentResponse) => {
@@ -104,7 +106,8 @@ export function useOrchestrator() {
     }
   }, [
     enabledAgents, messages, turnIndex, conversationMode, turnStrategy,
-    ttsEnabled, conversationId, addMessage, setWaiting, startTurn,
+    ttsEnabled, language, temperature, maxTokens, wordRange,
+    conversationId, addMessage, setWaiting, startTurn,
     incrementTurn, getVoiceId, openSettings,
   ]);
 

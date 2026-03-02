@@ -1,5 +1,6 @@
 import type { AgentConfig } from './agents';
 import type { ConversationMode, TurnStrategy, Message } from './conversation';
+import type { AppLanguage } from './settings';
 
 export type ConvergenceState = 'agreement' | 'divergence' | 'stagnation' | 'neutral';
 
@@ -9,8 +10,10 @@ export interface OrchestratorPlan {
   systemPrompts: Map<string, string>;
   convergence: ConvergenceState;
   temperature: number;
+  maxTokens: number;
   wordRange: [number, number];
   isForced: boolean;
+  language: AppLanguage;
 }
 
 export interface AgentResponse {
@@ -32,6 +35,10 @@ export interface OrchestratorInput {
   mode: ConversationMode;
   turnStrategy: TurnStrategy;
   enabledAgents: AgentConfig[];
+  language: AppLanguage;
+  temperature: number;
+  maxTokens: number;
+  wordRange: [number, number];
 }
 
 export interface OrchestratorResult {

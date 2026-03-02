@@ -11,16 +11,11 @@ import { getAPIKey, getModel } from './storage';
 import { ORCHESTRATOR, DEFAULT_MODELS } from './constants';
 import { analyzeConvergence, getConvergenceInstruction } from './convergence';
 import { generateId } from './utils';
+import { LANGUAGES } from '../types/settings';
 
 /**
  * Motore principale dell'orchestratore.
  * Coordina le chiamate sequenziali ai 4 agenti AI.
- *
- * Logica:
- * 1. Primi N turni → modalità "consultation" forzata (tutti rispondono)
- * 2. Dopo → modalità scelta dall'utente
- * 3. Ogni agente riceve il contesto delle risposte precedenti
- * 4. Analisi convergenza per evitare stagnazione
  */
 export async function orchestrate(
   input: OrchestratorInput,
@@ -47,7 +42,7 @@ export async function orchestrate(
   const convergenceInstruction = getConvergenceInstruction(convergence);
 
   // ── Seleziona agenti da far parlare ──────────────────────────────
-  const plan = buildPlan(mode, input.turnStrategy, enabledAgents, turnIndex);
+  const plan = buildPlan(mode, input.turnStrategy, enabledAgents, turnIndex, input);
 
   // ── Esegui chiamate sequenziali ──────────────────────────────────
   const responses: AgentResponse[] = [];
@@ -71,7 +66,6 @@ export async function orchestrate(
       }
     } catch (err) {
       console.error(`[orchestrator] Errore ${agent.name}:`, err);
-      // Continua con il prossimo agente — nessun blocco a cascata
     }
   }
 
@@ -89,30 +83,34 @@ function buildPlan(
   turnStrategy: string,
   enabledAgents: AgentConfig[],
   turnIndex: number,
+  input: OrchestratorInput,
 ): OrchestratorPlan {
   let agentsToSpeak: AgentConfig[];
 
   if (mode === 'standard') {
-    // Un solo agente a turno
     const idx = turnStrategy === 'random'
       ? Math.floor(Math.random() * enabledAgents.length)
       : turnIndex % enabledAgents.length;
     agentsToSpeak = [enabledAgents[idx]];
   } else {
-    // Consultation / Bar Realtime: tutti gli agenti
     agentsToSpeak = [...enabledAgents];
   }
+
+  // Usa word range dal settings, con fallback a consultationWordRange se in consultation
+  const wordRange = mode === 'consultation'
+    ? ORCHESTRATOR.consultationWordRange
+    : (input.wordRange || ORCHESTRATOR.wordRange);
 
   return {
     mode: mode as OrchestratorPlan['mode'],
     agentsToSpeak,
     systemPrompts: new Map(),
     convergence: 'neutral',
-    temperature: ORCHESTRATOR.defaultTemperature,
-    wordRange: mode === 'consultation'
-      ? ORCHESTRATOR.consultationWordRange
-      : ORCHESTRATOR.wordRange,
+    temperature: input.temperature ?? ORCHESTRATOR.defaultTemperature,
+    maxTokens: input.maxTokens ?? ORCHESTRATOR.maxTokens,
+    wordRange,
     isForced: turnIndex < ORCHESTRATOR.forcedConsultationTurns,
+    language: input.language || 'it',
   };
 }
 
@@ -129,7 +127,6 @@ async function callAgent(
   const apiKey = getAPIKey(agent.provider);
   const model = getModel(agent.provider) || DEFAULT_MODELS[agent.provider];
 
-  // Se non c'è chiave API → risposta demo
   if (!apiKey) {
     return {
       agentName: agent.name,
@@ -142,20 +139,16 @@ async function callAgent(
     };
   }
 
-  // ── Costruisci system prompt ───────────────────────────────────
   const systemPrompt = buildSystemPrompt(agent, previousResponses, convergenceInstruction, plan);
+  const apiMessages = buildMessages(userMessage, history);
 
-  // ── Costruisci messaggi ────────────────────────────────────────
-  const apiMessages = buildMessages(userMessage, history, previousResponses);
-
-  // ── Chiama il proxy ────────────────────────────────────────────
   const result = await callProxy({
     provider: agent.provider,
     model,
     messages: apiMessages,
     systemPrompt,
     temperature: plan.temperature,
-    maxTokens: ORCHESTRATOR.maxTokens,
+    maxTokens: plan.maxTokens,
     apiKey,
   });
 
@@ -183,7 +176,7 @@ async function callAgent(
   };
 }
 
-// ── System prompt ────────────────────────────────────────────────────
+// ── System prompt con lingua dinamica ────────────────────────────────
 function buildSystemPrompt(
   agent: AgentConfig,
   previousResponses: { name: string; content: string }[],
@@ -192,12 +185,15 @@ function buildSystemPrompt(
 ): string {
   const [minWords, maxWords] = plan.wordRange;
 
+  // Trova l'istruzione lingua corrispondente
+  const langConfig = LANGUAGES.find(l => l.value === plan.language);
+  const langInstruction = langConfig?.instruction || LANGUAGES[0].instruction;
+
   let prompt = `Sei ${agent.name}, un agente AI in BarTalk RadioChat.
-Rispondi in italiano in modo naturale e conversazionale.
+${langInstruction}
 Mantieni le risposte tra ${minWords} e ${maxWords} parole.
 Non ripetere quello che hanno già detto gli altri.`;
 
-  // In consultation: aggiungi contesto delle risposte precedenti
   if (previousResponses.length > 0 && plan.mode !== 'standard') {
     prompt += '\n\nRisposte precedenti degli altri agenti:';
     for (const prev of previousResponses) {
@@ -206,7 +202,6 @@ Non ripetere quello che hanno già detto gli altri.`;
     prompt += '\n\nAggiungi il tuo punto di vista unico, senza ripetere quanto già detto.';
   }
 
-  // Istruzione convergenza
   if (convergenceInstruction) {
     prompt += convergenceInstruction;
   }
@@ -218,11 +213,9 @@ Non ripetere quello che hanno già detto gli altri.`;
 function buildMessages(
   userMessage: string,
   history: Message[],
-  _previousResponses: { name: string; content: string }[],
 ): { role: string; content: string }[] {
   const msgs: { role: string; content: string }[] = [];
 
-  // Ultimi 10 messaggi di cronologia (per contesto)
   const recentHistory = history.slice(-10);
   for (const msg of recentHistory) {
     msgs.push({
@@ -231,8 +224,6 @@ function buildMessages(
     });
   }
 
-  // Messaggio corrente dell'utente
   msgs.push({ role: 'user', content: userMessage });
-
   return msgs;
 }

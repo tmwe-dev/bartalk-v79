@@ -74,6 +74,10 @@ export function PodcastMode() {
             mode: 'consultation',
             turnStrategy: 'round_robin',
             enabledAgents,
+            language: 'it',
+            temperature: 0.8,
+            maxTokens: 2048,
+            wordRange: [80, 200],
           },
           (response: AgentResponse) => {
             if (abortRef.current) return;

@@ -6,7 +6,7 @@ import { UI } from '../../lib/constants';
 
 export function Navbar() {
   const { toggleSettings, setStudioMode, studioMode } = useUIContext();
-  const { newConversation } = useConversationContext();
+  const { newConversation, sidebarOpen, setSidebarOpen, conversationTitle } = useConversationContext();
   const { ttsEnabled, setTtsEnabled } = useSettingsContext();
   const { stop: stopTTS } = useTTS();
 
@@ -18,8 +18,16 @@ export function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-left">
+        <button
+          className={`nav-btn ${sidebarOpen ? 'active' : ''}`}
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          title="Conversazioni"
+        >
+          ☰
+        </button>
         <h1 className="navbar-title">{UI.appName}</h1>
         <span className="navbar-version">v{UI.appVersion}</span>
+        <span className="navbar-conv-title">{conversationTitle}</span>
       </div>
 
       <div className="navbar-right">
