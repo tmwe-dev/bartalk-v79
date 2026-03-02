@@ -7,7 +7,7 @@ import { SettingsModal } from './components/Settings/SettingsModal';
 import { ToastContainer } from './components/Common/Toast';
 import { ChatPage } from './pages/ChatPage';
 import { StudioPage } from './components/Studio/StudioPage';
-import { AppLayout } from './components/Layout/AppLayout';
+import { Navbar } from './components/Layout/Navbar';
 
 function AppContent() {
   const { toggleSettings, studioMode } = useUIContext();
@@ -26,9 +26,12 @@ function AppContent() {
 
   if (studioMode) {
     return (
-      <AppLayout sidebar={false}>
-        <StudioPage />
-      </AppLayout>
+      <div className="app-layout">
+        <Navbar />
+        <div className="main-content-area" style={{ padding: 16 }}>
+          <StudioPage />
+        </div>
+      </div>
     );
   }
 
