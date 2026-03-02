@@ -9,29 +9,35 @@ import { ConversationSidebar } from '../components/Chat/ConversationSidebar';
 import { AudioControlBar } from '../components/Chat/AudioControlBar';
 import { useConversationContext } from '../context/ConversationContext';
 import { useSettingsContext } from '../context/SettingsContext';
-import { stopTTS } from '../lib/tts';
-import { getAgent } from '../lib/agents';
 
 const RadioCarousel3D = lazy(() =>
   import('../components/Carousel/RadioCarousel3D').then(m => ({ default: m.RadioCarousel3D }))
 );
 
 type MainTab = 'chat' | 'carousel' | 'podcast' | 'agents';
+const MAX_SLOTS = 8;
 
-// Helper: filtra messaggi visibili nel carousel (tutti tranne system)
-function getVisibleMessages(messages: { senderType: string; senderName?: string }[]) {
-  return messages.filter(m => m.senderType === 'assistant' || m.senderType === 'human');
+// Helper: filtra messaggi visibili nel carousel (solo human + assistant)
+function getVisibleSlice(messages: { senderType: string }[]) {
+  return messages
+    .filter(m => m.senderType === 'assistant' || m.senderType === 'human')
+    .slice(-MAX_SLOTS);
 }
 
 export function ChatPage() {
   const [activeTab, setActiveTab] = useState<MainTab>('chat');
-  const [carouselIndex, setCarouselIndex] = useState(0);
+  const { messages } = useConversationContext();
+  const { ttsEnabled } = useSettingsContext();
+
+  // ── Carousel index: parte SEMPRE dall'ultimo messaggio ──
+  const [carouselIndex, setCarouselIndex] = useState(() => {
+    const slice = getVisibleSlice(messages);
+    return Math.max(0, slice.length - 1);
+  });
+
   const [autoAdvance, setAutoAdvance] = useState(() => {
     return localStorage.getItem('bartalk_auto_advance') !== 'false';
   });
-  const { messages } = useConversationContext();
-  const { ttsEnabled } = useSettingsContext();
-  const prevMsgCountRef = useRef(0);
 
   const [carouselZoom, setCarouselZoom] = useState(() => {
     const saved = localStorage.getItem('bartalk_carousel_zoom');
@@ -42,64 +48,62 @@ export function ChatPage() {
     return saved ? parseInt(saved) : 0;
   });
 
-  // Persist zoom
+  // Track previous message count for auto-advance
+  const prevMsgCountRef = useRef(0);
+
+  // Persist settings
   useEffect(() => {
     localStorage.setItem('bartalk_carousel_zoom', String(carouselZoom));
   }, [carouselZoom]);
-
-  // Persist vertical offset
   useEffect(() => {
     localStorage.setItem('bartalk_carousel_voffset', String(carouselVerticalOffset));
   }, [carouselVerticalOffset]);
-
-  // Persist auto-advance
   useEffect(() => {
     localStorage.setItem('bartalk_auto_advance', String(autoAdvance));
   }, [autoAdvance]);
 
-  const onCarouselIndexChange = useCallback((idx: number) => {
-    setCarouselIndex(idx);
-    // Quando l'utente naviga manualmente, ferma l'audio corrente
-    if (!autoAdvance) {
-      stopTTS();
-    }
-  }, [autoAdvance]);
-
-  // ── AUTO-ADVANCE: quando arriva un nuovo messaggio, vai all'ultimo ──
+  // ── AUTO-ADVANCE: quando arrivano nuovi messaggi → vai all'ultimo ──
   useEffect(() => {
-    const visible = getVisibleMessages(messages);
-    const count = visible.length;
+    const slice = getVisibleSlice(messages);
+    const count = slice.length;
+
     if (count > prevMsgCountRef.current && count > 0) {
-      // Nuovo messaggio arrivato → vai all'ultimo
-      setCarouselIndex(Math.min(count - 1, 7)); // max 8 slot
+      // Nuovo messaggio: vai all'ultimo slot
+      setCarouselIndex(count - 1);
     }
     prevMsgCountRef.current = count;
   }, [messages]);
 
-  // ── TTS SYNC: quando TTS inizia a parlare un agente, ruota il carousel ──
+  // ── TAB SWITCH: quando si apre il carousel, posizionati sull'ultimo messaggio ──
+  useEffect(() => {
+    if (activeTab === 'carousel') {
+      const slice = getVisibleSlice(messages);
+      if (slice.length > 0) {
+        setCarouselIndex(slice.length - 1);
+      }
+    }
+  }, [activeTab]); // Solo quando cambia tab, non ad ogni messaggio
+
+  // ── TTS SYNC: quando TTS parla un agente, ruota il carousel su quel messaggio ──
   useEffect(() => {
     const onAudioStart = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       const agentName = detail?.agentName;
       if (!agentName) return;
 
-      // Trova l'indice del messaggio di questo agente nel carousel
-      const visible = getVisibleMessages(messages);
-      const visibleSlice = visible.slice(-8); // ultimi 8
-
-      // Cerca l'ULTIMO messaggio di questo agente (il più recente)
-      const agent = getAgent(agentName);
-      const targetName = agent?.name || agentName;
+      const slice = getVisibleSlice(messages);
+      // Cerca l'ULTIMO messaggio di questo agente nella slice visibile
       let targetIdx = -1;
-      for (let i = visibleSlice.length - 1; i >= 0; i--) {
-        const m = visibleSlice[i] as { senderName?: string };
-        if (m.senderName === targetName) {
+      for (let i = slice.length - 1; i >= 0; i--) {
+        const m = slice[i] as { senderType: string; senderName?: string };
+        // Match per nome (case insensitive)
+        if (m.senderName?.toLowerCase() === agentName.toLowerCase()) {
           targetIdx = i;
           break;
         }
       }
 
-      if (targetIdx >= 0 && targetIdx !== carouselIndex) {
+      if (targetIdx >= 0) {
         setCarouselIndex(targetIdx);
       }
     };
@@ -107,9 +111,9 @@ export function ChatPage() {
     const onAudioEnd = () => {
       if (!autoAdvance) return;
       // Auto-advance: vai al prossimo messaggio
-      const visible = getVisibleMessages(messages);
-      const maxIdx = Math.min(visible.length, 8) - 1;
       setCarouselIndex(prev => {
+        const slice = getVisibleSlice(messages);
+        const maxIdx = slice.length - 1;
         const next = prev + 1;
         return next <= maxIdx ? next : prev;
       });
@@ -121,19 +125,22 @@ export function ChatPage() {
       window.removeEventListener('radio-audio-start', onAudioStart);
       window.removeEventListener('radio-audio-end', onAudioEnd);
     };
-  }, [messages, carouselIndex, autoAdvance]);
+  }, [messages, autoAdvance]);
+
+  // ── Navigazione manuale del carousel (NON ferma TTS) ──
+  const onCarouselIndexChange = useCallback((idx: number) => {
+    setCarouselIndex(idx);
+  }, []);
 
   return (
     <div className="app-layout">
       <ConversationSidebar />
       <Navbar />
 
-      {/* ── Audio Control Bar (sempre visibile se TTS attivo) ── */}
-      {ttsEnabled && (
-        <AudioControlBar />
-      )}
+      {/* Audio Control Bar */}
+      {ttsEnabled && <AudioControlBar />}
 
-      {/* ── Tab Bar Principale ── */}
+      {/* Tab Bar Principale */}
       <div className="main-tab-bar">
         <button
           className={`main-tab ${activeTab === 'chat' ? 'active' : ''}`}
@@ -175,7 +182,7 @@ export function ChatPage() {
         </button>
       </div>
 
-      {/* ── Contenuto principale ── */}
+      {/* Contenuto principale */}
       <div className="main-content-area">
         {activeTab === 'chat' && <ChatContainer />}
 

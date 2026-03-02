@@ -165,9 +165,11 @@ interface RadioCarousel3DProps {
   messages: Message[];
   currentIndex: number;
   onIndexChange: (index: number) => void;
+  zoom?: number;
+  verticalOffset?: number;
 }
 
-export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: RadioCarousel3DProps) {
+export function RadioCarousel3D({ messages, currentIndex, onIndexChange, zoom = 1.0, verticalOffset = 0 }: RadioCarousel3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -177,6 +179,7 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
   const renderedIdsRef = useRef<Set<string>>(new Set());
   const hasInitRef = useRef(false);
   const animFrameRef = useRef(0);
+  const isFirstRotationRef = useRef(true);
   const [isReady, setIsReady] = useState(false);
 
   // Inizializza Three.js (setup identico a v7.x)
@@ -291,6 +294,28 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
     renderedIdsRef.current.clear();
   }, [isReady]);
 
+  // Zoom FOV (v7.x style - ultra-light, no geometry recalc)
+  useEffect(() => {
+    if (!cameraRef.current) return;
+    const baseFOV = 50;
+    const newFOV = baseFOV / (zoom || 1.0);
+    cameraRef.current.fov = newFOV;
+    cameraRef.current.updateProjectionMatrix();
+  }, [zoom]);
+
+  // Vertical camera offset (v7.x style - GSAP animated)
+  useEffect(() => {
+    if (!cameraRef.current) return;
+    const cameraYOffset = -(verticalOffset || 0) * 0.01;
+    const baseY = 0.3;
+    const newY = baseY + cameraYOffset;
+    gsap.to(cameraRef.current.position, {
+      y: newY,
+      duration: 0.3,
+      ease: 'power2.out'
+    });
+  }, [verticalOffset]);
+
   // Popola slot con messaggi
   useEffect(() => {
     if (!isReady || !groupRef.current || meshesRef.current.length === 0) return;
@@ -327,6 +352,7 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
   }, [messages, isReady]);
 
   // Rotazione GSAP al messaggio attivo (identica a v7.x)
+  // Primo posizionamento: istantaneo. Successivi: animati.
   useEffect(() => {
     if (!groupRef.current) return;
 
@@ -335,11 +361,18 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
     if (visibleCount === 0) return;
 
     const targetAngle = -(currentIndex / MAX_SLOTS) * Math.PI * 2 + Math.PI / 2;
-    gsap.to(groupRef.current.rotation, {
-      y: targetAngle,
-      duration: 1.2,
-      ease: 'power2.inOut'
-    });
+
+    if (isFirstRotationRef.current) {
+      // Prima rotazione: posiziona istantaneamente (no animation)
+      groupRef.current.rotation.y = targetAngle;
+      isFirstRotationRef.current = false;
+    } else {
+      gsap.to(groupRef.current.rotation, {
+        y: targetAngle,
+        duration: 1.2,
+        ease: 'power2.inOut'
+      });
+    }
   }, [currentIndex, messages]);
 
   // Navigazione
