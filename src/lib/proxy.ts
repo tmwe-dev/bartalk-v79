@@ -42,7 +42,22 @@ export async function callProxy(req: ProxyRequest): Promise<ProxyResponse> {
       }),
     });
 
-    const data = await res.json();
+    // Leggi il body come testo prima, poi prova a parsare JSON
+    const rawText = await res.text();
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      console.error(`[proxy] ${req.provider} risposta non-JSON (HTTP ${res.status}):`, rawText.substring(0, 200));
+      return {
+        content: '',
+        tokensIn: 0,
+        tokensOut: 0,
+        duration: Date.now() - startTime,
+        error: `Proxy HTTP ${res.status}`,
+        detail: rawText.substring(0, 200),
+      };
+    }
 
     if (!res.ok) {
       console.error(`[proxy] ${req.provider} HTTP ${res.status}:`, data.error, data.detail);
@@ -51,16 +66,16 @@ export async function callProxy(req: ProxyRequest): Promise<ProxyResponse> {
         tokensIn: 0,
         tokensOut: 0,
         duration: Date.now() - startTime,
-        error: data.error || `HTTP ${res.status}`,
-        detail: data.detail,
+        error: (data.error as string) || `HTTP ${res.status}`,
+        detail: data.detail as string,
       };
     }
 
     return {
-      content: data.content || '',
-      tokensIn: data.tokensIn || 0,
-      tokensOut: data.tokensOut || 0,
-      duration: data.duration || Date.now() - startTime,
+      content: (data.content as string) || '',
+      tokensIn: (data.tokensIn as number) || 0,
+      tokensOut: (data.tokensOut as number) || 0,
+      duration: (data.duration as number) || Date.now() - startTime,
     };
   } catch (err) {
     console.error(`[proxy] ${req.provider} network error:`, err);
