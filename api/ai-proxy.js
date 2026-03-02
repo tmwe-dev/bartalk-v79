@@ -45,7 +45,7 @@ function mapUpstreamStatus(upstreamStatus) {
   return 502;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // CORS: only allowed origins
   const origin = getAllowedOrigin(req);
   if (origin) {
