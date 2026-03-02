@@ -1,6 +1,7 @@
 import { useState, useCallback, lazy, Suspense } from 'react';
 import { Navbar } from '../components/Layout/Navbar';
 import { ChatContainer } from '../components/Chat/ChatContainer';
+import { InputBox } from '../components/Chat/InputBox';
 import { AgentSelector } from '../components/Agents/AgentSelector';
 import { PodcastMode } from '../components/Podcast/PodcastMode';
 import { useConversationContext } from '../context/ConversationContext';
@@ -61,15 +62,18 @@ export function ChatPage() {
         {activeTab === 'chat' && <ChatContainer />}
 
         {activeTab === 'carousel' && (
-          <Suspense fallback={
-            <div className="loading-fallback">Caricamento Carousel 3D...</div>
-          }>
-            <RadioCarousel3D
-              messages={messages}
-              currentIndex={carouselIndex}
-              onIndexChange={onCarouselIndexChange}
-            />
-          </Suspense>
+          <div className="carousel-with-input">
+            <Suspense fallback={
+              <div className="loading-fallback">Caricamento Carousel 3D...</div>
+            }>
+              <RadioCarousel3D
+                messages={messages}
+                currentIndex={carouselIndex}
+                onIndexChange={onCarouselIndexChange}
+              />
+            </Suspense>
+            <InputBox />
+          </div>
         )}
 
         {activeTab === 'podcast' && (
