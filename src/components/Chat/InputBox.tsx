@@ -48,16 +48,14 @@ export function InputBox() {
 
   return (
     <div className="input-box">
-      {isSupported && (
-        <button
-          className={`mic-button ${isListening ? 'mic-active' : ''}`}
-          onClick={handleMicClick}
-          disabled={isWaiting}
-          title={isListening ? 'Ferma registrazione' : 'Parla'}
-        >
-          {isListening ? '⏹' : '🎤'}
-        </button>
-      )}
+      <button
+        className={`mic-button ${isListening ? 'mic-active' : ''}`}
+        onClick={handleMicClick}
+        disabled={isWaiting || !isSupported}
+        title={!isSupported ? 'Microfono non supportato in questo browser' : isListening ? 'Ferma registrazione' : 'Parla'}
+      >
+        {isListening ? '⏹' : '🎤'}
+      </button>
       <textarea
         ref={inputRef}
         className="input-textarea"
