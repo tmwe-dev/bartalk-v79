@@ -2,8 +2,10 @@ import { useCallback } from 'react';
 import { useConversationContext } from '../context/ConversationContext';
 import { useSettingsContext } from '../context/SettingsContext';
 import { useAgentContext } from '../context/AgentContext';
+import { useUIContext } from '../context/UIContext';
 import { orchestrate } from '../lib/orchestrator';
 import { enqueueTTS } from '../lib/tts';
+import { handleCommand } from '../lib/commands';
 import type { AgentResponse } from '../types/orchestrator';
 
 export function useOrchestrator() {
@@ -11,9 +13,38 @@ export function useOrchestrator() {
     useConversationContext();
   const { conversationMode, turnStrategy, ttsEnabled } = useSettingsContext();
   const { enabledAgents, getVoiceId } = useAgentContext();
+  const { openSettings } = useUIContext();
 
   const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim() || enabledAgents.length === 0) return;
+    if (!text.trim()) return;
+
+    // Controlla comandi slash prima di tutto
+    if (text.trim().startsWith('/')) {
+      const cmd = handleCommand(text);
+      if (cmd.handled) {
+        // Mostra il comando dell'utente
+        addMessage({
+          senderType: 'human',
+          senderName: 'Tu',
+          content: text,
+        });
+        // Mostra la risposta del sistema
+        if (cmd.systemMessage) {
+          addMessage({
+            senderType: 'system',
+            senderName: 'Sistema',
+            content: cmd.systemMessage,
+          });
+        }
+        // /keys apre le impostazioni
+        if (text.trim().toLowerCase() === '/keys') {
+          openSettings();
+        }
+        return;
+      }
+    }
+
+    if (enabledAgents.length === 0) return;
 
     // Aggiungi messaggio utente
     addMessage({
@@ -74,7 +105,7 @@ export function useOrchestrator() {
   }, [
     enabledAgents, messages, turnIndex, conversationMode, turnStrategy,
     ttsEnabled, conversationId, addMessage, setWaiting, startTurn,
-    incrementTurn, getVoiceId,
+    incrementTurn, getVoiceId, openSettings,
   ]);
 
   return { sendMessage };

@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { Navbar } from './Navbar';
 import { AgentSelector } from '../Agents/AgentSelector';
+import { PodcastMode } from '../Podcast/PodcastMode';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -15,6 +16,7 @@ export function AppLayout({ children, sidebar = true }: AppLayoutProps) {
         {sidebar && (
           <aside className="sidebar">
             <AgentSelector />
+            <PodcastMode />
           </aside>
         )}
         <main className="main-content">
