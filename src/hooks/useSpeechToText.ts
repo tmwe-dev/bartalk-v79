@@ -19,7 +19,12 @@ function getSpeechRecognitionClass(): (new () => SpeechRecognitionInstance) | nu
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
-export function useSpeechToText(onResult?: (text: string) => void): SpeechToTextResult {
+/**
+ * Hook per Speech-to-Text con lingua dinamica.
+ * @param lang - codice BCP-47 (es. 'it-IT', 'en-US', 'es-ES')
+ * @param onResult - callback quando la trascrizione è completa
+ */
+export function useSpeechToText(lang: string = 'it-IT', onResult?: (text: string) => void): SpeechToTextResult {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<SpeechRecognitionInstance>(null);
@@ -32,7 +37,7 @@ export function useSpeechToText(onResult?: (text: string) => void): SpeechToText
     if (!SRClass || isListening) return;
 
     const recognition = new SRClass();
-    recognition.lang = 'it-IT';
+    recognition.lang = lang; // Lingua dinamica dalla configurazione
     recognition.continuous = true;
     recognition.interimResults = true;
 
@@ -68,7 +73,7 @@ export function useSpeechToText(onResult?: (text: string) => void): SpeechToText
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [isListening, onResult]);
+  }, [isListening, lang, onResult]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {

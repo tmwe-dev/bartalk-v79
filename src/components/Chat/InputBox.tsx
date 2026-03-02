@@ -1,14 +1,19 @@
 import { useState, useRef, useCallback, useEffect, type KeyboardEvent } from 'react';
 import { useConversationContext } from '../../context/ConversationContext';
+import { useSettingsContext } from '../../context/SettingsContext';
 import { useOrchestrator } from '../../hooks/useOrchestrator';
 import { useSpeechToText } from '../../hooks/useSpeechToText';
-import { UI } from '../../lib/constants';
+import { getLangConfig } from '../../types/settings';
 
 export function InputBox() {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { isWaiting } = useConversationContext();
+  const { language } = useSettingsContext();
   const { sendMessage } = useOrchestrator();
+
+  // Ottieni configurazione lingua corrente
+  const langConfig = getLangConfig(language);
 
   const handleSend = useCallback(() => {
     const msg = text.trim();
@@ -18,8 +23,9 @@ export function InputBox() {
     inputRef.current?.focus();
   }, [text, isWaiting, sendMessage]);
 
-  // Speech-to-Text: quando finisce di ascoltare, inserisci il testo
-  const { isListening, isSupported, transcript, toggleListening, clearTranscript } = useSpeechToText();
+  // Speech-to-Text con lingua dinamica
+  const { isListening, isSupported, transcript, toggleListening, clearTranscript } =
+    useSpeechToText(langConfig.bcp47);
 
   // Aggiorna il testo con il transcript in tempo reale
   useEffect(() => {
@@ -30,7 +36,6 @@ export function InputBox() {
 
   const handleMicClick = useCallback(() => {
     if (isListening) {
-      // Stop: il testo è già nel campo, l'utente può inviarlo
       toggleListening();
     } else {
       clearTranscript();
@@ -46,13 +51,26 @@ export function InputBox() {
     }
   }, [handleSend]);
 
+  // Placeholder dinamico per lingua
+  const placeholder = isListening
+    ? langConfig.ui.listening
+    : isWaiting
+      ? langConfig.ui.waiting
+      : langConfig.ui.placeholder;
+
+  const micTitle = !isSupported
+    ? langConfig.ui.micUnsupported
+    : isListening
+      ? langConfig.ui.stopRecording
+      : langConfig.ui.speak;
+
   return (
     <div className="input-box">
       <button
         className={`mic-button ${isListening ? 'mic-active' : ''}`}
         onClick={handleMicClick}
         disabled={isWaiting || !isSupported}
-        title={!isSupported ? 'Microfono non supportato in questo browser' : isListening ? 'Ferma registrazione' : 'Parla'}
+        title={micTitle}
       >
         {isListening ? '⏹' : '🎤'}
       </button>
@@ -62,7 +80,7 @@ export function InputBox() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={isListening ? 'Sto ascoltando...' : isWaiting ? 'Gli agenti stanno rispondendo...' : UI.placeholder}
+        placeholder={placeholder}
         disabled={isWaiting}
         rows={1}
       />

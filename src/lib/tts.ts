@@ -1,6 +1,8 @@
 import { TTS } from './constants';
-import { getAPIKey } from './storage';
+import { getAPIKey, loadSettings } from './storage';
 import { stripHtml, truncate } from './utils';
+import { getLangConfig } from '../types/settings';
+import type { AppSettings } from '../types/settings';
 
 // ── Stato globale TTS ────────────────────────────────────────────────
 interface TTSJob {
@@ -8,6 +10,7 @@ interface TTSJob {
   text: string;
   voiceId: string;
   agentName: string;
+  lang: string; // BCP-47 language code
   blob?: Blob;
   useWebSpeech?: boolean;
   ready: boolean;
@@ -30,8 +33,12 @@ export function enqueueTTS(text: string, voiceId: string, agentName: string): vo
   const cleanText = truncate(stripHtml(text), TTS.maxChars);
   if (!cleanText.trim()) return;
 
+  // Leggi lingua corrente dalle impostazioni salvate
+  const settings = loadSettings<Partial<AppSettings>>({});
+  const langConfig = getLangConfig(settings.language || 'it');
+
   const seq = ++currentSeq;
-  const job: TTSJob = { seq, text: cleanText, voiceId, agentName, ready: false };
+  const job: TTSJob = { seq, text: cleanText, voiceId, agentName, lang: langConfig.bcp47, ready: false };
   queue.push(job);
 
   // Sintetizza in background
@@ -167,7 +174,7 @@ async function processQueue(): Promise<void> {
     if (job.blob) {
       await playBlob(job.blob);
     } else if (job.useWebSpeech) {
-      await playWebSpeech(job.text);
+      await playWebSpeech(job.text, job.lang);
     }
   } catch (err) {
     console.error('[tts] Errore riproduzione:', err);
@@ -211,7 +218,7 @@ function playBlob(blob: Blob): Promise<void> {
   });
 }
 
-function playWebSpeech(text: string): Promise<void> {
+function playWebSpeech(text: string, lang: string = 'it-IT'): Promise<void> {
   return new Promise((resolve) => {
     if (!window.speechSynthesis) {
       resolve();
@@ -219,10 +226,10 @@ function playWebSpeech(text: string): Promise<void> {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'it-IT';
+    utterance.lang = lang; // Lingua dinamica
     utterance.rate = 1.0;
     utterance.onend = () => resolve();
-    utterance.onerror = () => resolve(); // Non bloccare se fallisce
+    utterance.onerror = () => resolve();
 
     window.speechSynthesis.speak(utterance);
   });
