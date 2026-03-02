@@ -17,7 +17,9 @@ let queue: TTSJob[] = [];
 let currentSeq = 0;
 let nextSeq = 1;
 let isPlaying = false;
+let isPaused = false;
 let currentAudio: HTMLAudioElement | null = null;
+let currentJobAgentName: string | null = null;
 
 // ── API pubblica ─────────────────────────────────────────────────────
 
@@ -43,9 +45,45 @@ export function enqueueTTS(text: string, voiceId: string, agentName: string): vo
 export function stopTTS(): void {
   queue = [];
   isPlaying = false;
+  isPaused = false;
+  currentJobAgentName = null;
   if (currentAudio) {
     currentAudio.pause();
     currentAudio = null;
+  }
+  window.speechSynthesis?.cancel();
+  // Emetti stop event
+  window.dispatchEvent(new CustomEvent('radio-audio-stop'));
+}
+
+/** Pausa la riproduzione corrente */
+export function pauseTTS(): void {
+  if (!isPlaying || isPaused) return;
+  isPaused = true;
+  if (currentAudio) {
+    currentAudio.pause();
+  }
+  window.speechSynthesis?.pause();
+  window.dispatchEvent(new CustomEvent('radio-audio-pause'));
+}
+
+/** Riprendi la riproduzione dopo pausa */
+export function resumeTTS(): void {
+  if (!isPaused) return;
+  isPaused = false;
+  if (currentAudio) {
+    currentAudio.play();
+  }
+  window.speechSynthesis?.resume();
+  window.dispatchEvent(new CustomEvent('radio-audio-resume'));
+}
+
+/** Salta al prossimo messaggio in coda */
+export function skipTTS(): void {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = currentAudio.duration || 0;
+    // L'evento onended gestirà il passaggio al prossimo
   }
   window.speechSynthesis?.cancel();
 }
@@ -55,6 +93,16 @@ export function resetTTS(): void {
   stopTTS();
   currentSeq = 0;
   nextSeq = 1;
+}
+
+/** Stato corrente TTS */
+export function getTTSState(): { isPlaying: boolean; isPaused: boolean; currentAgent: string | null; queueLength: number } {
+  return {
+    isPlaying,
+    isPaused,
+    currentAgent: currentJobAgentName,
+    queueLength: queue.length,
+  };
 }
 
 // ── Sintetizzazione ──────────────────────────────────────────────────
@@ -107,6 +155,13 @@ async function processQueue(): Promise<void> {
   if (!job) return;
 
   isPlaying = true;
+  isPaused = false;
+  currentJobAgentName = job.agentName;
+
+  // Emetti evento INIZIO audio (per carousel/UI sync)
+  window.dispatchEvent(new CustomEvent('radio-audio-start', {
+    detail: { agentName: job.agentName, seq: job.seq },
+  }));
 
   try {
     if (job.blob) {
@@ -122,8 +177,9 @@ async function processQueue(): Promise<void> {
   queue = queue.filter(j => j.seq !== job.seq);
   nextSeq++;
   isPlaying = false;
+  currentJobAgentName = null;
 
-  // Emetti evento fine audio (per carousel/UI)
+  // Emetti evento FINE audio (per carousel/UI auto-advance)
   window.dispatchEvent(new CustomEvent('radio-audio-end', {
     detail: { agentName: job.agentName, seq: job.seq },
   }));
