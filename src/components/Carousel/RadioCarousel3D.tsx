@@ -5,22 +5,22 @@ import { AGENTS } from '../../lib/agents';
 
 // --- Costanti ---
 const MAX_CARDS = 8;
-const RADIUS = 7.8;
-const CARD_Y = 0.82;
-const CARD_WIDTH = 4.5;
-const CARD_HEIGHT = 6.2;
-const FOV_DESKTOP = 67;
-const FOV_MOBILE = 62;
-const CAMERA_POS = new THREE.Vector3(0, 0.3, 13.5);
+const RADIUS = 9;
+const CARD_Y = 0.6;
+const CARD_WIDTH = 3.8;
+const CARD_HEIGHT = 5.2;
+const FOV_DESKTOP = 60;
+const FOV_MOBILE = 55;
+const CAMERA_POS = new THREE.Vector3(0, 1, 15);
 
-// Colori agente → gradiente
+// Colori agente
 const AGENT_COLORS: Record<string, { top: string; bottom: string; badge: string }> = {
-  albert: { top: 'rgba(34,197,94,0.25)', bottom: 'rgba(22,163,74,0.05)', badge: '#22c55e' },
-  archimede: { top: 'rgba(168,85,247,0.25)', bottom: 'rgba(147,51,234,0.05)', badge: '#a855f7' },
-  pitagora: { top: 'rgba(6,182,212,0.25)', bottom: 'rgba(8,145,178,0.05)', badge: '#06b6d4' },
-  newton: { top: 'rgba(245,158,11,0.25)', bottom: 'rgba(217,119,6,0.05)', badge: '#f59e0b' },
-  human: { top: 'rgba(59,130,246,0.25)', bottom: 'rgba(37,99,235,0.05)', badge: '#3b82f6' },
-  system: { top: 'rgba(100,100,100,0.25)', bottom: 'rgba(60,60,60,0.05)', badge: '#666' },
+  albert: { top: 'rgba(34,197,94,0.35)', bottom: 'rgba(22,163,74,0.08)', badge: '#22c55e' },
+  archimede: { top: 'rgba(168,85,247,0.35)', bottom: 'rgba(147,51,234,0.08)', badge: '#a855f7' },
+  pitagora: { top: 'rgba(6,182,212,0.35)', bottom: 'rgba(8,145,178,0.08)', badge: '#06b6d4' },
+  newton: { top: 'rgba(245,158,11,0.35)', bottom: 'rgba(217,119,6,0.08)', badge: '#f59e0b' },
+  human: { top: 'rgba(59,130,246,0.35)', bottom: 'rgba(37,99,235,0.08)', badge: '#3b82f6' },
+  system: { top: 'rgba(100,100,100,0.35)', bottom: 'rgba(60,60,60,0.08)', badge: '#666' },
 };
 
 function getAgentColor(senderName: string) {
@@ -42,44 +42,67 @@ function createCardTexture(msg: Message, dpr: number): THREE.CanvasTexture {
 
   const colors = getAgentColor(msg.senderName);
 
-  // Background gradiente
+  // Background scuro con bordo arrotondato
+  ctx.fillStyle = 'rgba(12,12,18,0.95)';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, w, h, 24);
+  ctx.fill();
+
+  // Gradiente colorato sopra
   const grad = ctx.createLinearGradient(0, 0, 0, h);
   grad.addColorStop(0, colors.top);
-  grad.addColorStop(1, colors.bottom);
-  ctx.fillStyle = 'rgba(15,15,20,0.92)';
-  ctx.roundRect(0, 0, w, h, 24);
-  ctx.fill();
+  grad.addColorStop(0.5, colors.bottom);
+  grad.addColorStop(1, 'transparent');
   ctx.fillStyle = grad;
+  ctx.beginPath();
   ctx.roundRect(0, 0, w, h, 24);
   ctx.fill();
 
-  // Bordo superiore colorato
+  // Bordo sottile
+  ctx.strokeStyle = colors.badge + '40';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(1, 1, w - 2, h - 2, 24);
+  ctx.stroke();
+
+  // Linea colorata in alto
   ctx.fillStyle = colors.badge;
-  ctx.roundRect(0, 0, w, 6, [24, 24, 0, 0]);
+  ctx.beginPath();
+  ctx.roundRect(0, 0, w, 5, [24, 24, 0, 0]);
   ctx.fill();
 
-  // Badge agente
+  // Badge provider
   ctx.fillStyle = colors.badge;
-  ctx.roundRect(30, 30, 180, 40, 12);
+  ctx.beginPath();
+  ctx.roundRect(30, 28, 160, 36, 10);
   ctx.fill();
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 20px system-ui, sans-serif';
+  ctx.font = 'bold 18px system-ui, sans-serif';
   ctx.textAlign = 'center';
   const agent = AGENTS.find(a => a.name === msg.senderName);
-  ctx.fillText(agent?.provider?.toUpperCase() || msg.senderType.toUpperCase(), 120, 57);
+  ctx.fillText(agent?.provider?.toUpperCase() || msg.senderType.toUpperCase(), 110, 52);
 
-  // Nome agente
+  // Emoji + nome agente
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 36px system-ui, sans-serif';
+  ctx.font = 'bold 34px system-ui, sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText(msg.senderName, 30, 120);
+  const emoji = agent?.emoji || '💬';
+  ctx.fillText(`${emoji} ${msg.senderName}`, 30, 110);
+
+  // Separatore
+  ctx.strokeStyle = colors.badge + '30';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(30, 130);
+  ctx.lineTo(w - 30, 130);
+  ctx.stroke();
 
   // Testo messaggio (word wrap)
-  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.font = '22px system-ui, sans-serif';
   const maxWidth = w - 60;
   const lineHeight = 30;
-  let y = 170;
+  let y = 165;
   const words = msg.content.split(' ');
   let line = '';
   for (const word of words) {
@@ -149,35 +172,25 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
     const fov = isMobile ? FOV_MOBILE : FOV_DESKTOP;
     const { width, height } = container.getBoundingClientRect();
 
-    // Scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0a0f);
     sceneRef.current = scene;
 
-    // Camera
     const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 100);
     camera.position.copy(CAMERA_POS);
     camera.lookAt(0, CARD_Y, 0);
     cameraRef.current = camera;
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Luce ambientale
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
-    // Punto luce dall'alto
-    const pointLight = new THREE.PointLight(0xffffff, 0.8, 50);
-    pointLight.position.set(0, 10, 10);
-    scene.add(pointLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
 
     setIsReady(true);
 
-    // Resize handler
     const onResize = () => {
       const { width: w, height: h } = container.getBoundingClientRect();
       camera.aspect = w / h;
@@ -190,26 +203,31 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
     const animate = () => {
       animFrameRef.current = requestAnimationFrame(animate);
 
-      // Smooth rotation verso target
+      // Smooth rotation
       const diff = targetAngleRef.current - currentAngleRef.current;
       if (Math.abs(diff) > 0.001) {
         currentAngleRef.current += diff * 0.08;
       }
 
-      // Posiziona cards
+      // Posiziona cards in cerchio — FACCIA VERSO ESTERNO (camera)
       const meshes = meshesRef.current;
-      const angleStep = (2 * Math.PI) / Math.max(meshes.length, 1);
-      meshes.forEach((mesh, i) => {
-        const angle = -(i * angleStep) + Math.PI + currentAngleRef.current;
-        mesh.position.x = Math.cos(angle) * RADIUS;
-        mesh.position.z = Math.sin(angle) * RADIUS;
-        mesh.position.y = CARD_Y;
-        mesh.lookAt(0, CARD_Y, 0);
+      const count = Math.max(meshes.length, 1);
+      const angleStep = (2 * Math.PI) / count;
 
-        // Opacità: card frontale più luminosa
+      meshes.forEach((mesh, i) => {
+        const angle = (i * angleStep) + currentAngleRef.current;
+        const x = Math.sin(angle) * RADIUS;
+        const z = Math.cos(angle) * RADIUS;
+        mesh.position.set(x, CARD_Y, z);
+
+        // Ruota la card per guardare VERSO FUORI (lontano dal centro)
+        // Il punto "outward" è il doppio della posizione rispetto al centro
+        mesh.lookAt(x * 2, CARD_Y, z * 2);
+
+        // Opacità basata su distanza dalla posizione frontale (z positivo = vicino alla camera)
+        const normalizedZ = (z + RADIUS) / (2 * RADIUS); // 0 = dietro, 1 = davanti
         const mat = mesh.material as THREE.MeshBasicMaterial;
-        const distFromFront = Math.abs(Math.atan2(Math.sin(angle - Math.PI), Math.cos(angle - Math.PI)));
-        mat.opacity = THREE.MathUtils.lerp(0.4, 1.0, 1 - distFromFront / Math.PI);
+        mat.opacity = THREE.MathUtils.lerp(0.15, 1.0, normalizedZ);
       });
 
       renderer.render(scene, camera);
@@ -239,7 +257,6 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
     });
     meshesRef.current = [];
 
-    // Filtra messaggi agente (no system)
     const agentMessages = messages.filter(m => m.senderType === 'assistant' || m.senderType === 'human');
     const visibleMessages = agentMessages.slice(-MAX_CARDS);
     const dpr = Math.min(window.devicePixelRatio, 2);
@@ -250,7 +267,7 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
       const material = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
-        side: THREE.DoubleSide,
+        side: THREE.FrontSide, // Solo lato frontale — no testo specchiato
         opacity: 1,
       });
       const mesh = new THREE.Mesh(geometry, material);
@@ -259,12 +276,13 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
     });
   }, [messages, isReady]);
 
-  // Aggiorna angolo target quando cambia currentIndex
+  // Angolo target = porta card[currentIndex] in posizione frontale
   useEffect(() => {
     const meshes = meshesRef.current;
     if (meshes.length === 0) return;
     const angleStep = (2 * Math.PI) / meshes.length;
-    targetAngleRef.current = currentIndex * angleStep;
+    // Angolo 0 = card davanti alla camera (z = RADIUS)
+    targetAngleRef.current = -currentIndex * angleStep;
   }, [currentIndex]);
 
   // Navigazione
@@ -310,14 +328,13 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange }: Radio
     };
   }, [goNext, goPrev]);
 
-  // Click zones per navigazione
   const handleClick = useCallback((e: React.MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
     const x = e.clientX - rect.left;
     const zone = x / rect.width;
-    if (zone < 0.25) goPrev();
-    else if (zone > 0.75) goNext();
+    if (zone < 0.3) goPrev();
+    else if (zone > 0.7) goNext();
   }, [goNext, goPrev]);
 
   return (
