@@ -320,7 +320,7 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange, zoom = 
   useEffect(() => {
     if (!isReady || !groupRef.current || meshesRef.current.length === 0) return;
 
-    const allMessages = messages.filter(m => m.senderType === 'assistant' || m.senderType === 'human');
+    const allMessages = messages.filter(m => (m.senderType === 'assistant' || m.senderType === 'human') && !m.isDemo && !m.isError);
     const visibleMessages = allMessages.slice(-MAX_SLOTS);
 
     visibleMessages.forEach((msg, i) => {
@@ -356,7 +356,7 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange, zoom = 
   useEffect(() => {
     if (!groupRef.current) return;
 
-    const allMessages = messages.filter(m => m.senderType === 'assistant' || m.senderType === 'human');
+    const allMessages = messages.filter(m => (m.senderType === 'assistant' || m.senderType === 'human') && !m.isDemo && !m.isError);
     const visibleCount = Math.min(allMessages.length, MAX_SLOTS);
     if (visibleCount === 0) return;
 
@@ -377,7 +377,7 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange, zoom = 
 
   // Navigazione
   const goNext = useCallback(() => {
-    const all = messages.filter(m => m.senderType === 'assistant' || m.senderType === 'human');
+    const all = messages.filter(m => (m.senderType === 'assistant' || m.senderType === 'human') && !m.isDemo && !m.isError);
     const max = Math.min(all.length, MAX_SLOTS) - 1;
     onIndexChange(Math.min(currentIndex + 1, max));
   }, [currentIndex, messages, onIndexChange]);
@@ -429,7 +429,7 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange, zoom = 
   }, [goNext, goPrev]);
 
   const visibleCount = Math.min(
-    messages.filter(m => m.senderType === 'assistant' || m.senderType === 'human').length,
+    messages.filter(m => (m.senderType === 'assistant' || m.senderType === 'human') && !m.isDemo && !m.isError).length,
     MAX_SLOTS
   );
 
@@ -439,7 +439,7 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange, zoom = 
       {visibleCount > 1 && (
         <div className="carousel-avatars">
           {messages
-            .filter(m => m.senderType === 'assistant' || m.senderType === 'human')
+            .filter(m => (m.senderType === 'assistant' || m.senderType === 'human') && !m.isDemo && !m.isError)
             .slice(-MAX_SLOTS)
             .map((msg, i) => {
               const agent = AGENTS.find(a => a.name === msg.senderName);

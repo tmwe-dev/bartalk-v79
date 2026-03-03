@@ -41,7 +41,7 @@ function getValidAgentMessages(messages: Message[]) {
 }
 
 // ── Left Sidebar (permanente, stile v7.x) ────────────────────────────
-function LeftSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+function LeftSidebar({ collapsed, onToggle, onClose }: { collapsed: boolean; onToggle: () => void; onClose: () => void }) {
   const {
     conversationId, conversationTitle, messages, conversationList, loadConversation,
     deleteConversation, newConversation,
@@ -90,7 +90,7 @@ function LeftSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: ()
       </div>
 
       {/* New Chat */}
-      <button className="lsb-new-chat" onClick={() => { resetTTS(); newConversation(); }}>
+      <button className="lsb-new-chat" onClick={() => { resetTTS(); newConversation(); onClose(); }}>
         <span>＋</span> Nuova conversazione
       </button>
 
@@ -105,7 +105,7 @@ function LeftSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: ()
             <div
               key={conv.id}
               className={`lsb-conv-item ${conv.id === conversationId ? 'active' : ''}`}
-              onClick={() => loadConversation(conv.id)}
+              onClick={() => { loadConversation(conv.id); onClose(); }}
             >
               <div className="lsb-conv-header">
                 <span className="lsb-conv-title">{conv.title}</span>
@@ -138,7 +138,7 @@ function LeftSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: ()
                 key={agent.id}
                 className={`lsb-agent ${enabled ? 'enabled' : 'disabled'}`}
                 style={{ '--agent-color': agent.color, '--agent-glow': agent.glowColor } as React.CSSProperties}
-                onClick={() => toggleAgent(agent.id)}
+                onClick={() => { toggleAgent(agent.id); onClose(); }}
               >
                 <img
                   src={agent.staticImage}
@@ -160,7 +160,7 @@ function LeftSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: ()
 
       {/* Quick Controls */}
       <div className="lsb-controls">
-        <label className="lsb-control-row" onClick={() => setTtsEnabled(!ttsEnabled)}>
+        <label className="lsb-control-row" onClick={() => { setTtsEnabled(!ttsEnabled); onClose(); }}>
           <span className="lsb-control-icon">{ttsEnabled ? '🔊' : '🔇'}</span>
           <span className="lsb-control-label">Audio TTS</span>
           <span className={`lsb-toggle-pill ${ttsEnabled ? 'on' : 'off'}`}>
@@ -289,11 +289,26 @@ export function ChatPage() {
     prevMsgCountRef.current = count;
   }, [validAgentMsgs, messages]);
 
-  // Tab switch → jump to last carousel card
+  // Tab switch → sync carousel to current agent tab (maintain state across views)
   useEffect(() => {
     if (activeTab === 'carousel') {
+      // Sync carousel card to the agent tab that was active
+      const msg = validAgentMsgs[agentTabIndex];
+      if (msg) {
+        const slice = getVisibleSlice(messages);
+        const cIdx = slice.findIndex(m => m.id === msg.id);
+        if (cIdx >= 0) setCarouselIndex(cIdx);
+        else if (slice.length > 0) setCarouselIndex(slice.length - 1);
+      }
+    }
+    if (activeTab === 'chat') {
+      // Sync agent tab to the carousel card that was active
       const slice = getVisibleSlice(messages);
-      if (slice.length > 0) setCarouselIndex(slice.length - 1);
+      const msg = slice[carouselIndex];
+      if (msg && msg.senderType === 'assistant') {
+        const tabIdx = validAgentMsgs.findIndex(m => m.id === msg.id);
+        if (tabIdx >= 0) setAgentTabIndex(tabIdx);
+      }
     }
   }, [activeTab]);
 
@@ -375,7 +390,7 @@ export function ChatPage() {
       )}
 
       {/* Permanent Left Sidebar */}
-      <LeftSidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <LeftSidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} onClose={() => setSidebarCollapsed(true)} />
 
       {/* Main Content */}
       <div className="app-main">
