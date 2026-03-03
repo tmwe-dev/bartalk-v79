@@ -5,10 +5,14 @@ import { APIKeysTab } from './APIKeysTab';
 import { VoicesTab } from './VoicesTab';
 import { PreferencesTab } from './PreferencesTab';
 import { PromptTab } from './PromptTab';
+import { MemoryTab } from './MemoryTab';
+import { PromptSectionsTab } from './PromptSectionsTab';
 
 const TABS = [
   { id: 'keys', label: 'Chiavi API' },
   { id: 'prompts', label: 'Prompt' },
+  { id: 'sections', label: 'Sezioni' },
+  { id: 'memory', label: 'Memoria' },
   { id: 'voices', label: 'Voci' },
   { id: 'prefs', label: 'Preferenze' },
 ] as const;
@@ -35,6 +39,8 @@ export function SettingsModal() {
 
       {activeTab === 'keys' && <APIKeysTab />}
       {activeTab === 'prompts' && <PromptTab />}
+      {activeTab === 'sections' && <PromptSectionsTab />}
+      {activeTab === 'memory' && <MemoryTab />}
       {activeTab === 'voices' && <VoicesTab />}
       {activeTab === 'prefs' && <PreferencesTab />}
     </Modal>

@@ -5,6 +5,7 @@
 
 import { useState, useRef } from 'react';
 import { useTaskContext } from '../../context/TaskContext';
+import { useConversationContext } from '../../context/ConversationContext';
 import { DELIVERABLE_TEMPLATES, PHASE_LABELS } from '../../lib/taskTemplates';
 import { AGENTS } from '../../lib/agents';
 import { useAgentContext } from '../../context/AgentContext';
@@ -20,7 +21,11 @@ export function TaskPanel() {
     removeFile,
     setLeadAgent,
     clearTask,
+    checkPhaseMaturity,
+    phaseSuggestionDismissed,
+    dismissPhaseSuggestion,
   } = useTaskContext();
+  const { messages } = useConversationContext();
   const { isAgentEnabled } = useAgentContext();
 
   // Creazione nuovo task
@@ -266,6 +271,30 @@ export function TaskPanel() {
           </div>
         </div>
       )}
+
+      {/* ── Suggerimento auto-advance ────────────── */}
+      {!isCompleted && (() => {
+        const maturity = checkPhaseMaturity(messages.length, 'neutral');
+        if (maturity.ready && !phaseSuggestionDismissed) {
+          return (
+            <div className="task-suggestion">
+              <div className="task-suggestion-text">
+                <span className="task-suggestion-icon">💡</span>
+                <span>{maturity.reason}</span>
+              </div>
+              <div className="task-suggestion-actions">
+                <button className="task-btn-primary task-btn-small" onClick={advancePhase}>
+                  ▶ Avanza
+                </button>
+                <button className="task-btn-secondary task-btn-small" onClick={dismissPhaseSuggestion}>
+                  Dopo
+                </button>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       {/* ── Avanza fase / Genera deliverable ─────── */}
       {!isCompleted && (

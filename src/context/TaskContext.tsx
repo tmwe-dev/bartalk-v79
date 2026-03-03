@@ -10,6 +10,7 @@ import type {
   DeliverableType,
   AttachedFile,
   TaskContextValue,
+  PhaseMaturityResult,
 } from '../types/tasks';
 import { DELIVERABLE_TEMPLATES } from '../lib/taskTemplates';
 import { generateId } from '../lib/utils';
@@ -33,6 +34,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const [phaseSuggestionDismissed, setPhaseSuggestionDismissed] = useState(false);
+
   const createTask = useCallback((type: DeliverableType, title: string, description: string) => {
     const template = DELIVERABLE_TEMPLATES[type];
     const task: TaskObjective = {
@@ -45,11 +48,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       phases: template.phases,
       attachedFiles: [],
       deliverableContent: '',
+      phaseStartMessageIndex: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isActive: true,
     };
     save(task);
+    setPhaseSuggestionDismissed(false);
   }, []);
 
   const updatePhase = useCallback((phase: TaskPhase) => {
@@ -67,15 +72,15 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       const currentIdx = prev.phases.indexOf(prev.currentPhase);
       if (currentIdx < prev.phases.length - 1) {
         const nextPhase = prev.phases[currentIdx + 1];
-        const updated = { ...prev, currentPhase: nextPhase, updatedAt: new Date().toISOString() };
+        const updated = { ...prev, currentPhase: nextPhase, phaseStartMessageIndex: Date.now(), updatedAt: new Date().toISOString() };
         localStorage.setItem('bartalk_active_task', JSON.stringify(updated));
         return updated;
       }
-      // Ultima fase → completato
       const updated = { ...prev, currentPhase: 'completed' as TaskPhase, isActive: false, updatedAt: new Date().toISOString() };
       localStorage.setItem('bartalk_active_task', JSON.stringify(updated));
       return updated;
     });
+    setPhaseSuggestionDismissed(false);
   }, []);
 
   const attachFile = useCallback((file: AttachedFile) => {
@@ -124,6 +129,59 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   const clearTask = useCallback(() => {
     save(null);
+  }, []);
+
+  // ── Phase maturity check ───────────────────────────────────────────
+  const PHASE_MIN_MESSAGES: Record<string, number> = {
+    setup: 2,
+    analysis: 6,
+    debate: 8,
+    synthesis: 4,
+    deliverable: 2,
+  };
+
+  const checkPhaseMaturity = useCallback((totalMessages: number, convergence: string): PhaseMaturityResult => {
+    if (!activeTask || !activeTask.isActive || activeTask.currentPhase === 'completed') {
+      return { ready: false, reason: '', messagesSincePhaseStart: 0 };
+    }
+
+    const phase = activeTask.currentPhase;
+    const msgSince = Math.max(0, totalMessages - (activeTask.phaseStartMessageIndex || 0));
+    const minRequired = PHASE_MIN_MESSAGES[phase] || 4;
+
+    if (msgSince < minRequired) {
+      return { ready: false, reason: `Servono almeno ${minRequired - msgSince} messaggi in più`, messagesSincePhaseStart: msgSince };
+    }
+
+    // Regole per fase
+    if (phase === 'analysis' && msgSince >= minRequired) {
+      return { ready: true, reason: 'Analisi sufficiente. Puoi passare al dibattito.', messagesSincePhaseStart: msgSince };
+    }
+    if (phase === 'debate') {
+      if (convergence === 'agreement' && msgSince >= minRequired) {
+        return { ready: true, reason: 'Gli agenti convergono. Puoi passare alla sintesi.', messagesSincePhaseStart: msgSince };
+      }
+      if (msgSince >= minRequired * 2) {
+        return { ready: true, reason: 'Dibattito esteso. Considera di passare alla sintesi.', messagesSincePhaseStart: msgSince };
+      }
+    }
+    if (phase === 'synthesis' && msgSince >= minRequired) {
+      if (convergence === 'agreement') {
+        return { ready: true, reason: 'Sintesi completata. Puoi procedere al deliverable.', messagesSincePhaseStart: msgSince };
+      }
+      if (msgSince >= minRequired * 2) {
+        return { ready: true, reason: 'Sintesi estesa. Considera di procedere al deliverable.', messagesSincePhaseStart: msgSince };
+      }
+    }
+    if (phase === 'setup' && msgSince >= minRequired) {
+      return { ready: true, reason: 'Setup completo. Avvia l\'analisi.', messagesSincePhaseStart: msgSince };
+    }
+
+    return { ready: false, reason: '', messagesSincePhaseStart: msgSince };
+  }, [activeTask]);
+
+  const dismissPhaseSuggestion = useCallback(() => {
+    setPhaseSuggestionDismissed(true);
   }, []);
 
   // getTaskPromptContext ora accetta agentId per differenziare il comportamento
@@ -177,11 +235,20 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
 
     if (activeTask.attachedFiles.length > 0) {
-      parts.push('\nFILE ALLEGATI:');
+      parts.push('\n📚 KNOWLEDGE BASE — FILE ALLEGATI:');
+      parts.push('Usa questi documenti come riferimento primario per le tue risposte.');
+
+      // Budget token per file: distribuisci equamente max ~4000 char totali
+      const totalBudget = 4000;
+      const perFileBudget = Math.floor(totalBudget / activeTask.attachedFiles.length);
+
       for (const f of activeTask.attachedFiles) {
-        const preview = f.content.length > 800 ? f.content.substring(0, 800) + '...' : f.content;
-        parts.push(`--- ${f.name} (${f.type}) ---\n${preview}`);
+        const content = f.content.length > perFileBudget
+          ? f.content.substring(0, perFileBudget) + `\n...[troncato: file ${(f.size / 1024).toFixed(1)}KB, mostrati primi ${perFileBudget} caratteri]`
+          : f.content;
+        parts.push(`\n--- 📄 ${f.name} (${(f.size / 1024).toFixed(1)}KB) ---\n${content}`);
       }
+      parts.push('--- FINE KNOWLEDGE BASE ---');
     }
 
     parts.push(`\nIMPORTANTE: Ogni tua risposta deve contribuire all'obiettivo "${activeTask.title}". Segui le istruzioni della fase corrente.`);
@@ -201,6 +268,9 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       setDeliverableContent,
       clearTask,
       getTaskPromptContext,
+      checkPhaseMaturity,
+      phaseSuggestionDismissed,
+      dismissPhaseSuggestion,
     }}>
       {children}
     </TaskContext.Provider>

@@ -48,9 +48,16 @@ export interface TaskObjective {
   attachedFiles: AttachedFile[];
   deliverableContent: string;    // Il deliverable finale prodotto
   leadAgent?: string;            // Agente "redattore" del deliverable
+  phaseStartMessageIndex: number; // Indice messaggio inizio fase corrente
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
+}
+
+export interface PhaseMaturityResult {
+  ready: boolean;
+  reason: string;
+  messagesSincePhaseStart: number;
 }
 
 export interface TaskContextValue {
@@ -64,4 +71,9 @@ export interface TaskContextValue {
   setDeliverableContent: (content: string) => void;
   clearTask: () => void;
   getTaskPromptContext: (agentId?: string) => string;
+  /** Controlla se la fase corrente è matura per avanzare */
+  checkPhaseMaturity: (totalMessages: number, convergence: string) => PhaseMaturityResult;
+  /** Suggerimento avanzamento: true se l'utente ha già visto il suggerimento */
+  phaseSuggestionDismissed: boolean;
+  dismissPhaseSuggestion: () => void;
 }

@@ -17,22 +17,50 @@ import { DEFAULT_MODELS } from './constants';
 
 // ── Configurazione memoria ──────────────────────────────────────────
 
-export const MEMORY_CONFIG = {
-  /** Messaggi in Livello 1 (testo completo) */
+// ── Defaults ────────────────────────────────────────────────────────
+const DEFAULT_MEMORY_CONFIG = {
   fullDetailCount: 20,
-  /** Messaggi in Livello 2 (condensato: nome + posizione + 1 frase) */
   condensedCount: 20,
-  /** Oltre questo limite, tutto diventa Livello 3 (riassunto unico) */
   summaryThreshold: 40,
-  /** Ogni quanti messaggi generare un riassunto automatico */
   summaryTrigger: 20,
-  /** Max token stimati per il contesto (safety limit) */
   maxContextTokens: 6000,
-  /** Max caratteri per messaggio condensato */
   condensedMaxChars: 120,
-  /** Max caratteri per il blocco riassunto */
   summaryMaxChars: 800,
-} as const;
+};
+
+export type MemoryConfigType = typeof DEFAULT_MEMORY_CONFIG;
+
+const MEMORY_SETTINGS_KEY = 'bartalk_memory_config';
+
+/** Carica configurazione memoria (user-override o default) */
+export function loadMemoryConfig(): MemoryConfigType {
+  try {
+    const saved = localStorage.getItem(MEMORY_SETTINGS_KEY);
+    if (saved) return { ...DEFAULT_MEMORY_CONFIG, ...JSON.parse(saved) };
+  } catch { /* ignore */ }
+  return { ...DEFAULT_MEMORY_CONFIG };
+}
+
+/** Salva override configurazione memoria */
+export function saveMemoryConfig(config: Partial<MemoryConfigType>): void {
+  try {
+    const current = loadMemoryConfig();
+    localStorage.setItem(MEMORY_SETTINGS_KEY, JSON.stringify({ ...current, ...config }));
+  } catch { /* ignore */ }
+}
+
+/** Reset configurazione memoria ai default */
+export function resetMemoryConfig(): void {
+  localStorage.removeItem(MEMORY_SETTINGS_KEY);
+}
+
+/** Getter runtime (sempre aggiornato) */
+export function getMemoryConfig(): MemoryConfigType {
+  return loadMemoryConfig();
+}
+
+// Esponiamo anche come costante statica per retrocompatibilità
+export const MEMORY_CONFIG = DEFAULT_MEMORY_CONFIG;
 
 // ── Tipi ─────────────────────────────────────────────────────────────
 
@@ -98,13 +126,13 @@ function estimateTokens(text: string): number {
 // ── Condensatore: messaggio → 1 riga ────────────────────────────────
 
 function condenseMessage(msg: Message): string {
+  const cfg = getMemoryConfig();
   const name = msg.senderName || (msg.senderType === 'human' ? 'Utente' : 'Agente');
   const content = msg.content.trim();
 
-  // Prendi la prima frase significativa (fino al primo punto, max 120 char)
   const firstSentence = content.split(/[.!?]\s/)[0];
-  const condensed = firstSentence.length > MEMORY_CONFIG.condensedMaxChars
-    ? firstSentence.substring(0, MEMORY_CONFIG.condensedMaxChars) + '...'
+  const condensed = firstSentence.length > cfg.condensedMaxChars
+    ? firstSentence.substring(0, cfg.condensedMaxChars) + '...'
     : firstSentence;
 
   return `[${name}]: ${condensed}`;
@@ -116,6 +144,7 @@ export function buildMemoryBlock(
   messages: Message[],
   conversationId: string,
 ): MemoryBlock {
+  const cfg = getMemoryConfig();
   const total = messages.length;
   const summaries = loadSummaries(conversationId);
 
@@ -125,8 +154,8 @@ export function buildMemoryBlock(
     : '';
 
   // Determina i confini dei 3 livelli
-  const fullStart = Math.max(0, total - MEMORY_CONFIG.fullDetailCount);
-  const condensedStart = Math.max(0, fullStart - MEMORY_CONFIG.condensedCount);
+  const fullStart = Math.max(0, total - cfg.fullDetailCount);
+  const condensedStart = Math.max(0, fullStart - cfg.condensedCount);
 
   // Livello 1: messaggi completi (ultimi N)
   const fullMessages = messages.slice(fullStart).map(m => ({
@@ -166,14 +195,19 @@ export function buildMemoryMessages(
   messages: Message[],
   conversationId: string,
 ): { role: string; content: string }[] {
+  const cfg = getMemoryConfig();
   const block = buildMemoryBlock(messages, conversationId);
   const apiMessages: { role: string; content: string }[] = [];
 
   // Livello 3: Riassunto cumulativo come primo messaggio di contesto
   if (block.summary) {
+    // Tronca riassunto se troppo lungo
+    const summaryText = block.summary.length > cfg.summaryMaxChars
+      ? block.summary.substring(0, cfg.summaryMaxChars) + '...[troncato]'
+      : block.summary;
     apiMessages.push({
       role: 'user',
-      content: `[RIASSUNTO CONVERSAZIONE PRECEDENTE]\n${block.summary}`,
+      content: `[RIASSUNTO CONVERSAZIONE PRECEDENTE]\n${summaryText}`,
     });
     apiMessages.push({
       role: 'assistant',
@@ -202,6 +236,28 @@ export function buildMemoryMessages(
   // Messaggio utente corrente
   apiMessages.push({ role: 'user', content: userMessage });
 
+  // ── TOKEN ENFORCEMENT ──────────────────────────────────────────────
+  // Se il contesto supera maxContextTokens, rimuovi messaggi L1 più vecchi
+  let totalTokens = apiMessages.reduce((acc, m) => acc + estimateTokens(m.content), 0);
+  const maxTokens = cfg.maxContextTokens;
+
+  if (totalTokens > maxTokens) {
+    // Identifica l'indice dove iniziano i messaggi L1 (dopo L3+L2 headers)
+    const l1StartIdx = block.summary ? 2 : 0;
+    const l1StartWithL2 = l1StartIdx + (block.condensed.length > 0 ? 2 : 0);
+
+    // Rimuovi messaggi L1 più vecchi finché non rientro nel limite
+    while (totalTokens > maxTokens && apiMessages.length > l1StartWithL2 + 2) {
+      // Rimuovi il messaggio più vecchio di L1 (non toccare L3, L2, e l'ultimo user)
+      const removed = apiMessages.splice(l1StartWithL2, 1);
+      if (removed.length > 0) {
+        totalTokens -= estimateTokens(removed[0].content);
+      } else {
+        break;
+      }
+    }
+  }
+
   return apiMessages;
 }
 
@@ -211,13 +267,14 @@ export function shouldTriggerSummary(
   messages: Message[],
   conversationId: string,
 ): boolean {
+  const cfg = getMemoryConfig();
   const summaries = loadSummaries(conversationId);
   const lastSummarizedIdx = summaries.length > 0
     ? summaries[summaries.length - 1].messageRange[1]
     : 0;
 
   const unsummarized = messages.length - lastSummarizedIdx;
-  return unsummarized >= MEMORY_CONFIG.summaryTrigger;
+  return unsummarized >= cfg.summaryTrigger;
 }
 
 // ── Genera riassunto automatico via AI ───────────────────────────────
@@ -231,8 +288,9 @@ export async function generateAutoSummary(
     ? summaries[summaries.length - 1].messageRange[1]
     : 0;
 
-  // Messaggi da riassumere: dall'ultimo riassunto fino a 20 messaggi fa
-  const endIdx = Math.max(lastSummarizedIdx, messages.length - MEMORY_CONFIG.fullDetailCount);
+  // Messaggi da riassumere: dall'ultimo riassunto fino a N messaggi fa (L1 range)
+  const cfg = getMemoryConfig();
+  const endIdx = Math.max(lastSummarizedIdx, messages.length - cfg.fullDetailCount);
   if (endIdx <= lastSummarizedIdx) return null;
 
   const toSummarize = messages.slice(lastSummarizedIdx, endIdx);

@@ -9,6 +9,7 @@ import type { AgentConfig } from '../types/agents';
 import type { OrchestratorPlan } from '../types/orchestrator';
 import type { AppLanguage } from '../types/settings';
 import { LANGUAGES } from '../types/settings';
+import { buildSectionsBlock } from './promptSections';
 
 // ── Personalità distinte per ogni agente ─────────────────────────────
 
@@ -150,6 +151,7 @@ export function buildRichSystemPrompt(
   convergenceInstruction: string,
   plan: OrchestratorPlan,
   taskContext?: string,
+  userMessage?: string,
 ): string {
   const lang = plan.language || 'it';
   const [minWords, maxWords] = plan.wordRange;
@@ -218,7 +220,15 @@ export function buildRichSystemPrompt(
     parts.push(convergenceInstruction);
   }
 
-  // 8. Contesto Task/Obiettivo
+  // 8. Prompt Sections personalizzate (regole, topic, contesto)
+  if (userMessage) {
+    const sectionsBlock = buildSectionsBlock(userMessage);
+    if (sectionsBlock) {
+      parts.push(sectionsBlock);
+    }
+  }
+
+  // 9. Contesto Task/Obiettivo
   if (taskContext) {
     parts.push(taskContext);
   }

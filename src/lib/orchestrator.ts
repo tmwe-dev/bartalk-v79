@@ -226,7 +226,7 @@ async function callAgent(
     };
   }
 
-  const systemPrompt = buildRichSystemPrompt(agent, previousResponses, convergenceInstruction, plan, taskContext);
+  const systemPrompt = buildRichSystemPrompt(agent, previousResponses, convergenceInstruction, plan, taskContext, userMessage);
 
   // ── Memoria a 3 livelli ───────────────────────────────────────────
   const apiMessages = conversationId
