@@ -212,18 +212,27 @@ export default async function handler(req, res) {
       }
 
       case 'gemini': {
+        // Build contents array: filter empty, ensure non-empty parts
         const geminiContents = [];
         for (const m of (messages || [])) {
           if (m.role === 'system') continue;
+          const text = String(m.content || '').trim();
+          if (!text) continue; // Skip empty messages (Gemini rejects empty parts)
           geminiContents.push({
             role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: String(m.content || '') }]
+            parts: [{ text }]
           });
         }
-        if (geminiContents.length === 0) geminiContents.push({ role: 'user', parts: [{ text: 'Ciao' }] });
-        if (geminiContents[0].role !== 'user') geminiContents.unshift({ role: 'user', parts: [{ text: 'Ciao' }] });
+        // Ensure at least one user message
+        if (geminiContents.length === 0) {
+          geminiContents.push({ role: 'user', parts: [{ text: 'Ciao' }] });
+        }
+        // Gemini requires first message to be user
+        if (geminiContents[0].role !== 'user') {
+          geminiContents.unshift({ role: 'user', parts: [{ text: '.' }] });
+        }
 
-        // Merge consecutive same-role
+        // Merge consecutive same-role (Gemini requires strict alternation)
         const mergedGemini = [];
         for (const msg of geminiContents) {
           if (mergedGemini.length > 0 && mergedGemini[mergedGemini.length - 1].role === msg.role) {
@@ -233,28 +242,83 @@ export default async function handler(req, res) {
           }
         }
 
-        const geminiModel = model || 'gemini-2.0-flash';
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+        // Ensure strict user/model alternation (fill gaps with placeholder)
+        const alternated = [];
+        for (let i = 0; i < mergedGemini.length; i++) {
+          const expected = i % 2 === 0 ? 'user' : 'model';
+          if (mergedGemini[i].role !== expected) {
+            alternated.push({ role: expected, parts: [{ text: '...' }] });
+          }
+          alternated.push(mergedGemini[i]);
+        }
 
-        const geminiRes = await fetch(geminiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
-            contents: mergedGemini,
+        const geminiModel = model || 'gemini-2.0-flash';
+
+        // Try v1beta first, fallback to v1 on 400
+        let geminiRes;
+        let geminiUrl;
+        for (const apiVersion of ['v1beta', 'v1']) {
+          geminiUrl = `https://generativelanguage.googleapis.com/${apiVersion}/models/${geminiModel}:generateContent?key=${apiKey}`;
+
+          const body = {
+            contents: alternated,
             generationConfig: {
               maxOutputTokens: maxTokens || 2048,
               temperature: temperature != null ? temperature : 0.7
             }
-          })
-        });
+          };
+          // Add system instruction only if present (some Gemini versions don't support it)
+          if (systemPrompt) {
+            body.system_instruction = { parts: [{ text: systemPrompt }] };
+          }
+
+          geminiRes = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+
+          if (geminiRes.ok || geminiRes.status !== 400) break;
+
+          // If 400 on v1beta, try v1 (might be an API version issue)
+          console.warn(`[ai-proxy] Gemini ${apiVersion} returned 400, trying next version...`);
+
+          // If system_instruction caused the 400, retry without it
+          if (apiVersion === 'v1beta' && systemPrompt) {
+            const bodyNoSys = { ...body };
+            delete bodyNoSys.system_instruction;
+            // Prepend system prompt as first user message instead
+            const sysAsUser = [
+              { role: 'user', parts: [{ text: `[Istruzioni di sistema]\n${systemPrompt}` }] },
+              { role: 'model', parts: [{ text: 'Ricevuto. Seguo le istruzioni.' }] },
+              ...alternated
+            ];
+            bodyNoSys.contents = sysAsUser;
+
+            geminiRes = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(bodyNoSys)
+            });
+
+            if (geminiRes.ok) {
+              console.log('[ai-proxy] Gemini: system_instruction fallback worked');
+              break;
+            }
+          }
+        }
 
         if (!geminiRes.ok) {
           const errText = await geminiRes.text();
-          console.error('[ai-proxy] Gemini error:', geminiRes.status, errText.substring(0, 200));
+          let detail = errText.substring(0, 500);
+          try {
+            const errJson = JSON.parse(errText);
+            detail = errJson.error?.message || errJson.error?.status || detail;
+          } catch {}
+          console.error('[ai-proxy] Gemini error:', geminiRes.status, detail);
           return res.status(mapUpstreamStatus(geminiRes.status)).json({
-            error: `Gemini ${geminiRes.status}`,
-            detail: errText.substring(0, 300),
+            error: `Gemini ${geminiRes.status}: ${detail.substring(0, 150)}`,
+            detail: detail,
             provider: 'gemini'
           });
         }
