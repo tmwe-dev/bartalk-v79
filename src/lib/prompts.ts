@@ -10,6 +10,7 @@ import type { OrchestratorPlan } from '../types/orchestrator';
 import type { AppLanguage } from '../types/settings';
 import { LANGUAGES } from '../types/settings';
 import { buildSectionsBlock } from './promptSections';
+import { buildTTSKnowledgeBase } from './ttsPreprocessor';
 
 // ── Personalità distinte per ogni agente ─────────────────────────────
 
@@ -236,7 +237,7 @@ export function buildRichSystemPrompt(
     parts.push(taskContext);
   }
 
-  // 9. Turno forzato
+  // 10. Turno forzato
   if (plan.isForced) {
     const forcedNote = lang === 'it'
       ? '📢 Questo è uno dei primi turni della conversazione. Presenta il tuo punto di vista distintivo e stabilisci la tua posizione sul tema.'
@@ -244,6 +245,13 @@ export function buildRichSystemPrompt(
       ? '📢 This is one of the first turns. Present your distinctive viewpoint and establish your position on the topic.'
       : '📢 Primo turno: stabilisci la tua posizione.';
     parts.push(forcedNote);
+  }
+
+  // 11. Knowledge Base TTS — istruzioni per scrittura voice-friendly
+  if (plan.ttsEnabled) {
+    parts.push('');
+    parts.push('---');
+    parts.push(buildTTSKnowledgeBase(lang));
   }
 
   return parts.join('\n');

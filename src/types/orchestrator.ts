@@ -14,6 +14,7 @@ export interface OrchestratorPlan {
   wordRange: [number, number];
   isForced: boolean;
   language: AppLanguage;
+  ttsEnabled?: boolean;
 }
 
 export interface AgentResponse {
@@ -39,6 +40,7 @@ export interface OrchestratorInput {
   temperature: number;
   maxTokens: number;
   wordRange: [number, number];
+  ttsEnabled?: boolean;
   taskContext?: string | ((agentId: string) => string);  // Contesto task/obiettivo per il prompt
 }
 

@@ -3,6 +3,7 @@ import { getAPIKey, loadSettings } from './storage';
 import { stripHtml, truncate } from './utils';
 import { getLangConfig } from '../types/settings';
 import type { AppSettings } from '../types/settings';
+import { preprocessForTTS } from './ttsPreprocessor';
 
 // ── Stato globale TTS ────────────────────────────────────────────────
 interface TTSJob {
@@ -30,12 +31,15 @@ let currentJobAgentName: string | null = null;
  * Accoda un messaggio TTS. Sintetizza in background e riproduce in ordine.
  */
 export function enqueueTTS(text: string, voiceId: string, agentName: string): void {
-  const cleanText = truncate(stripHtml(text), TTS.maxChars);
-  if (!cleanText.trim()) return;
-
   // Leggi lingua corrente dalle impostazioni salvate
   const settings = loadSettings<Partial<AppSettings>>({});
   const langConfig = getLangConfig(settings.language || 'it');
+
+  // Pipeline di pulizia: HTML → TTS preprocessing → truncate
+  const stripped = stripHtml(text);
+  const preprocessed = preprocessForTTS(stripped, langConfig.bcp47);
+  const cleanText = truncate(preprocessed, TTS.maxChars);
+  if (!cleanText.trim()) return;
 
   const seq = ++currentSeq;
   const job: TTSJob = { seq, text: cleanText, voiceId, agentName, lang: langConfig.bcp47, ready: false };

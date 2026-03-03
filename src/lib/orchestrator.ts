@@ -227,6 +227,7 @@ function buildPlan(
     wordRange,
     isForced: turnIndex < ORCHESTRATOR.forcedConsultationTurns,
     language: input.language || 'it',
+    ttsEnabled: input.ttsEnabled,
   };
 }
 
