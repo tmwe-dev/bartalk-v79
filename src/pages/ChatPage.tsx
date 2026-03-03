@@ -6,6 +6,7 @@ import { PodcastMode } from '../components/Podcast/PodcastMode';
 import { FloatingZoomControl } from '../components/Carousel/FloatingZoomControl';
 import { AudioControlBar } from '../components/Chat/AudioControlBar';
 import { AgentTabs } from '../components/Chat/AgentTabs';
+import { TabMessageView } from '../components/Chat/TabMessageView';
 import { TaskPanel } from '../components/Tasks/TaskPanel';
 import { useConversationContext } from '../context/ConversationContext';
 import { useSettingsContext } from '../context/SettingsContext';
@@ -457,7 +458,20 @@ export function ChatPage() {
 
         {/* Content */}
         <div className="main-content-area">
-          {activeTab === 'chat' && <ChatContainer />}
+          {activeTab === 'chat' && (
+            validAgentMsgs.length > 0 ? (
+              <div className="tab-msg-with-input">
+                <TabMessageView
+                  message={validAgentMsgs[agentTabIndex] || null}
+                  index={agentTabIndex}
+                  total={validAgentMsgs.length}
+                />
+                <InputBox />
+              </div>
+            ) : (
+              <ChatContainer />
+            )
+          )}
 
           {activeTab === 'carousel' && (
             <div className="carousel-with-input">
