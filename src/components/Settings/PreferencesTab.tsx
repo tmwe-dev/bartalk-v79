@@ -1,8 +1,14 @@
+import { useState } from 'react';
 import { useSettingsContext } from '../../context/SettingsContext';
 import { UI } from '../../lib/constants';
 import { LANGUAGES } from '../../types/settings';
 import type { AppLanguage } from '../../types/settings';
 import type { ConversationMode, TurnStrategy } from '../../types/conversation';
+
+// Raggruppa le lingue per categoria
+const PRIMARY = LANGUAGES.filter(l => l.group === 'primary');
+const MAJOR = LANGUAGES.filter(l => l.group === 'major');
+const ELEVENLABS = LANGUAGES.filter(l => l.group === 'elevenlabs' || l.group === 'other');
 
 export function PreferencesTab() {
   const {
@@ -15,6 +21,24 @@ export function PreferencesTab() {
     wordRange, setWordRange,
   } = useSettingsContext();
 
+  const [showMajor, setShowMajor] = useState(false);
+  const [showElevenlabs, setShowElevenlabs] = useState(false);
+  const [langSearch, setLangSearch] = useState('');
+
+  // Controlla se la lingua attiva è in un gruppo non-primary
+  const activeInMajor = MAJOR.some(l => l.value === language);
+  const activeInElevenlabs = ELEVENLABS.some(l => l.value === language);
+
+  // Filtra lingue per ricerca
+  const filterLangs = (langs: typeof LANGUAGES) => {
+    if (!langSearch.trim()) return langs;
+    const q = langSearch.toLowerCase();
+    return langs.filter(l =>
+      l.label.toLowerCase().includes(q) ||
+      l.value.toLowerCase().includes(q)
+    );
+  };
+
   const modes: { value: ConversationMode; label: string; desc: string }[] = [
     { value: 'consultation', label: UI.modConsultation, desc: 'Tutti gli agenti rispondono a ogni messaggio' },
     { value: 'standard', label: UI.modStandard, desc: 'Un agente alla volta, a rotazione' },
@@ -26,24 +50,76 @@ export function PreferencesTab() {
     { value: 'random', label: UI.turnRandom },
   ];
 
+  const renderLangButton = (lang: typeof LANGUAGES[0]) => (
+    <button
+      key={lang.value}
+      className={`lang-btn ${language === lang.value ? 'lang-active' : ''}`}
+      onClick={() => setLanguage(lang.value as AppLanguage)}
+    >
+      <span className="lang-flag">{lang.flag}</span>
+      <span className="lang-name">{lang.label}</span>
+    </button>
+  );
+
   return (
     <div className="tab-content">
 
       {/* ── LINGUA ─────────────────────────────────────── */}
       <div className="field-group">
         <label className="field-label">Lingua risposte</label>
+
+        {/* Lingue principali (sempre visibili) */}
         <div className="language-grid">
-          {LANGUAGES.map(lang => (
-            <button
-              key={lang.value}
-              className={`lang-btn ${language === lang.value ? 'lang-active' : ''}`}
-              onClick={() => setLanguage(lang.value as AppLanguage)}
-            >
-              <span className="lang-flag">{lang.flag}</span>
-              <span className="lang-name">{lang.label}</span>
-            </button>
-          ))}
+          {PRIMARY.map(renderLangButton)}
         </div>
+
+        {/* Lingue Mondiali (espandibile) */}
+        <button
+          className={`lang-group-toggle ${showMajor || activeInMajor ? 'open' : ''}`}
+          onClick={() => setShowMajor(!showMajor)}
+        >
+          <span className="lang-group-icon">{showMajor ? '▾' : '▸'}</span>
+          <span>Lingue Mondiali ({MAJOR.length})</span>
+          {activeInMajor && (
+            <span className="lang-group-active">
+              {MAJOR.find(l => l.value === language)?.flag} {MAJOR.find(l => l.value === language)?.label}
+            </span>
+          )}
+        </button>
+        {(showMajor || activeInMajor) && (
+          <div className="language-grid lang-grid-compact">
+            {filterLangs(MAJOR).map(renderLangButton)}
+          </div>
+        )}
+
+        {/* Lingue ElevenLabs (espandibile) */}
+        <button
+          className={`lang-group-toggle ${showElevenlabs || activeInElevenlabs ? 'open' : ''}`}
+          onClick={() => setShowElevenlabs(!showElevenlabs)}
+        >
+          <span className="lang-group-icon">{showElevenlabs ? '▾' : '▸'}</span>
+          <span>ElevenLabs TTS ({ELEVENLABS.length})</span>
+          {activeInElevenlabs && (
+            <span className="lang-group-active">
+              {ELEVENLABS.find(l => l.value === language)?.flag} {ELEVENLABS.find(l => l.value === language)?.label}
+            </span>
+          )}
+        </button>
+        {(showElevenlabs || activeInElevenlabs) && (
+          <>
+            <input
+              type="text"
+              className="lang-search"
+              placeholder="Cerca lingua..."
+              value={langSearch}
+              onChange={(e) => setLangSearch(e.target.value)}
+            />
+            <div className="language-grid lang-grid-compact">
+              {filterLangs(ELEVENLABS).map(renderLangButton)}
+            </div>
+          </>
+        )}
+
         <p className="field-hint">
           Gli agenti risponderanno nella lingua selezionata.
         </p>

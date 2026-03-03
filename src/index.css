@@ -1868,6 +1868,75 @@ body {
 .lang-flag { font-size: 20px; }
 .lang-name { font-weight: 500; }
 
+/* Griglia compatta per lingue secondarie */
+.lang-grid-compact {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.lang-grid-compact .lang-btn {
+  padding: 6px 8px;
+  font-size: 12px;
+  gap: 5px;
+}
+.lang-grid-compact .lang-flag { font-size: 16px; }
+.lang-grid-compact .lang-name { font-size: 11px; }
+
+/* Toggle gruppo lingue */
+.lang-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 8px;
+  background: rgba(30, 20, 50, 0.3);
+  border: 0.5px solid rgba(139, 92, 246, 0.12);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.lang-group-toggle:hover {
+  background: rgba(139, 92, 246, 0.08);
+  color: var(--text-primary);
+}
+.lang-group-toggle.open {
+  border-color: rgba(139, 92, 246, 0.25);
+  margin-bottom: 6px;
+}
+.lang-group-icon {
+  font-size: 10px;
+  color: var(--text-muted);
+  width: 12px;
+}
+.lang-group-active {
+  margin-left: auto;
+  font-size: 11px;
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+/* Ricerca lingue */
+.lang-search {
+  width: 100%;
+  padding: 7px 10px;
+  margin-bottom: 6px;
+  background: rgba(20, 15, 40, 0.6);
+  border: 0.5px solid rgba(139, 92, 246, 0.15);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.lang-search::placeholder {
+  color: var(--text-muted);
+}
+.lang-search:focus {
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
 /* ── Range/Slider Inputs (Preferences) ─────────────────────────── */
 .range-input {
   width: 100%;
