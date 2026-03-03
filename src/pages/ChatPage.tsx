@@ -300,13 +300,20 @@ export function ChatPage() {
     if (cIdx >= 0) setCarouselIndex(cIdx);
   }, []);
 
-  // ── Sync: nuovo messaggio → salta all'ultimo ──
+  // ── Sync: primo messaggio → mostra subito; nuovi messaggi → resta sul corrente ──
   useEffect(() => {
     const count = validAgentMsgs.length;
     if (count > prevMsgCountRef.current && count > 0) {
-      setAgentTabIndex(count - 1);
-      const slice = getVisibleSlice(messages);
-      if (slice.length > 0) setCarouselIndex(slice.length - 1);
+      if (prevMsgCountRef.current === 0) {
+        // È il primo messaggio della conversazione → mostra subito (index 0)
+        setAgentTabIndex(0);
+        const slice = getVisibleSlice(messages);
+        if (slice.length > 0) setCarouselIndex(0);
+      }
+      // Se ci sono già messaggi visualizzati, NON saltare all'ultimo.
+      // L'avanzamento avviene solo via:
+      // - autorun (TTS end → onAudioEnd)
+      // - click manuale su tab/carousel
     }
     prevMsgCountRef.current = count;
   }, [validAgentMsgs, messages]);
