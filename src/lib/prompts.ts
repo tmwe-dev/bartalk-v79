@@ -111,10 +111,23 @@ const DEBATE_FRAMEWORK: Record<AppLanguage, {
   },
 };
 
+// ── Carica personalità (custom da localStorage o default) ────────────
+
+export function getEffectivePersonality(agentId: string): AgentPersonality | undefined {
+  try {
+    const saved = localStorage.getItem('bartalk_custom_personalities');
+    if (saved) {
+      const custom = JSON.parse(saved);
+      if (custom[agentId]) return custom[agentId];
+    }
+  } catch { /* ignore */ }
+  return AGENT_PERSONALITIES[agentId];
+}
+
 // ── Personalità localizzate per lingua ───────────────────────────────
 
 function getPersonalityBlock(agentId: string, lang: AppLanguage): string {
-  const p = AGENT_PERSONALITIES[agentId];
+  const p = getEffectivePersonality(agentId);
   if (!p) return '';
 
   // Le personalità sono definite in italiano; per altre lingue, aggiungiamo l'istruzione di traduzione
@@ -152,7 +165,8 @@ export function buildRichSystemPrompt(
   const parts: string[] = [];
 
   // 1. Identità
-  parts.push(`# ${agent.name} — ${AGENT_PERSONALITIES[agent.id]?.role || 'Agente AI'}`);
+  const effectivePersonality = getEffectivePersonality(agent.id);
+  parts.push(`# ${agent.name} — ${effectivePersonality?.role || 'Agente AI'}`);
   parts.push(framework.intro);
   parts.push('');
 

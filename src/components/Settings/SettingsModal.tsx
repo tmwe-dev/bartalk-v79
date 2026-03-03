@@ -4,9 +4,11 @@ import { Modal } from '../Common/Modal';
 import { APIKeysTab } from './APIKeysTab';
 import { VoicesTab } from './VoicesTab';
 import { PreferencesTab } from './PreferencesTab';
+import { PromptTab } from './PromptTab';
 
 const TABS = [
   { id: 'keys', label: 'Chiavi API' },
+  { id: 'prompts', label: 'Prompt' },
   { id: 'voices', label: 'Voci' },
   { id: 'prefs', label: 'Preferenze' },
 ] as const;
@@ -32,6 +34,7 @@ export function SettingsModal() {
       </div>
 
       {activeTab === 'keys' && <APIKeysTab />}
+      {activeTab === 'prompts' && <PromptTab />}
       {activeTab === 'voices' && <VoicesTab />}
       {activeTab === 'prefs' && <PreferencesTab />}
     </Modal>
