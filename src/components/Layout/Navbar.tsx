@@ -1,4 +1,5 @@
 import { useUIContext } from '../../context/UIContext';
+import { useAuthContext } from '../../context/AuthContext';
 import { useConversationContext } from '../../context/ConversationContext';
 import { useSettingsContext } from '../../context/SettingsContext';
 import { useTTS } from '../../hooks/useTTS';
@@ -11,6 +12,7 @@ interface NavbarProps {
 
 export function Navbar({ onToggleSidebar, sidebarCollapsed }: NavbarProps) {
   const { toggleSettings, setStudioMode, studioMode } = useUIContext();
+  const { user, authState, isSkipMode, signOut, resumeAuth } = useAuthContext();
   const { newConversation, conversationTitle } = useConversationContext();
   const { ttsEnabled, setTtsEnabled } = useSettingsContext();
   const { stop: stopTTS } = useTTS();
@@ -67,6 +69,25 @@ export function Navbar({ onToggleSidebar, sidebarCollapsed }: NavbarProps) {
         >
           🔧
         </button>
+
+        {/* Auth: mostra email utente o bottone accedi */}
+        {authState === 'authenticated' && user ? (
+          <button
+            className="nav-btn"
+            onClick={signOut}
+            title={`${user.email} — Esci`}
+          >
+            👤
+          </button>
+        ) : isSkipMode ? (
+          <button
+            className="nav-btn"
+            onClick={resumeAuth}
+            title="Accedi con un account"
+          >
+            🔐
+          </button>
+        ) : null}
       </div>
     </nav>
   );

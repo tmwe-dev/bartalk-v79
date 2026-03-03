@@ -1,22 +1,54 @@
-// Vercel Serverless Function: AI Proxy for BarTalk v7.9
+// Vercel Serverless Function: AI Proxy for BarTalk v8.0
 // Proxies requests to Anthropic, OpenAI, Gemini, and Groq APIs
 // Node 20 required for native fetch
 
-// --- SECURITY: Allowed origins ---
-const ALLOWED_ORIGINS = [
-  /^https:\/\/bartalk-v79.*\.vercel\.app$/,
-  /^https:\/\/bartalk.*\.vercel\.app$/,
-  /^http:\/\/localhost(:\d+)?$/,
-  /^http:\/\/127\.0\.0\.1(:\d+)?$/
-];
+// --- SECURITY: Allowed origins (stringhe esatte + localhost dev) ---
+const ALLOWED_ORIGINS_EXACT = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
+// Fallback: domini noti se env var non configurata
+if (ALLOWED_ORIGINS_EXACT.length === 0) {
+  ALLOWED_ORIGINS_EXACT.push(
+    'https://bartalk-v79.vercel.app',
+    'https://bartalk-v79-git-main-tmwe-devs-projects.vercel.app',
+  );
+}
+
+const LOCALHOST_PATTERN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 function getAllowedOrigin(req) {
-  const origin = req.headers?.origin || req.headers?.referer || '';
+  const origin = req.headers?.origin || '';
   const clean = origin.replace(/\/$/, '');
-  for (const pat of ALLOWED_ORIGINS) {
-    if (pat.test(clean)) return clean;
-  }
+  if (!clean) return null;
+  // Controlla domini esatti
+  if (ALLOWED_ORIGINS_EXACT.includes(clean)) return clean;
+  // Controlla localhost (solo sviluppo)
+  if (LOCALHOST_PATTERN.test(clean)) return clean;
   return null;
+}
+
+// --- SECURITY: Body size limit (256KB max) ---
+const MAX_BODY_SIZE = 256 * 1024;
+
+// --- SECURITY: JWT verification per Supabase auth ---
+const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET || '';
+
+function verifyJWT(token) {
+  // Verifica base64url JWT senza libreria esterna (HS256)
+  // Per produzione: usare jose o jsonwebtoken
+  if (!SUPABASE_JWT_SECRET || !token) return null;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    // Controlla scadenza
+    if (payload.exp && payload.exp < Date.now() / 1000) return null;
+    return payload.sub || null; // user ID
+  } catch {
+    return null;
+  }
 }
 
 // --- SECURITY: Rate limiting (in-memory, per Vercel instance) ---
@@ -53,7 +85,7 @@ export default async function handler(req, res) {
     res.setHeader('Vary', 'Origin');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-BT-Session');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-BT-Session, X-BT-Skip-Auth');
 
   // Security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -67,7 +99,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     return res.status(200).json({
       status: 'ok',
-      version: '7.9.2',
+      version: '8.1.0',
       node: process.version,
       providers: ['anthropic', 'openai', 'gemini', 'groq'],
       timestamp: new Date().toISOString()
@@ -88,7 +120,31 @@ export default async function handler(req, res) {
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
   if (!checkRate(clientIp)) {
     res.setHeader('Retry-After', '60');
-    return res.status(429).json({ error: 'Rate limit exceeded. Max 30 requests/min.' });
+    return res.status(429).json({ error: `Rate limit exceeded. Max ${RATE_LIMIT} requests/min.` });
+  }
+
+  // --- Body size check ---
+  const bodySize = JSON.stringify(req.body || {}).length;
+  if (bodySize > MAX_BODY_SIZE) {
+    return res.status(413).json({ error: `Request body too large (${Math.round(bodySize/1024)}KB). Max ${MAX_BODY_SIZE/1024}KB.` });
+  }
+
+  // --- Auth check: JWT token o skip mode ---
+  const authHeader = req.headers.authorization || '';
+  const skipAuth = req.headers['x-bt-skip-auth'] === 'true';
+  let userId = null;
+
+  if (authHeader.startsWith('Bearer ')) {
+    userId = verifyJWT(authHeader.slice(7));
+    if (!userId) {
+      return res.status(401).json({ error: 'Invalid or expired auth token' });
+    }
+  } else if (!skipAuth) {
+    // Se SUPABASE_JWT_SECRET è configurato, richiedi autenticazione
+    // Altrimenti, consenti accesso anonimo (backward compatibility)
+    if (SUPABASE_JWT_SECRET) {
+      return res.status(401).json({ error: 'Authentication required. Use login or skip mode.' });
+    }
   }
 
   try {

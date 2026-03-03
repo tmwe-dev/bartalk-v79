@@ -1,7 +1,15 @@
+/**
+ * BarTalk v8 — ConversationContext
+ * Dual-layer persistence: Supabase DB (autenticato) + localStorage (skip mode).
+ */
+
 import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from 'react';
 import type { Message } from '../types/conversation';
 import { generateId, now, truncate } from '../lib/utils';
+import { useAuthContext } from './AuthContext';
+import { useSettingsContext } from './SettingsContext';
 import * as storage from '../lib/storage';
+import * as dbAPI from '../lib/supabaseAPI';
 import type { ConversationMeta } from '../lib/storage';
 
 interface ConversationContextValue {
@@ -28,6 +36,9 @@ interface ConversationContextValue {
 const ConversationContext = createContext<ConversationContextValue | null>(null);
 
 export function ConversationProvider({ children }: { children: ReactNode }) {
+  const { authState } = useAuthContext();
+  const { workspaceId } = useSettingsContext();
+
   const [conversationId, setConversationId] = useState(() => {
     const saved = storage.getCurrentConversationId();
     return saved || generateId();
@@ -44,30 +55,83 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
   const conversationIdRef = useRef(conversationId);
   conversationIdRef.current = conversationId;
 
-  // Load messages on init
+  // ── Helper: è in modalità DB? ──
+  const isDBMode = authState === 'authenticated' && !!workspaceId;
+
+  // ── Init: carica messaggi dalla fonte corretta ──
   useEffect(() => {
     if (isInitRef.current) return;
     isInitRef.current = true;
-    const savedMessages = storage.loadConversationMessages(conversationId) as Message[];
-    if (savedMessages.length > 0) {
-      setMessages(savedMessages);
-      // Find title from list
-      const meta = conversationList.find(c => c.id === conversationId);
-      if (meta) {
-        setConversationTitle(meta.title);
-        setTurnIndex(meta.turnIndex);
-      }
-    }
-    storage.setCurrentConversationId(conversationId);
-  }, []);
 
-  // Auto-save messages
+    const loadInit = async () => {
+      if (isDBMode) {
+        try {
+          const dbConvs = await dbAPI.loadConversations(workspaceId!);
+          if (dbConvs.length > 0) {
+            const metaList: ConversationMeta[] = dbConvs.map(c => ({
+              id: c.id,
+              title: c.title,
+              turnIndex: c.turn_index,
+              createdAt: c.created_at,
+              updatedAt: c.updated_at,
+              messageCount: 0,
+            }));
+            setConversationList(metaList);
+
+            const firstConv = dbConvs[0];
+            const dbMsgs = await dbAPI.loadMessages(firstConv.id);
+            if (dbMsgs.length > 0) {
+              setConversationId(firstConv.id);
+              setConversationTitle(firstConv.title);
+              setTurnIndex(firstConv.turn_index);
+              setMessages(dbMsgs.map(m => ({
+                id: m.id,
+                conversationId: m.conversation_id,
+                senderType: m.sender_type,
+                senderName: m.agent_name || (m.sender_type === 'human' ? 'Tu' : 'Sistema'),
+                provider: m.provider || undefined,
+                content: m.content,
+                tokensIn: m.tokens_in,
+                tokensOut: m.tokens_out,
+                duration: m.duration_ms,
+                isDemo: m.is_demo,
+                createdAt: m.created_at,
+              })));
+            }
+          }
+        } catch (err) {
+          console.warn('[conversation] DB load fallback to localStorage:', err);
+          loadFromLocalStorage();
+        }
+      } else {
+        loadFromLocalStorage();
+      }
+    };
+
+    const loadFromLocalStorage = () => {
+      const savedMessages = storage.loadConversationMessages(conversationId) as Message[];
+      if (savedMessages.length > 0) {
+        setMessages(savedMessages);
+        const meta = conversationList.find(c => c.id === conversationId);
+        if (meta) {
+          setConversationTitle(meta.title);
+          setTurnIndex(meta.turnIndex);
+        }
+      }
+      storage.setCurrentConversationId(conversationId);
+    };
+
+    loadInit();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Auto-save messaggi ──
   useEffect(() => {
     if (!isInitRef.current) return;
     if (messages.length === 0) return;
+
+    // Salva sempre in localStorage (cache rapida)
     storage.saveConversationMessages(conversationId, messages);
 
-    // Update conversation list metadata
     const firstHuman = messages.find(m => m.senderType === 'human');
     const title = firstHuman ? truncate(firstHuman.content, 50) : 'Nuova conversazione';
     const lastMsg = messages[messages.length - 1];
@@ -96,8 +160,18 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       storage.saveConversationList(newList);
       return newList;
     });
-  }, [messages, conversationId, turnIndex]);
 
+    // Se autenticato, salva anche in DB
+    if (isDBMode) {
+      dbAPI.saveConversation(workspaceId!, {
+        id: conversationId,
+        title,
+        turn_index: turnIndex,
+      }).catch(err => console.warn('[conversation] DB save error:', err));
+    }
+  }, [messages, conversationId, turnIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── addMessage ──
   const addMessage = useCallback((partial: Omit<Message, 'id' | 'createdAt' | 'conversationId'>): Message => {
     const msg: Message = {
       ...partial,
@@ -106,8 +180,25 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       createdAt: now(),
     };
     setMessages(prev => [...prev, msg]);
+
+    // Salva in DB in background
+    if (isDBMode) {
+      dbAPI.saveMessage(conversationIdRef.current, {
+        conversation_id: conversationIdRef.current,
+        sender_type: msg.senderType,
+        agent_name: msg.senderName || null,
+        provider: msg.provider || null,
+        content: msg.content,
+        tokens_in: msg.tokensIn || 0,
+        tokens_out: msg.tokensOut || 0,
+        duration_ms: msg.duration || 0,
+        is_demo: msg.isDemo || false,
+        metadata: {},
+      }).catch(err => console.warn('[conversation] DB message save error:', err));
+    }
+
     return msg;
-  }, []);
+  }, [isDBMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const incrementTurn = useCallback(() => {
     setTurnIndex(prev => prev + 1);
@@ -132,10 +223,34 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     storage.setCurrentConversationId(newId);
   }, []);
 
-  const loadConversation = useCallback((id: string) => {
-    const savedMessages = storage.loadConversationMessages(id) as Message[];
+  const loadConversation = useCallback(async (id: string) => {
+    let loadedMessages: Message[] = [];
+
+    if (isDBMode) {
+      try {
+        const dbMsgs = await dbAPI.loadMessages(id);
+        loadedMessages = dbMsgs.map(m => ({
+          id: m.id,
+          conversationId: m.conversation_id,
+          senderType: m.sender_type,
+          agentName: m.agent_name || undefined,
+          provider: m.provider || undefined,
+          content: m.content,
+          tokensIn: m.tokens_in,
+          tokensOut: m.tokens_out,
+          duration: m.duration_ms,
+          isDemo: m.is_demo,
+          createdAt: m.created_at,
+        }));
+      } catch {
+        loadedMessages = storage.loadConversationMessages(id) as Message[];
+      }
+    } else {
+      loadedMessages = storage.loadConversationMessages(id) as Message[];
+    }
+
     setConversationId(id);
-    setMessages(savedMessages);
+    setMessages(loadedMessages);
     const meta = conversationList.find(c => c.id === id);
     if (meta) {
       setConversationTitle(meta.title);
@@ -146,7 +261,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     setActiveTurnId(null);
     storage.setCurrentConversationId(id);
     setSidebarOpen(false);
-  }, [conversationList]);
+  }, [conversationList, isDBMode]);
 
   const deleteConversation = useCallback((id: string) => {
     storage.deleteConversationData(id);
@@ -155,11 +270,16 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       storage.saveConversationList(newList);
       return newList;
     });
-    // If deleting current conversation, create new
+
+    if (isDBMode) {
+      dbAPI.deleteConversation(id)
+        .catch(err => console.warn('[conversation] DB delete error:', err));
+    }
+
     if (id === conversationId) {
       newConversation();
     }
-  }, [conversationId, newConversation]);
+  }, [conversationId, newConversation, isDBMode]);
 
   const renameConversation = useCallback((id: string, title: string) => {
     setConversationList(prev => {
@@ -170,7 +290,13 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     if (id === conversationId) {
       setConversationTitle(title);
     }
-  }, [conversationId]);
+
+    if (isDBMode) {
+      dbAPI.saveConversation(workspaceId!, {
+        id, title, turn_index: turnIndex,
+      }).catch(err => console.warn('[conversation] DB rename error:', err));
+    }
+  }, [conversationId, isDBMode, workspaceId, turnIndex]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -179,24 +305,11 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
 
   return (
     <ConversationContext.Provider value={{
-      conversationId,
-      conversationTitle,
-      messages,
-      turnIndex,
-      isWaiting,
-      activeTurnId,
-      conversationList,
-      sidebarOpen,
-      addMessage,
-      setWaiting,
-      incrementTurn,
-      newConversation,
-      startTurn,
-      clearMessages,
-      loadConversation,
-      deleteConversation,
-      renameConversation,
-      setSidebarOpen,
+      conversationId, conversationTitle, messages, turnIndex,
+      isWaiting, activeTurnId, conversationList, sidebarOpen,
+      addMessage, setWaiting, incrementTurn, newConversation,
+      startTurn, clearMessages, loadConversation,
+      deleteConversation, renameConversation, setSidebarOpen,
     }}>
       {children}
     </ConversationContext.Provider>

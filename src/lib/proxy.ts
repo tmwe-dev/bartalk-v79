@@ -1,5 +1,6 @@
 import type { ProviderType } from '../types/agents';
 import { PROXY_URL, ORCHESTRATOR } from './constants';
+import { supabase } from './supabase';
 
 export interface ProxyRequest {
   provider: ProviderType;
@@ -28,9 +29,24 @@ export async function callProxy(req: ProxyRequest): Promise<ProxyResponse> {
   const startTime = Date.now();
 
   try {
+    // Costruisci headers con auth token se disponibile
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      } else {
+        // Skip mode: segnala al proxy che non c'è auth
+        headers['X-BT-Skip-Auth'] = 'true';
+      }
+    } else {
+      headers['X-BT-Skip-Auth'] = 'true';
+    }
+
     const res = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         provider: req.provider,
         model: req.model,

@@ -195,8 +195,8 @@ async function processQueue(): Promise<void> {
     detail: { agentName: job.agentName, seq: job.seq },
   }));
 
-  // Processa il prossimo in coda
-  processQueue();
+  // Processa il prossimo in coda (yield per evitare stack overflow in caso di coda lunga)
+  setTimeout(processQueue, 0);
 }
 
 // ── Riproduttori ─────────────────────────────────────────────────────

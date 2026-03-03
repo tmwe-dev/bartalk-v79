@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
+import { AuthProvider } from './context/AuthContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { AgentProvider } from './context/AgentContext';
 import { ConversationProvider } from './context/ConversationContext';
 import { TaskProvider } from './context/TaskContext';
 import { UIProvider, useUIContext } from './context/UIContext';
+import { AuthGate } from './components/Auth/AuthGate';
 import { SettingsModal } from './components/Settings/SettingsModal';
 import { ToastContainer } from './components/Common/Toast';
 import { ChatPage } from './pages/ChatPage';
@@ -41,18 +43,22 @@ function AppContent() {
 
 export default function App() {
   return (
-    <SettingsProvider>
-      <AgentProvider>
-        <ConversationProvider>
-          <TaskProvider>
-            <UIProvider>
-              <AppContent />
-              <SettingsModal />
-              <ToastContainer />
-            </UIProvider>
-          </TaskProvider>
-        </ConversationProvider>
-      </AgentProvider>
-    </SettingsProvider>
+    <AuthProvider>
+      <SettingsProvider>
+        <AgentProvider>
+          <ConversationProvider>
+            <TaskProvider>
+              <UIProvider>
+                <AuthGate>
+                  <AppContent />
+                </AuthGate>
+                <SettingsModal />
+                <ToastContainer />
+              </UIProvider>
+            </TaskProvider>
+          </ConversationProvider>
+        </AgentProvider>
+      </SettingsProvider>
+    </AuthProvider>
   );
 }

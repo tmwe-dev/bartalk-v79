@@ -1,4 +1,5 @@
 import type { APIKeyEntry, VoiceConfig } from '../types/settings';
+import type { Message } from '../types/conversation';
 
 // ── Chiavi localStorage ──────────────────────────────────────────────
 const KEYS = {
@@ -74,11 +75,11 @@ export function saveExcludedAgents(excluded: string[]): void {
 }
 
 // ── Conversazioni ────────────────────────────────────────────────────
-export function loadConversationMessages(conversationId: string) {
-  return getJSON<unknown[]>(`bartalk_messages_${conversationId}`, []);
+export function loadConversationMessages(conversationId: string): Message[] {
+  return getJSON<Message[]>(`bartalk_messages_${conversationId}`, []);
 }
 
-export function saveConversationMessages(conversationId: string, messages: unknown[]): void {
+export function saveConversationMessages(conversationId: string, messages: Message[]): void {
   setJSON(`bartalk_messages_${conversationId}`, messages);
 }
 
