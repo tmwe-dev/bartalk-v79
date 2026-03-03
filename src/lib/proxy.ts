@@ -44,18 +44,25 @@ export async function callProxy(req: ProxyRequest): Promise<ProxyResponse> {
       headers['X-BT-Skip-Auth'] = 'true';
     }
 
+    // Se la chiave è un placeholder del vault (utente autenticato), non inviarla.
+    // Il proxy la leggerà direttamente dal DB server-side.
+    const isVaultPlaceholder = req.apiKey === '••••••••' || !req.apiKey;
+    const bodyPayload: Record<string, unknown> = {
+      provider: req.provider,
+      model: req.model,
+      messages: req.messages,
+      systemPrompt: req.systemPrompt,
+      temperature: req.temperature ?? ORCHESTRATOR.defaultTemperature,
+      maxTokens: req.maxTokens ?? ORCHESTRATOR.maxTokens,
+    };
+    if (!isVaultPlaceholder) {
+      bodyPayload.apiKey = req.apiKey;
+    }
+
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        provider: req.provider,
-        model: req.model,
-        messages: req.messages,
-        systemPrompt: req.systemPrompt,
-        temperature: req.temperature ?? ORCHESTRATOR.defaultTemperature,
-        maxTokens: req.maxTokens ?? ORCHESTRATOR.maxTokens,
-        apiKey: req.apiKey,
-      }),
+      body: JSON.stringify(bodyPayload),
     });
 
     // Leggi il body come testo prima, poi prova a parsare JSON

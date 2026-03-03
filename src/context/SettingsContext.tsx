@@ -9,6 +9,7 @@ import type { ConversationMode, TurnStrategy } from '../types/conversation';
 import { useAuthContext } from './AuthContext';
 import * as storage from '../lib/storage';
 import * as dbAPI from '../lib/supabaseAPI';
+import * as keysAPI from '../lib/keysAPI';
 import { ORCHESTRATOR } from '../lib/constants';
 
 interface SettingsContextValue {
@@ -99,16 +100,33 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           setWordRange(dbSettings.word_range);
         }
 
-        // Carica API keys
-        const dbKeys = await dbAPI.loadAPIKeys(ws.id);
+        // Carica info chiavi dal vault server-side
+        // Il frontend NON riceve mai le chiavi in chiaro — solo i provider salvati.
+        // Il proxy legge le chiavi direttamente dal DB quando serve.
+        const vaultKeys = await keysAPI.listVaultKeys();
         if (cancelled) return;
 
-        if (dbKeys.length > 0) {
-          setApiKeys(dbKeys.map(k => ({
-            provider: k.provider as APIKeyEntry['provider'],
-            apiKey: k.encrypted_key, // TODO: decrypt quando implementiamo encryption
-            model: k.model || undefined,
-          })));
+        if (vaultKeys.length > 0) {
+          // Merge: chiavi vault (marker server-side) + chiavi localStorage (legacy/skip)
+          const localKeys = storage.loadAPIKeys();
+          const mergedKeys: APIKeyEntry[] = [];
+
+          for (const vk of vaultKeys) {
+            // Chiave nel vault: usa placeholder (il proxy la legge dal DB)
+            const localMatch = localKeys.find(lk => lk.provider === vk.provider);
+            mergedKeys.push({
+              provider: vk.provider as APIKeyEntry['provider'],
+              apiKey: localMatch?.apiKey || '••••••••', // placeholder, proxy usa vault
+              model: vk.model || localMatch?.model || undefined,
+            });
+          }
+          // Aggiungi chiavi solo in localStorage (non ancora nel vault)
+          for (const lk of localKeys) {
+            if (!mergedKeys.find(mk => mk.provider === lk.provider)) {
+              mergedKeys.push(lk);
+            }
+          }
+          setApiKeys(mergedKeys);
         }
 
         dbLoadedRef.current = true;
@@ -155,20 +173,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [conversationMode, turnStrategy, ttsEnabled, autoRun, language, temperature, maxTokens, wordRange, authState, workspaceId]);
 
   // ── AUTO-SAVE API keys ──
+  // Le chiavi vengono salvate singolarmente via setAPIKey/removeAPIKey.
+  // L'auto-save qui aggiorna solo localStorage come cache.
   useEffect(() => {
     if (!isInitRef.current) return;
-
-    // Salva sempre in localStorage
     storage.saveAPIKeys(apiKeys);
-
-    // Se autenticato, salva in DB
-    if (authState === 'authenticated' && workspaceId && dbLoadedRef.current) {
-      for (const key of apiKeys) {
-        dbAPI.saveAPIKey(workspaceId, key.provider, key.apiKey, key.model)
-          .catch(err => console.warn('[settings] DB key save error:', err));
-      }
-    }
-  }, [apiKeys, authState, workspaceId]);
+  }, [apiKeys]);
 
   const setAPIKey = useCallback((provider: string, apiKey: string, model?: string) => {
     setApiKeys(prev => {
@@ -178,16 +188,26 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
       return filtered;
     });
-  }, []);
+
+    // Se autenticato, salva nel vault server-side (criptata AES-256-GCM)
+    if (authState === 'authenticated' && apiKey) {
+      keysAPI.saveVaultKey(provider, apiKey, model)
+        .then(res => {
+          if (!res.success) console.warn('[settings] Vault save error:', res.error);
+        })
+        .catch(err => console.warn('[settings] Vault save error:', err));
+    }
+  }, [authState]);
 
   const removeAPIKey = useCallback((provider: string) => {
     setApiKeys(prev => prev.filter(k => k.provider !== provider));
-    // Se autenticato, rimuovi anche da DB
-    if (authState === 'authenticated' && workspaceId) {
-      dbAPI.deleteAPIKey(workspaceId, provider)
-        .catch(err => console.warn('[settings] DB key delete error:', err));
+
+    // Se autenticato, rimuovi dal vault server-side
+    if (authState === 'authenticated') {
+      keysAPI.deleteVaultKey(provider)
+        .catch(err => console.warn('[settings] Vault delete error:', err));
     }
-  }, [authState, workspaceId]);
+  }, [authState]);
 
   const getAPIKeyValue = useCallback((provider: string): string | null => {
     const entry = apiKeys.find(k => k.provider === provider);

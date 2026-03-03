@@ -2,6 +2,52 @@
 // Proxies requests to Anthropic, OpenAI, Gemini, and Groq APIs
 // Node 20 required for native fetch
 
+import { createClient } from '@supabase/supabase-js';
+import { createDecipheriv } from 'node:crypto';
+
+// --- Server-side key decryption ---
+const ENCRYPTION_KEY_HEX = process.env.ENCRYPTION_KEY || '';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+function decryptAPIKey(ciphertext) {
+  if (!ENCRYPTION_KEY_HEX || ENCRYPTION_KEY_HEX.length < 64) return null;
+  try {
+    const key = Buffer.from(ENCRYPTION_KEY_HEX, 'hex');
+    const [ivHex, authTagHex, encryptedHex] = ciphertext.split(':');
+    if (!ivHex || !authTagHex || !encryptedHex) return null;
+    const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivHex, 'hex'));
+    decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
+    return decipher.update(Buffer.from(encryptedHex, 'hex')) + decipher.final('utf8');
+  } catch (e) {
+    console.error('[ai-proxy] Decrypt error:', e.message);
+    return null;
+  }
+}
+
+/** Recupera la chiave API dal vault DB per un utente autenticato */
+async function getKeyFromVault(userId, provider) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return null;
+  try {
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    // Trova workspace dell'utente
+    const { data: ws } = await sb.from('workspaces')
+      .select('id').eq('user_id', userId)
+      .order('created_at', { ascending: true }).limit(1).single();
+    if (!ws) return null;
+    // Trova chiave per provider
+    const { data: keyRow } = await sb.from('api_keys_vault')
+      .select('encrypted_key, model')
+      .eq('workspace_id', ws.id).eq('provider', provider).single();
+    if (!keyRow) return null;
+    const decrypted = decryptAPIKey(keyRow.encrypted_key);
+    return decrypted ? { apiKey: decrypted, model: keyRow.model } : null;
+  } catch (e) {
+    console.warn('[ai-proxy] Vault lookup error:', e.message);
+    return null;
+  }
+}
+
 // --- SECURITY: Allowed origins (stringhe esatte + localhost dev) ---
 const ALLOWED_ORIGINS_EXACT = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
@@ -148,10 +194,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { provider, model, messages, systemPrompt, temperature, maxTokens, apiKey, tools } = req.body;
+    const { provider, model: requestModel, messages, systemPrompt, temperature, maxTokens, apiKey: clientApiKey, tools } = req.body;
 
-    if (!provider || !apiKey) {
-      return res.status(400).json({ error: 'Missing provider or apiKey' });
+    if (!provider) {
+      return res.status(400).json({ error: 'Missing provider' });
+    }
+
+    // ── Risolvi API key: vault DB (autenticato) → client (skip mode) ──
+    let apiKey = clientApiKey;
+    let model = requestModel;
+
+    if (userId && !clientApiKey) {
+      // Utente autenticato senza chiave nel body → cerca nel vault
+      const vaultEntry = await getKeyFromVault(userId, provider);
+      if (vaultEntry) {
+        apiKey = vaultEntry.apiKey;
+        if (!model && vaultEntry.model) model = vaultEntry.model;
+      }
+    }
+
+    if (!apiKey) {
+      return res.status(400).json({ error: 'Missing apiKey. Save your key in Settings or provide it in the request.' });
     }
 
     // Validate API key format (basic sanity check)
