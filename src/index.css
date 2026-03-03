@@ -2260,3 +2260,127 @@ body {
 .prompt-preview-code::-webkit-scrollbar { width: 4px; }
 .prompt-preview-code::-webkit-scrollbar-track { background: transparent; }
 .prompt-preview-code::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.2); border-radius: 4px; }
+
+/* ── Preset personalità rapidi ────────────────────────────────────── */
+
+.prompt-presets {
+  margin-bottom: 16px;
+}
+.prompt-presets-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.prompt-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.prompt-preset-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.prompt-preset-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.prompt-preset-icon {
+  font-size: 1.5rem;
+}
+.prompt-preset-name {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Clone personalità con AI ─────────────────────────────────────── */
+
+.prompt-clone {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: var(--radius-sm);
+}
+.prompt-clone-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.prompt-clone-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.prompt-clone-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+  transition: var(--transition);
+}
+.prompt-clone-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+.prompt-clone-input::placeholder {
+  color: var(--text-muted);
+}
+.prompt-clone-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+.prompt-clone-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.prompt-clone-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.prompt-clone-error {
+  color: var(--danger);
+  font-size: 0.75rem;
+  margin-top: 6px;
+}
+.prompt-clone-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .prompt-presets-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .prompt-clone-row {
+    flex-direction: column;
+  }
+}
