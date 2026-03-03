@@ -11,6 +11,11 @@ import { useSettingsContext } from '../context/SettingsContext';
 import { useAgentContext } from '../context/AgentContext';
 import { useTaskContext } from '../context/TaskContext';
 import { formatTime, truncate } from '../lib/utils';
+import {
+  generateFullConversationSummary,
+  exportConversationAsMarkdown,
+  buildMemoryBlock,
+} from '../lib/memory';
 
 const RadioCarousel3D = lazy(() =>
   import('../components/Carousel/RadioCarousel3D').then(m => ({ default: m.RadioCarousel3D }))
@@ -28,11 +33,37 @@ function getVisibleSlice(messages: { senderType: string }[]) {
 // ── Left Sidebar (permanente, stile v7.x) ────────────────────────────
 function LeftSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const {
-    conversationId, conversationList, loadConversation,
+    conversationId, conversationTitle, messages, conversationList, loadConversation,
     deleteConversation, newConversation,
   } = useConversationContext();
   const { agents, toggleAgent, isAgentEnabled } = useAgentContext();
   const { ttsEnabled, setTtsEnabled } = useSettingsContext();
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryText, setSummaryText] = useState('');
+
+  // Memory stats
+  const memoryStats = messages.length > 0
+    ? buildMemoryBlock(messages, conversationId).stats
+    : null;
+
+  const handleSummary = async () => {
+    setSummaryLoading(true);
+    setSummaryText('');
+    const result = await generateFullConversationSummary(messages);
+    setSummaryText(result || 'Impossibile generare il riassunto. Verifica le chiavi API.');
+    setSummaryLoading(false);
+  };
+
+  const handleExport = () => {
+    const md = exportConversationAsMarkdown(messages, conversationTitle);
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bartalk-${conversationTitle.substring(0, 30).replace(/\s+/g, '-')}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const sorted = [...conversationList].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -127,6 +158,64 @@ function LeftSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: ()
           </span>
         </label>
       </div>
+
+      {/* Memory Stats */}
+      {memoryStats && memoryStats.totalMessages > 0 && (
+        <div className="lsb-section lsb-memory">
+          <div className="lsb-section-title">Memoria</div>
+          <div className="lsb-memory-stats">
+            <div className="lsb-memory-row">
+              <span className="lsb-memory-dot lsb-dot-l1" />
+              <span>Full: {memoryStats.level1Count} msg</span>
+            </div>
+            <div className="lsb-memory-row">
+              <span className="lsb-memory-dot lsb-dot-l2" />
+              <span>Condensato: {memoryStats.level2Count} msg</span>
+            </div>
+            {memoryStats.level3Summarized > 0 && (
+              <div className="lsb-memory-row">
+                <span className="lsb-memory-dot lsb-dot-l3" />
+                <span>Riassunto: {memoryStats.level3Summarized} msg</span>
+              </div>
+            )}
+            <div className="lsb-memory-row lsb-memory-tokens">
+              ~{memoryStats.estimatedTokens.toLocaleString()} token stimati
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export / Summary */}
+      {messages.length > 2 && (
+        <div className="lsb-section lsb-export">
+          <div className="lsb-section-title">Strumenti</div>
+          <button className="lsb-tool-btn" onClick={handleSummary} disabled={summaryLoading}>
+            {summaryLoading ? '⏳ Generando...' : '📝 Riassunto AI'}
+          </button>
+          <button className="lsb-tool-btn" onClick={handleExport}>
+            📥 Esporta Markdown
+          </button>
+        </div>
+      )}
+
+      {/* Summary result */}
+      {summaryText && (
+        <div className="lsb-summary-result">
+          <div className="lsb-summary-header">
+            <span>Riassunto</span>
+            <button className="lsb-summary-close" onClick={() => setSummaryText('')}>✕</button>
+          </div>
+          <div className="lsb-summary-text">{summaryText}</div>
+          <button
+            className="lsb-tool-btn"
+            onClick={() => {
+              navigator.clipboard.writeText(summaryText);
+            }}
+          >
+            📋 Copia
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

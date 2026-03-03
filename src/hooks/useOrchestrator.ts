@@ -70,7 +70,7 @@ export function useOrchestrator() {
           temperature,
           maxTokens,
           wordRange,
-          taskContext: getTaskPromptContext(),
+          taskContext: (agentId: string) => getTaskPromptContext(agentId),
         },
         // Callback: ogni risposta agente arriva in tempo reale
         (response: AgentResponse) => {

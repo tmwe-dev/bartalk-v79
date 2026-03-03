@@ -12,17 +12,27 @@ import { ORCHESTRATOR, DEFAULT_MODELS } from './constants';
 import { analyzeConvergence, getConvergenceInstruction } from './convergence';
 import { generateId } from './utils';
 import { buildRichSystemPrompt } from './prompts';
+import { buildMemoryMessages, shouldTriggerSummary, generateAutoSummary } from './memory';
+
+// ── Keywords per skip logic (consenso) ───────────────────────────────
+const SKIP_KEYWORDS = [
+  'concordo', 'sono d\'accordo', 'esatto', 'perfetto', 'giusto', 'condivido',
+  'agree', 'exactly', 'correct', 'right', 'indeed',
+  'de acuerdo', 'exactamente',
+  'd\'accord', 'exactement',
+];
 
 /**
  * Motore principale dell'orchestratore.
  * Coordina le chiamate sequenziali ai 4 agenti AI.
+ * Con: memoria a 3 livelli, skip logic, riassunto automatico.
  */
 export async function orchestrate(
   input: OrchestratorInput,
   onAgentResponse?: (response: AgentResponse) => void,
 ): Promise<OrchestratorResult> {
   const turnId = generateId();
-  const { userMessage, messages, turnIndex, enabledAgents } = input;
+  const { userMessage, messages, turnIndex, enabledAgents, conversationId } = input;
 
   if (enabledAgents.length === 0) {
     return {
@@ -33,6 +43,17 @@ export async function orchestrate(
     };
   }
 
+  // ── Riassunto automatico (background, non blocca) ─────────────────
+  if (shouldTriggerSummary(messages, conversationId)) {
+    generateAutoSummary(messages, conversationId).then(summary => {
+      if (summary) {
+        console.log(`[orchestrator] Riassunto automatico generato: ${summary.messageRange[0]}-${summary.messageRange[1]}`);
+      }
+    }).catch(err => {
+      console.warn('[orchestrator] Errore riassunto auto:', err);
+    });
+  }
+
   // ── Determina modalità ───────────────────────────────────────────
   const isForced = turnIndex < ORCHESTRATOR.forcedConsultationTurns;
   const mode = isForced ? 'consultation' : input.mode;
@@ -41,7 +62,7 @@ export async function orchestrate(
   const convergence = analyzeConvergence(messages, input.language);
   const convergenceInstruction = getConvergenceInstruction(convergence, input.language);
 
-  // ── Seleziona agenti da far parlare ──────────────────────────────
+  // ── Seleziona agenti da far parlare (con skip logic) ──────────────
   const plan = buildPlan(mode, input.turnStrategy, enabledAgents, turnIndex, input);
 
   // ── Esegui chiamate sequenziali ──────────────────────────────────
@@ -49,6 +70,17 @@ export async function orchestrate(
   const previousResponses: { name: string; content: string }[] = [];
 
   for (const agent of plan.agentsToSpeak) {
+    // ── Skip logic: salta se c'è consenso e non ci sono domande ────
+    if (mode === 'standard' && shouldSkipAgent(messages, userMessage, turnIndex)) {
+      console.log(`[orchestrator] Skip ${agent.name} (consenso rilevato)`);
+      continue;
+    }
+
+    // Risolvi task context per agente specifico
+    const resolvedTaskContext = typeof input.taskContext === 'function'
+      ? input.taskContext(agent.id)
+      : input.taskContext;
+
     try {
       const response = await callAgent(
         agent,
@@ -57,7 +89,8 @@ export async function orchestrate(
         previousResponses,
         convergenceInstruction,
         plan,
-        input.taskContext,
+        resolvedTaskContext,
+        conversationId,
       );
 
       if (response.content) {
@@ -78,7 +111,35 @@ export async function orchestrate(
   };
 }
 
+// ── Skip Logic (da TMwEngine) ────────────────────────────────────────
+
+function shouldSkipAgent(
+  messages: Message[],
+  userMessage: string,
+  turnIndex: number,
+): boolean {
+  // Non skippare nei primi turni o se c'è una domanda
+  if (turnIndex < 4) return false;
+  if (userMessage.includes('?')) return false;
+
+  const recent = messages.filter(m => m.senderType === 'assistant').slice(-3);
+  if (recent.length < 3) return false;
+
+  // Conta quanti degli ultimi 3 messaggi contengono keyword di consenso
+  let agreementCount = 0;
+  for (const msg of recent) {
+    const lower = msg.content.toLowerCase();
+    if (SKIP_KEYWORDS.some(k => lower.includes(k))) {
+      agreementCount++;
+    }
+  }
+
+  // Skip se almeno 2 su 3 sono in accordo
+  return agreementCount >= 2;
+}
+
 // ── Costruisce il piano ──────────────────────────────────────────────
+
 function buildPlan(
   mode: string,
   turnStrategy: string,
@@ -89,10 +150,25 @@ function buildPlan(
   let agentsToSpeak: AgentConfig[];
 
   if (mode === 'standard') {
-    const idx = turnStrategy === 'random'
-      ? Math.floor(Math.random() * enabledAgents.length)
-      : turnIndex % enabledAgents.length;
-    agentsToSpeak = [enabledAgents[idx]];
+    if (turnStrategy === 'smart') {
+      // Smart: 30% random, 70% sequenziale (come TMwEngine)
+      const shouldRandomize = Math.random() < 0.3;
+      if (shouldRandomize && enabledAgents.length > 1) {
+        // Random, escludendo l'ultimo che ha parlato
+        const lastIdx = turnIndex > 0 ? (turnIndex - 1) % enabledAgents.length : -1;
+        const available = enabledAgents.filter((_, i) => i !== lastIdx);
+        const picked = available[Math.floor(Math.random() * available.length)];
+        agentsToSpeak = [picked];
+      } else {
+        agentsToSpeak = [enabledAgents[turnIndex % enabledAgents.length]];
+      }
+    } else if (turnStrategy === 'random') {
+      const idx = Math.floor(Math.random() * enabledAgents.length);
+      agentsToSpeak = [enabledAgents[idx]];
+    } else {
+      // round_robin
+      agentsToSpeak = [enabledAgents[turnIndex % enabledAgents.length]];
+    }
   } else {
     agentsToSpeak = [...enabledAgents];
   }
@@ -123,6 +199,7 @@ function buildPlan(
 }
 
 // ── Chiama un singolo agente ─────────────────────────────────────────
+
 async function callAgent(
   agent: AgentConfig,
   userMessage: string,
@@ -131,6 +208,7 @@ async function callAgent(
   convergenceInstruction: string,
   plan: OrchestratorPlan,
   taskContext?: string,
+  conversationId?: string,
 ): Promise<AgentResponse> {
   const startTime = Date.now();
   const apiKey = getAPIKey(agent.provider);
@@ -149,7 +227,11 @@ async function callAgent(
   }
 
   const systemPrompt = buildRichSystemPrompt(agent, previousResponses, convergenceInstruction, plan, taskContext);
-  const apiMessages = buildMessages(userMessage, history, plan.mode);
+
+  // ── Memoria a 3 livelli ───────────────────────────────────────────
+  const apiMessages = conversationId
+    ? buildMemoryMessages(userMessage, history, conversationId)
+    : buildMessagesLegacy(userMessage, history, plan.mode);
 
   const result = await callProxy({
     provider: agent.provider,
@@ -185,8 +267,9 @@ async function callAgent(
   };
 }
 
-// ── Messaggi per l'API (con history slice per modalità) ──────────────
-function buildMessages(
+// ── Fallback: messaggi senza memoria (legacy) ────────────────────────
+
+function buildMessagesLegacy(
   userMessage: string,
   history: Message[],
   mode?: string,

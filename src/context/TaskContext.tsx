@@ -126,18 +126,55 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     save(null);
   }, []);
 
-  const getTaskPromptContext = useCallback((): string => {
+  // getTaskPromptContext ora accetta agentId per differenziare il comportamento
+  const getTaskPromptContext = useCallback((agentId?: string): string => {
     if (!activeTask || !activeTask.isActive) return '';
 
     const template = DELIVERABLE_TEMPLATES[activeTask.type];
     const phaseInstruction = template.phaseInstructions[activeTask.currentPhase] || '';
+    const isLeadAgent = agentId && activeTask.leadAgent === agentId;
+    const phase = activeTask.currentPhase;
 
     const parts: string[] = [];
     parts.push(`\n---\n🎯 OBIETTIVO ATTIVO: ${activeTask.title}`);
     parts.push(`Tipo: ${template.label} (${template.icon})`);
     parts.push(`Descrizione: ${activeTask.description}`);
-    parts.push(`Fase corrente: ${activeTask.currentPhase.toUpperCase()}`);
+    parts.push(`Fase corrente: ${phase.toUpperCase()}`);
     parts.push(`Istruzione fase: ${phaseInstruction}`);
+
+    // ── Istruzioni specifiche per fase e ruolo ───────────────────
+    if (phase === 'analysis') {
+      parts.push('\nCOMPORTAMENTO FASE ANALISI:');
+      parts.push('- Analizza in profondità il tema/dati forniti');
+      parts.push('- Identifica pattern, fatti chiave, criticità');
+      parts.push('- Non trarre conclusioni definitive, apri discussione');
+    } else if (phase === 'debate') {
+      parts.push('\nCOMPORTAMENTO FASE DIBATTITO:');
+      parts.push('- Esprimi una posizione chiara e distinta dagli altri agenti');
+      parts.push('- Argomenta con evidenze');
+      parts.push('- Sfida le posizioni degli altri quando hai argomentazioni migliori');
+      parts.push('- Cerca punti di forza e debolezza in ogni proposta');
+    } else if (phase === 'synthesis') {
+      parts.push('\nCOMPORTAMENTO FASE SINTESI:');
+      parts.push('- Cerca convergenza e punti di accordo');
+      parts.push('- Proponi una sintesi che integri le migliori idee emerse');
+      parts.push('- Identifica le conclusioni condivise e le questioni aperte');
+    } else if (phase === 'deliverable') {
+      if (isLeadAgent) {
+        parts.push('\n🖊️ SEI IL REDATTORE PRINCIPALE DEL DELIVERABLE.');
+        parts.push('Devi produrre il deliverable finale completo basandoti su:');
+        parts.push('- Tutte le analisi e discussioni precedenti');
+        parts.push('- I punti di accordo raggiunti in fase di sintesi');
+        parts.push('- I file allegati forniti');
+        parts.push(`Il formato richiesto è: ${template.outputFormat}`);
+        parts.push('Produci un output COMPLETO, strutturato e professionale.');
+      } else {
+        parts.push('\nCOMPORTAMENTO FASE DELIVERABLE:');
+        parts.push('- Supporta il redattore con integrazioni, correzioni e suggerimenti');
+        parts.push('- Verifica la completezza e accuratezza del deliverable');
+        parts.push('- Proponi miglioramenti specifici se necessario');
+      }
+    }
 
     if (activeTask.attachedFiles.length > 0) {
       parts.push('\nFILE ALLEGATI:');
@@ -145,10 +182,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         const preview = f.content.length > 800 ? f.content.substring(0, 800) + '...' : f.content;
         parts.push(`--- ${f.name} (${f.type}) ---\n${preview}`);
       }
-    }
-
-    if (activeTask.leadAgent) {
-      parts.push(`\nAGENTE REDATTORE: Questo agente è il redattore principale del deliverable.`);
     }
 
     parts.push(`\nIMPORTANTE: Ogni tua risposta deve contribuire all'obiettivo "${activeTask.title}". Segui le istruzioni della fase corrente.`);

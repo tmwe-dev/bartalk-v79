@@ -63,5 +63,5 @@ export interface TaskContextValue {
   setLeadAgent: (agentId: string) => void;
   setDeliverableContent: (content: string) => void;
   clearTask: () => void;
-  getTaskPromptContext: () => string;
+  getTaskPromptContext: (agentId?: string) => string;
 }
