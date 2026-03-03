@@ -16,10 +16,42 @@ import { buildMemoryMessages, shouldTriggerSummary, generateAutoSummary } from '
 
 // ── Keywords per skip logic (consenso) ───────────────────────────────
 const SKIP_KEYWORDS = [
+  // Italian
   'concordo', 'sono d\'accordo', 'esatto', 'perfetto', 'giusto', 'condivido',
-  'agree', 'exactly', 'correct', 'right', 'indeed',
-  'de acuerdo', 'exactamente',
-  'd\'accord', 'exactement',
+  // English
+  'agree', 'exactly', 'correct', 'right', 'indeed', 'absolutely',
+  // Spanish
+  'de acuerdo', 'exactamente', 'correcto', 'coincido',
+  // French
+  'd\'accord', 'exactement', 'tout à fait', 'je confirme',
+  // German
+  'einverstanden', 'genau', 'stimme zu', 'richtig',
+  // Portuguese
+  'concordo', 'exatamente', 'de acordo', 'correto',
+  // Chinese
+  '同意', '没错', '正确', '完全同意',
+  // Japanese
+  'その通り', '正しい', '賛成', 'おっしゃる通り',
+  // Korean
+  '동의', '맞습니다', '정확합니다', '찬성합니다',
+  // Thai
+  'เห็นด้วย', 'ถูกต้อง', 'ใช่เลย',
+  // Arabic
+  'أوافق', 'بالضبط', 'صحيح', 'تماماً',
+  // Hindi
+  'सहमत', 'बिल्कुल', 'सही',
+  // Russian
+  'согласен', 'именно', 'верно', 'правильно',
+  // Turkish
+  'katılıyorum', 'kesinlikle', 'doğru', 'aynen',
+  // Vietnamese
+  'đồng ý', 'chính xác', 'đúng vậy',
+  // Polish
+  'zgadzam się', 'dokładnie', 'słusznie', 'racja',
+  // Dutch
+  'eens', 'precies', 'juist', 'akkoord',
+  // Indonesian
+  'setuju', 'tepat', 'benar', 'betul',
 ];
 
 /**

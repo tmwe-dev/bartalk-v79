@@ -91,17 +91,18 @@ body {
   height: 100vh;
   background: linear-gradient(180deg, rgba(15, 10, 30, 0.97) 0%, rgba(20, 12, 40, 0.95) 50%, rgba(12, 8, 25, 0.98) 100%);
   backdrop-filter: blur(16px);
-  border-right: 1px solid rgba(139, 92, 246, 0.15);
+  border-right: 0.5px solid rgba(139, 92, 246, 0.1);
   overflow: hidden;
-  box-shadow: 2px 0 24px rgba(139, 92, 246, 0.06);
+  overflow-y: auto;
+  box-shadow: 2px 0 20px rgba(139, 92, 246, 0.04);
 }
 
 .lsb-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 18px;
-  border-bottom: 1px solid rgba(139, 92, 246, 0.12);
+  padding: 14px 18px;
+  border-bottom: 0.5px solid rgba(139, 92, 246, 0.08);
 }
 
 .lsb-brand {
@@ -138,11 +139,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 12px 14px;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  border-radius: 10px;
+  margin: 10px 14px;
+  padding: 9px 16px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+  border: 0.5px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
   color: #c4b5fd;
   font-size: 13px;
   font-weight: 600;
@@ -151,10 +152,10 @@ body {
 }
 
 .lsb-new-chat:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(139, 92, 246, 0.3));
-  border-color: rgba(139, 92, 246, 0.5);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
+  border-color: rgba(139, 92, 246, 0.35);
   color: #e9e5ff;
-  box-shadow: 0 0 16px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.1);
   transform: translateY(-1px);
 }
 
@@ -162,13 +163,15 @@ body {
   display: flex;
   flex-direction: column;
   padding: 0 14px;
-  margin-top: 8px;
+  margin-top: 6px;
   min-height: 0;
+  flex-shrink: 0;
 }
 
 .lsb-section:first-of-type {
   flex: 1;
   overflow: hidden;
+  flex-shrink: 1;
 }
 
 .lsb-section-title {
@@ -203,22 +206,20 @@ body {
 }
 
 .lsb-conv-item {
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 1px solid transparent;
+  border: 0.5px solid transparent;
 }
 
 .lsb-conv-item:hover {
-  background: rgba(139, 92, 246, 0.06);
-  border-color: rgba(139, 92, 246, 0.1);
+  background: rgba(139, 92, 246, 0.05);
 }
 
 .lsb-conv-item.active {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.25);
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.08);
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.15);
 }
 
 .lsb-conv-header {
@@ -274,7 +275,7 @@ body {
 .lsb-agent-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   padding-bottom: 8px;
 }
 
@@ -282,39 +283,43 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.25s ease;
-  border: 1px solid transparent;
-  background: rgba(30, 20, 50, 0.4);
+  border: none;
+  background: transparent;
 }
 
 .lsb-agent:hover {
-  background: rgba(30, 20, 50, 0.7);
-  transform: translateX(2px);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .lsb-agent.enabled {
-  border-color: var(--agent-color, var(--accent));
-  box-shadow: 0 0 10px color-mix(in srgb, var(--agent-color, var(--accent)) 20%, transparent);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .lsb-agent.disabled {
-  opacity: 0.4;
+  opacity: 0.35;
 }
 
 .lsb-agent-avatar {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid transparent;
-  transition: border-color 0.2s;
+  border: none;
+  background: transparent;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--agent-color, var(--accent)) 40%, transparent));
+  transition: filter 0.3s;
 }
 
 .lsb-agent.enabled .lsb-agent-avatar {
-  border-color: var(--agent-color, var(--accent));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--agent-color, var(--accent)) 50%, transparent));
+}
+
+.lsb-agent.disabled .lsb-agent-avatar {
+  filter: grayscale(0.6) opacity(0.6);
 }
 
 .lsb-agent-info {
@@ -325,44 +330,46 @@ body {
 }
 
 .lsb-agent-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .lsb-agent-provider {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-muted);
   text-transform: capitalize;
 }
 
 .lsb-agent-toggle {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: bold;
   flex-shrink: 0;
   transition: all 0.2s;
 }
 
 .lsb-agent-toggle.on {
-  background: var(--success);
+  background: color-mix(in srgb, var(--agent-color, var(--success)) 60%, transparent);
   color: white;
 }
 
 .lsb-agent-toggle.off {
-  background: rgba(60, 60, 80, 0.5);
+  background: rgba(60, 60, 80, 0.3);
   color: var(--text-muted);
 }
 
 /* Quick Controls */
 .lsb-controls {
-  padding: 10px 14px;
-  border-top: 1px solid rgba(139, 92, 246, 0.1);
+  padding: 8px 14px;
+  margin-top: 4px;
+  border-top: 0.5px solid rgba(139, 92, 246, 0.08);
   flex-shrink: 0;
 }
 
@@ -2416,7 +2423,7 @@ body {
   font-style: italic;
 }
 .lsb-export {
-  border-top: 1px solid var(--border);
+  border-top: 0.5px solid rgba(139, 92, 246, 0.08);
   padding-top: 8px;
 }
 .lsb-tool-btn {
@@ -2424,8 +2431,8 @@ body {
   width: 100%;
   padding: 7px 12px;
   margin-bottom: 4px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid rgba(139, 92, 246, 0.1);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   font-size: 0.75rem;
@@ -2445,8 +2452,8 @@ body {
 .lsb-summary-result {
   margin: 8px 12px;
   padding: 10px;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+  border: 0.5px solid rgba(139, 92, 246, 0.1);
   border-radius: var(--radius-sm);
   max-height: 300px;
   overflow-y: auto;

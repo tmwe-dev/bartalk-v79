@@ -6,29 +6,54 @@ import type { AppLanguage } from '../types/settings';
  * BarTalk v8 — Sistema di Convergenza Avanzato
  *
  * Analizza la convergenza della conversazione con:
- * - Keywords multilingua (6 lingue)
+ * - Keywords multilingua (primarie + major + universali)
  * - Similarity migliorata con stop words filtering
  * - Soglie ottimizzate
+ * - Fallback intelligente per lingue non primarie
  */
 
-// ── Keywords per lingua ──────────────────────────────────────────────
+// ── Keywords per lingua (primarie + major) ──────────────────────────
 
-const AGREEMENT_KEYWORDS: Record<AppLanguage, string[]> = {
+const AGREEMENT_KEYWORDS: Partial<Record<AppLanguage, string[]>> = {
   it: ['concordo', 'esattamente', 'sono d\'accordo', 'hai ragione', 'confermo', 'condivido', 'giusto', 'perfettamente', 'assolutamente'],
   en: ['agree', 'exactly', 'correct', 'right', 'indeed', 'absolutely', 'precisely', 'well said', 'I share'],
   es: ['de acuerdo', 'exactamente', 'correcto', 'coincido', 'comparto', 'precisamente', 'efectivamente'],
   fr: ['d\'accord', 'exactement', 'tout à fait', 'je confirme', 'effectivement', 'précisément', 'je partage'],
   de: ['einverstanden', 'genau', 'stimme zu', 'richtig', 'absolut', 'in der tat', 'teile die meinung'],
   pt: ['concordo', 'exatamente', 'de acordo', 'correto', 'compartilho', 'precisamente', 'certamente'],
+  zh: ['同意', '对的', '没错', '正确', '赞同', '完全同意', '说得对'],
+  ja: ['同意', 'その通り', '正しい', '賛成', 'おっしゃる通り', '確かに'],
+  ko: ['동의', '맞습니다', '정확합니다', '그렇습니다', '찬성합니다'],
+  th: ['เห็นด้วย', 'ถูกต้อง', 'เห็นพ้อง', 'ใช่เลย'],
+  ar: ['أوافق', 'بالضبط', 'صحيح', 'تماماً', 'أتفق'],
+  hi: ['सहमत', 'बिल्कुल', 'सही', 'मैं सहमत हूँ'],
+  ru: ['согласен', 'именно', 'верно', 'правильно', 'абсолютно', 'разделяю'],
+  tr: ['katılıyorum', 'kesinlikle', 'doğru', 'aynen', 'haklısın'],
+  vi: ['đồng ý', 'chính xác', 'đúng vậy', 'hoàn toàn'],
+  pl: ['zgadzam się', 'dokładnie', 'słusznie', 'racja', 'podzielam'],
+  nl: ['eens', 'precies', 'juist', 'akkoord', 'inderdaad'],
+  id: ['setuju', 'tepat', 'benar', 'betul'],
 };
 
-const DIVERGENCE_KEYWORDS: Record<AppLanguage, string[]> = {
+const DIVERGENCE_KEYWORDS: Partial<Record<AppLanguage, string[]>> = {
   it: ['tuttavia', 'al contrario', 'non sono d\'accordo', 'diversamente', 'invece', 'obietto', 'ma', 'però', 'dissento', 'non credo'],
   en: ['however', 'disagree', 'on the contrary', 'actually', 'but', 'rather', 'I object', 'differ', 'not quite', 'I don\'t think'],
   es: ['sin embargo', 'al contrario', 'no estoy de acuerdo', 'en cambio', 'pero', 'disiento', 'difiero', 'no creo'],
   fr: ['cependant', 'au contraire', 'je ne suis pas d\'accord', 'en revanche', 'mais', 'toutefois', 'je m\'oppose', 'je ne pense pas'],
   de: ['jedoch', 'im gegenteil', 'nicht einverstanden', 'andererseits', 'aber', 'allerdings', 'widerspreche', 'glaube nicht'],
   pt: ['no entanto', 'ao contrário', 'discordo', 'em contrapartida', 'mas', 'porém', 'não concordo', 'não acredito'],
+  zh: ['但是', '然而', '不同意', '反对', '相反', '不对'],
+  ja: ['しかし', '違います', '反対', '同意しません', '異なります'],
+  ko: ['하지만', '반대합니다', '동의하지 않습니다', '그렇지 않습니다'],
+  th: ['แต่', 'อย่างไรก็ตาม', 'ไม่เห็นด้วย', 'ตรงกันข้าม'],
+  ar: ['لكن', 'على العكس', 'لا أوافق', 'أعترض'],
+  hi: ['लेकिन', 'हालांकि', 'असहमत', 'मैं सहमत नहीं'],
+  ru: ['однако', 'не согласен', 'наоборот', 'но', 'возражаю'],
+  tr: ['ancak', 'aksine', 'katılmıyorum', 'ama', 'fakat'],
+  vi: ['tuy nhiên', 'ngược lại', 'không đồng ý', 'nhưng'],
+  pl: ['jednak', 'nie zgadzam się', 'wręcz przeciwnie', 'ale'],
+  nl: ['echter', 'niet eens', 'integendeel', 'maar'],
+  id: ['namun', 'tidak setuju', 'sebaliknya', 'tetapi'],
 };
 
 const STOP_WORDS = new Set([
@@ -62,30 +87,29 @@ function isStagnant(contents: string[]): boolean {
     const similarity = calculateSimilarity(contents[i - 1], contents[i]);
     if (similarity > 0.55) stagnantPairs++;
   }
-  // Stagnazione se almeno 2 coppie consecutive sono troppo simili
   return stagnantPairs >= 2;
 }
 
-function isAgreement(contents: string[], lang?: AppLanguage): boolean {
-  const allKeywords = lang
-    ? AGREEMENT_KEYWORDS[lang] || AGREEMENT_KEYWORDS.it
-    : Object.values(AGREEMENT_KEYWORDS).flat();
+function getKeywords(map: Partial<Record<AppLanguage, string[]>>, lang?: AppLanguage): string[] {
+  if (lang && map[lang]) return map[lang]!;
+  // Fallback: usa tutte le lingue disponibili per massima copertura
+  return Object.values(map).flat() as string[];
+}
 
+function isAgreement(contents: string[], lang?: AppLanguage): boolean {
+  const keywords = getKeywords(AGREEMENT_KEYWORDS, lang);
   let agreementCount = 0;
   for (const content of contents) {
-    if (allKeywords.some(w => content.includes(w))) agreementCount++;
+    if (keywords.some(w => content.includes(w))) agreementCount++;
   }
   return agreementCount >= 2;
 }
 
 function isDivergence(contents: string[], lang?: AppLanguage): boolean {
-  const allKeywords = lang
-    ? DIVERGENCE_KEYWORDS[lang] || DIVERGENCE_KEYWORDS.it
-    : Object.values(DIVERGENCE_KEYWORDS).flat();
-
+  const keywords = getKeywords(DIVERGENCE_KEYWORDS, lang);
   let divergenceCount = 0;
   for (const content of contents) {
-    if (allKeywords.some(w => content.includes(w))) divergenceCount++;
+    if (keywords.some(w => content.includes(w))) divergenceCount++;
   }
   return divergenceCount >= 2;
 }
@@ -108,7 +132,7 @@ function calculateSimilarity(a: string, b: string): number {
 
 // ── Istruzioni convergenza multilingua ───────────────────────────────
 
-const CONVERGENCE_INSTRUCTIONS: Record<AppLanguage, Record<ConvergenceState, string>> = {
+const CONVERGENCE_INSTRUCTIONS: Partial<Record<AppLanguage, Record<ConvergenceState, string>>> = {
   it: {
     stagnation: '\n⚠️ LA CONVERSAZIONE È STAGNANTE. Porta un punto di vista COMPLETAMENTE NUOVO o proponi una direzione inaspettata. Cambia prospettiva, usa un\'analogia diversa, o sfida un presupposto condiviso.',
     agreement: '\nGli agenti stanno convergendo. Approfondisci un aspetto specifico che nessuno ha ancora esplorato, oppure identifica possibili criticità o eccezioni alla posizione condivisa.',
@@ -149,6 +173,6 @@ const CONVERGENCE_INSTRUCTIONS: Record<AppLanguage, Record<ConvergenceState, str
 
 export function getConvergenceInstruction(state: ConvergenceState, lang?: AppLanguage): string {
   const langKey = lang || 'it';
-  const instructions = CONVERGENCE_INSTRUCTIONS[langKey] || CONVERGENCE_INSTRUCTIONS.it;
-  return instructions[state] || '';
+  const instructions = CONVERGENCE_INSTRUCTIONS[langKey] || CONVERGENCE_INSTRUCTIONS.en || CONVERGENCE_INSTRUCTIONS.it!;
+  return instructions?.[state] || '';
 }

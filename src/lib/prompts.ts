@@ -54,14 +54,17 @@ export const AGENT_PERSONALITIES: Record<string, AgentPersonality> = {
 
 // ── Framework di dibattito ───────────────────────────────────────────
 
-const DEBATE_FRAMEWORK: Record<AppLanguage, {
+type DebateFrameworkEntry = {
   intro: string;
   rules: string;
   consultation: string;
   buildOn: string;
   disagree: string;
   conclude: string;
-}> = {
+};
+
+// Framework tradotto per le 6 lingue primarie; tutte le altre usano fallback English
+const DEBATE_FRAMEWORK: Partial<Record<AppLanguage, DebateFrameworkEntry>> = {
   it: {
     intro: 'Sei in una conversazione a più voci nel BarTalk RadioChat. Ogni agente ha un ruolo unico.',
     rules: 'REGOLE DEL DIBATTITO:\n• Ascolta attentamente gli altri prima di rispondere\n• Aggiungi VALORE NUOVO — mai ripetere ciò che è già stato detto\n• Se concordi con qualcuno, approfondisci o estendi il suo punto\n• Se dissenti, spiega perché con argomentazioni concrete\n• Mantieni un tono collaborativo ma non conformista\n• L\'obiettivo è CONVERGERE verso la risposta migliore possibile',
@@ -155,7 +158,7 @@ export function buildRichSystemPrompt(
 ): string {
   const lang = plan.language || 'it';
   const [minWords, maxWords] = plan.wordRange;
-  const framework = DEBATE_FRAMEWORK[lang] || DEBATE_FRAMEWORK.it;
+  const framework = DEBATE_FRAMEWORK[lang] || DEBATE_FRAMEWORK.en || DEBATE_FRAMEWORK.it!;
 
   // Lingua
   const langConfig = LANGUAGES.find(l => l.value === lang);
