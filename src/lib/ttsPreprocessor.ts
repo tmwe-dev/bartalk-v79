@@ -88,7 +88,157 @@ const ACRONYM_KB: Record<string, Record<string, string>> = {
   'UNESCO': { it: 'unesco', en: 'unesco' },
   'OMS':   { it: 'o emme esse', en: 'W H O' },
   'WHO':   { it: 'o emme esse', en: 'W H O' },
+
+  // Media / Social
+  'SEO':   { it: 'esse e o', en: 'S E O' },
+  'SEM':   { it: 'esse e emme', en: 'S E M' },
+  'SMM':   { it: 'esse emme emme', en: 'S M M' },
+  'RSS':   { it: 'erre esse esse', en: 'R S S' },
+  'CMS':   { it: 'ci emme esse', en: 'C M S' },
+
+  // Scienza / Medicina
+  'DNA':   { it: 'di enne a', en: 'D N A' },
+  'RNA':   { it: 'erre enne a', en: 'R N A' },
+  'PCR':   { it: 'pi ci erre', en: 'P C R' },
+  'TAC':   { it: 'tac', en: 'C T scan' },
+  'ECG':   { it: 'e ci gi', en: 'E C G' },
+  'EEG':   { it: 'e e gi', en: 'E E G' },
+  'BMI':   { it: 'bi emme i', en: 'B M I' },
+  'ICU':   { it: 'terapia intensiva', en: 'I C U' },
 };
+
+// ── KB: Acronimi alfanumerici (acronimo + numero, codici composti) ───
+// Gestiti con regex perché contengono cifre, trattini, punti
+
+const COMPOUND_KB: Array<{ pattern: RegExp; replace: Record<string, string> }> = [
+  // Virus / Malattie
+  { pattern: /\bCOVID[-‑–]?19\b/gi, replace: { it: 'covid diciannove', en: 'covid nineteen' } },
+  { pattern: /\bSARS[-‑–]?CoV[-‑–]?2\b/gi, replace: { it: 'sars cov due', en: 'sars cov two' } },
+  { pattern: /\bH1N1\b/gi, replace: { it: 'acca uno enne uno', en: 'H one N one' } },
+  { pattern: /\bH5N1\b/gi, replace: { it: 'acca cinque enne uno', en: 'H five N one' } },
+  { pattern: /\bHIV\b/gi, replace: { it: 'acca i vu', en: 'H I V' } },
+
+  // Tecnologia / Standard
+  { pattern: /\b5G\b/g, replace: { it: 'cinque gi', en: 'five G' } },
+  { pattern: /\b4G\b/g, replace: { it: 'quattro gi', en: 'four G' } },
+  { pattern: /\b3G\b/g, replace: { it: 'tre gi', en: 'three G' } },
+  { pattern: /\b6G\b/g, replace: { it: 'sei gi', en: 'six G' } },
+  { pattern: /\bWi[-‑–]?Fi\b/gi, replace: { it: 'uài fài', en: 'why fye' } },
+  { pattern: /\bUSB[-‑–]?C\b/gi, replace: { it: 'u esse bi ci', en: 'U S B C' } },
+  { pattern: /\bUSB\s*3\.0\b/gi, replace: { it: 'u esse bi tre punto zero', en: 'U S B three point zero' } },
+  { pattern: /\bUSB\s*2\.0\b/gi, replace: { it: 'u esse bi due punto zero', en: 'U S B two point zero' } },
+  { pattern: /\bBluetooth\s*5\.0\b/gi, replace: { it: 'bluetooth cinque punto zero', en: 'bluetooth five point zero' } },
+  { pattern: /\bWeb\s*3\.0\b/gi, replace: { it: 'web tre punto zero', en: 'web three point zero' } },
+  { pattern: /\bWeb3\b/gi, replace: { it: 'web tre', en: 'web three' } },
+  { pattern: /\bGPT[-‑–]?4o?\b/gi, replace: { it: 'gi pi ti quattro', en: 'G P T four' } },
+  { pattern: /\bGPT[-‑–]?3\.5\b/gi, replace: { it: 'gi pi ti tre punto cinque', en: 'G P T three point five' } },
+  { pattern: /\bMP3\b/gi, replace: { it: 'emme pi tre', en: 'M P three' } },
+  { pattern: /\bMP4\b/gi, replace: { it: 'emme pi quattro', en: 'M P four' } },
+  { pattern: /\bJPEG\b/gi, replace: { it: 'jay peg', en: 'jay peg' } },
+  { pattern: /\bPNG\b/gi, replace: { it: 'pi enne gi', en: 'P N G' } },
+  { pattern: /\bH\.264\b/gi, replace: { it: 'acca punto due sei quattro', en: 'H point two six four' } },
+  { pattern: /\bH\.265\b/gi, replace: { it: 'acca punto due sei cinque', en: 'H point two six five' } },
+  { pattern: /\b4K\b/g, replace: { it: 'quattro cappa', en: 'four K' } },
+  { pattern: /\b8K\b/g, replace: { it: 'otto cappa', en: 'eight K' } },
+  { pattern: /\b1080p\b/gi, replace: { it: 'mille ottanta pi', en: 'ten eighty p' } },
+  { pattern: /\b720p\b/gi, replace: { it: 'sette venti pi', en: 'seven twenty p' } },
+  { pattern: /\b24\/7\b/g, replace: { it: 'ventiquattro ore su ventiquattro, sette giorni su sette', en: 'twenty four seven' } },
+
+  // Geopolitica / Summit
+  { pattern: /\bG7\b/g, replace: { it: 'gi sette', en: 'G seven' } },
+  { pattern: /\bG8\b/g, replace: { it: 'gi otto', en: 'G eight' } },
+  { pattern: /\bG20\b/g, replace: { it: 'gi venti', en: 'G twenty' } },
+  { pattern: /\bCOP\s*(\d+)\b/gi, replace: { it: 'cop $1', en: 'cop $1' } },
+
+  // Inquinamento / Scienza
+  { pattern: /\bCO2\b/gi, replace: { it: 'ci o due', en: 'C O two' } },
+  { pattern: /\bH2O\b/gi, replace: { it: 'acca due o', en: 'H two O' } },
+  { pattern: /\bO2\b/g, replace: { it: 'o due', en: 'O two' } },
+  { pattern: /\bO3\b/g, replace: { it: 'o tre, ozono', en: 'O three, ozone' } },
+  { pattern: /\bN2O\b/gi, replace: { it: 'enne due o, protossido di azoto', en: 'N two O, nitrous oxide' } },
+  { pattern: /\bNO2\b/gi, replace: { it: 'enne o due, biossido di azoto', en: 'N O two, nitrogen dioxide' } },
+  { pattern: /\bSO2\b/gi, replace: { it: 'esse o due, anidride solforosa', en: 'S O two, sulfur dioxide' } },
+  { pattern: /\bNaCl\b/gi, replace: { it: 'cloruro di sodio', en: 'sodium chloride' } },
+  { pattern: /\bCH4\b/gi, replace: { it: 'ci acca quattro, metano', en: 'C H four, methane' } },
+  { pattern: /\bC2H5OH\b/gi, replace: { it: 'etanolo', en: 'ethanol' } },
+  { pattern: /\bFe2O3\b/gi, replace: { it: 'ossido di ferro', en: 'iron oxide' } },
+  { pattern: /\bCaCO3\b/gi, replace: { it: 'carbonato di calcio', en: 'calcium carbonate' } },
+  { pattern: /\bHCl\b/g, replace: { it: 'acido cloridrico', en: 'hydrochloric acid' } },
+  { pattern: /\bH2SO4\b/gi, replace: { it: 'acido solforico', en: 'sulfuric acid' } },
+  { pattern: /\bNaOH\b/gi, replace: { it: 'idrossido di sodio', en: 'sodium hydroxide' } },
+  { pattern: /\bPM\s*2[\.,]5\b/gi, replace: { it: 'pi emme due virgola cinque', en: 'P M two point five' } },
+  { pattern: /\bPM\s*10\b/gi, replace: { it: 'pi emme dieci', en: 'P M ten' } },
+  { pattern: /\bpH\b/g, replace: { it: 'pi acca', en: 'P H' } },
+
+  // Formule Matematiche / Fisiche
+  { pattern: /\bE\s*=\s*mc²/gi, replace: { it: 'e uguale emme ci al quadrato', en: 'E equals M C squared' } },
+  { pattern: /\bE\s*=\s*mc\^2/gi, replace: { it: 'e uguale emme ci al quadrato', en: 'E equals M C squared' } },
+  { pattern: /\bF\s*=\s*ma\b/gi, replace: { it: 'effe uguale emme per a', en: 'F equals M A' } },
+  { pattern: /\bPV\s*=\s*nRT\b/g, replace: { it: 'pi vu uguale enne erre ti', en: 'P V equals N R T' } },
+  { pattern: /\ba²\s*\+\s*b²\s*=\s*c²/gi, replace: { it: 'a al quadrato più b al quadrato uguale c al quadrato', en: 'a squared plus b squared equals c squared' } },
+  { pattern: /(\d+)\s*[²³]/g, replace: { it: '$1', en: '$1' } }, // handled by next rule
+  { pattern: /²/g, replace: { it: ' al quadrato', en: ' squared' } },
+  { pattern: /³/g, replace: { it: ' al cubo', en: ' cubed' } },
+  { pattern: /√(\d+)/g, replace: { it: 'radice di $1', en: 'square root of $1' } },
+  { pattern: /√/g, replace: { it: 'radice quadrata di', en: 'square root of' } },
+  { pattern: /≈/g, replace: { it: ' circa uguale a ', en: ' approximately equal to ' } },
+  { pattern: /≠/g, replace: { it: ' diverso da ', en: ' not equal to ' } },
+  { pattern: /≤/g, replace: { it: ' minore o uguale a ', en: ' less than or equal to ' } },
+  { pattern: /≥/g, replace: { it: ' maggiore o uguale a ', en: ' greater than or equal to ' } },
+  { pattern: /∞/g, replace: { it: ' infinito ', en: ' infinity ' } },
+  { pattern: /π/g, replace: { it: ' pi greco ', en: ' pi ' } },
+  { pattern: /Δ/g, replace: { it: ' delta ', en: ' delta ' } },
+  { pattern: /Σ/g, replace: { it: ' sommatoria ', en: ' summation ' } },
+  { pattern: /∫/g, replace: { it: ' integrale ', en: ' integral ' } },
+  { pattern: /°C\b/g, replace: { it: ' gradi centigradi', en: ' degrees Celsius' } },
+  { pattern: /°F\b/g, replace: { it: ' gradi Fahrenheit', en: ' degrees Fahrenheit' } },
+  { pattern: /°K\b/g, replace: { it: ' gradi Kelvin', en: ' degrees Kelvin' } },
+  { pattern: /(\d+)\s*°/g, replace: { it: '$1 gradi', en: '$1 degrees' } },
+
+  // Nomenclatura Medica
+  { pattern: /\bECMO\b/gi, replace: { it: 'ecmo', en: 'ecmo' } },
+  { pattern: /\bMRI\b/gi, replace: { it: 'risonanza magnetica', en: 'M R I' } },
+  { pattern: /\bCT\b/g, replace: { it: 'tomografia computerizzata', en: 'C T scan' } },
+  { pattern: /\bIBD\b/gi, replace: { it: 'i bi di', en: 'I B D' } },
+  { pattern: /\bADHD\b/gi, replace: { it: 'a di acca di', en: 'A D H D' } },
+  { pattern: /\bOCD\b/gi, replace: { it: 'o ci di', en: 'O C D' } },
+  { pattern: /\bPTSD\b/gi, replace: { it: 'pi ti esse di', en: 'P T S D' } },
+  { pattern: /\bLDL\b/gi, replace: { it: 'elle di elle', en: 'L D L' } },
+  { pattern: /\bHDL\b/gi, replace: { it: 'acca di elle', en: 'H D L' } },
+  { pattern: /\bBPM\b/gi, replace: { it: 'battiti al minuto', en: 'beats per minute' } },
+  { pattern: /\bSpO2\b/gi, replace: { it: 'saturazione di ossigeno', en: 'oxygen saturation' } },
+  { pattern: /\bICU\b/gi, replace: { it: 'terapia intensiva', en: 'I C U' } },
+  { pattern: /\bmg\/dL\b/gi, replace: { it: 'milligrammi per decilitro', en: 'milligrams per deciliter' } },
+  { pattern: /\bmmHg\b/gi, replace: { it: 'millimetri di mercurio', en: 'millimeters of mercury' } },
+  { pattern: /\bng\/mL\b/gi, replace: { it: 'nanogrammi per millilitro', en: 'nanograms per milliliter' } },
+
+  // Ingegneria / Design
+  { pattern: /\bCAD\b/gi, replace: { it: 'cad', en: 'cad' } },
+  { pattern: /\bCAM\b/g, replace: { it: 'cam', en: 'cam' } },
+  { pattern: /\bBIM\b/gi, replace: { it: 'bim', en: 'bim' } },
+  { pattern: /\bDPI\b/gi, replace: { it: 'di pi i, punti per pollice', en: 'D P I, dots per inch' } },
+  { pattern: /\bPPI\b/gi, replace: { it: 'pi pi i, pixel per pollice', en: 'P P I, pixels per inch' } },
+  { pattern: /\bRGB\b/gi, replace: { it: 'erre gi bi', en: 'R G B' } },
+  { pattern: /\bCMYK\b/gi, replace: { it: 'ci emme i cappa', en: 'C M Y K' } },
+  { pattern: /\bHEX\b/gi, replace: { it: 'esadecimale', en: 'hexadecimal' } },
+  { pattern: /\bSVG\b/gi, replace: { it: 'esse vu gi', en: 'S V G' } },
+  { pattern: /\bSTL\b/gi, replace: { it: 'esse ti elle', en: 'S T L' } },
+  { pattern: /\bISO\s*(\d+)\b/gi, replace: { it: 'iso $1', en: 'I S O $1' } },
+  { pattern: /\bAC\b/g, replace: { it: 'corrente alternata', en: 'A C' } },
+  { pattern: /\bDC\b/g, replace: { it: 'corrente continua', en: 'D C' } },
+  { pattern: /\bRPM\b/gi, replace: { it: 'giri al minuto', en: 'R P M' } },
+  { pattern: /\bPSI\b/gi, replace: { it: 'pi esse i', en: 'P S I' } },
+  { pattern: /\bkWh\b/gi, replace: { it: 'chilowattora', en: 'kilowatt hours' } },
+  { pattern: /\bkW\b/g, replace: { it: 'chilowatt', en: 'kilowatts' } },
+  { pattern: /\bMW\b/g, replace: { it: 'megawatt', en: 'megawatts' } },
+  { pattern: /\bmA\b/g, replace: { it: 'milliampere', en: 'milliamps' } },
+  { pattern: /\bmAh\b/gi, replace: { it: 'milliampere ora', en: 'milliamp hours' } },
+  { pattern: /\bHz\b/g, replace: { it: 'hertz', en: 'hertz' } },
+  { pattern: /\bGHz\b/gi, replace: { it: 'gigahertz', en: 'gigahertz' } },
+  { pattern: /\bMHz\b/gi, replace: { it: 'megahertz', en: 'megahertz' } },
+  { pattern: /\bdB\b/g, replace: { it: 'decibel', en: 'decibels' } },
+  { pattern: /\blux\b/gi, replace: { it: 'lux', en: 'lux' } },
+];
 
 // ── KB: Simboli e caratteri speciali ─────────────────────────────────
 
@@ -196,7 +346,27 @@ function stripMarkdown(text: string): string {
   return t;
 }
 
-/** 2. Espandi sigle e acronimi */
+/** 2a. Espandi codici composti (acronimo+numero, formule) — PRIMA delle sigle pure */
+function expandCompounds(text: string, lang: string): string {
+  const bl = baseLang(lang);
+  let t = text;
+
+  for (const entry of COMPOUND_KB) {
+    if (entry.replace.it.includes('$1')) {
+      // Pattern con cattura (es. COP + numero)
+      t = t.replace(entry.pattern, (_match, ...args) => {
+        const template = entry.replace[bl] || entry.replace.en;
+        return template.replace('$1', args[0] || '');
+      });
+    } else {
+      t = t.replace(entry.pattern, entry.replace[bl] || entry.replace.en);
+    }
+  }
+
+  return t;
+}
+
+/** 2b. Espandi sigle e acronimi */
 function expandAcronyms(text: string, lang: string): string {
   const bl = baseLang(lang);
   let t = text;
@@ -380,13 +550,14 @@ export function preprocessForTTS(text: string, lang: string = 'it'): string {
   let processed = text;
 
   // Pipeline di trasformazione (ordine importante!)
-  processed = stripMarkdown(processed);       // 1. Rimuovi markdown
-  processed = stripEmoji(processed);           // 2. Rimuovi emoji
-  processed = expandAcronyms(processed, lang); // 3. Espandi sigle
-  processed = normalizeNumbers(processed, lang); // 4. Numeri e unità
-  processed = replaceSymbols(processed, lang); // 5. Simboli
-  processed = normalizePunctuation(processed); // 6. Punteggiatura
-  processed = cleanWhitespace(processed);      // 7. Pulizia finale
+  processed = stripMarkdown(processed);          // 1. Rimuovi markdown
+  processed = stripEmoji(processed);              // 2. Rimuovi emoji
+  processed = expandCompounds(processed, lang);   // 3. Codici composti (COVID-19, 5G, CO2...)
+  processed = expandAcronyms(processed, lang);    // 4. Espandi sigle pure
+  processed = normalizeNumbers(processed, lang);  // 5. Numeri e unità
+  processed = replaceSymbols(processed, lang);    // 6. Simboli
+  processed = normalizePunctuation(processed);    // 7. Punteggiatura
+  processed = cleanWhitespace(processed);         // 8. Pulizia finale
 
   return processed;
 }
