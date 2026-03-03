@@ -16,12 +16,14 @@ import {
   exportConversationAsMarkdown,
   buildMemoryBlock,
 } from '../lib/memory';
+import { resetTTS } from '../lib/tts';
+import { StudioPage } from '../components/Studio/StudioPage';
 
 const RadioCarousel3D = lazy(() =>
   import('../components/Carousel/RadioCarousel3D').then(m => ({ default: m.RadioCarousel3D }))
 );
 
-type MainTab = 'chat' | 'carousel' | 'podcast' | 'tasks';
+type MainTab = 'chat' | 'carousel' | 'podcast' | 'tasks' | 'studio';
 const MAX_SLOTS = 8;
 
 function getVisibleSlice(messages: { senderType: string }[]) {
@@ -80,7 +82,7 @@ function LeftSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: ()
       </div>
 
       {/* New Chat */}
-      <button className="lsb-new-chat" onClick={newConversation}>
+      <button className="lsb-new-chat" onClick={() => { resetTTS(); newConversation(); }}>
         <span>＋</span> Nuova conversazione
       </button>
 
@@ -376,6 +378,13 @@ export function ChatPage() {
             {activeTask?.isActive && <span className="task-tab-badge" />}
           </button>
           <button
+            className={`main-tab ${activeTab === 'studio' ? 'active' : ''}`}
+            onClick={() => setActiveTab('studio')}
+          >
+            <span className="main-tab-icon">🔧</span>
+            <span className="main-tab-label">Studio</span>
+          </button>
+          <button
             className={`main-tab ${autoAdvance ? 'active' : ''}`}
             onClick={() => setAutoAdvance(!autoAdvance)}
             title={autoAdvance ? 'Auto-avanzamento ON' : 'Auto-avanzamento OFF'}
@@ -423,6 +432,12 @@ export function ChatPage() {
           {activeTab === 'tasks' && (
             <div className="tab-content-padded">
               <TaskPanel />
+            </div>
+          )}
+
+          {activeTab === 'studio' && (
+            <div className="tab-content-padded">
+              <StudioPage />
             </div>
           )}
         </div>

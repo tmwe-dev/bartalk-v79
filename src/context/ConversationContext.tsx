@@ -41,6 +41,8 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
   const activeTurnRef = useRef<string | null>(null);
   const [activeTurnId, setActiveTurnId] = useState<string | null>(null);
   const isInitRef = useRef(false);
+  const conversationIdRef = useRef(conversationId);
+  conversationIdRef.current = conversationId;
 
   // Load messages on init
   useEffect(() => {
@@ -100,12 +102,12 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     const msg: Message = {
       ...partial,
       id: generateId(),
-      conversationId,
+      conversationId: conversationIdRef.current,
       createdAt: now(),
     };
     setMessages(prev => [...prev, msg]);
     return msg;
-  }, [conversationId]);
+  }, []);
 
   const incrementTurn = useCallback(() => {
     setTurnIndex(prev => prev + 1);
