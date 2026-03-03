@@ -53,13 +53,25 @@ export const TTS = {
   apiBase: 'https://api.elevenlabs.io/v1',
 } as const;
 
-// ── Orchestrator ─────────────────────────────────────────────────────
+// ── Orchestrator — Defaults ottimali mixati ──────────────────────────
 export const ORCHESTRATOR = {
   forcedConsultationTurns: 4, // primi N turni = consultation forzata
   defaultTemperature: 0.7,
   maxTokens: 2048,
   wordRange: [80, 200] as [number, number],
   consultationWordRange: [60, 150] as [number, number],
+  // Temperature ottimali per modalità (mix originale TM V engine)
+  temperatureByMode: {
+    standard: 0.7,       // Bilanciata
+    consultation: 0.8,   // Più creativa per diversificare le risposte
+    bar_realtime: 0.9,   // Massima varietà per il formato radio
+  },
+  // History context per modalità
+  historySlice: {
+    standard: 12,        // Più contesto in modalità singolo agente
+    consultation: 8,     // Meno contesto per non sovraccaricare
+    bar_realtime: 6,     // Minimo per velocità
+  },
 } as const;
 
 // ── Proxy ────────────────────────────────────────────────────────────

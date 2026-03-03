@@ -11,7 +11,7 @@ import { getAPIKey, getModel } from './storage';
 import { ORCHESTRATOR, DEFAULT_MODELS } from './constants';
 import { analyzeConvergence, getConvergenceInstruction } from './convergence';
 import { generateId } from './utils';
-import { LANGUAGES } from '../types/settings';
+import { buildRichSystemPrompt } from './prompts';
 
 /**
  * Motore principale dell'orchestratore.
@@ -37,9 +37,9 @@ export async function orchestrate(
   const isForced = turnIndex < ORCHESTRATOR.forcedConsultationTurns;
   const mode = isForced ? 'consultation' : input.mode;
 
-  // ── Analizza convergenza ─────────────────────────────────────────
-  const convergence = analyzeConvergence(messages);
-  const convergenceInstruction = getConvergenceInstruction(convergence);
+  // ── Analizza convergenza (con lingua) ───────────────────────────
+  const convergence = analyzeConvergence(messages, input.language);
+  const convergenceInstruction = getConvergenceInstruction(convergence, input.language);
 
   // ── Seleziona agenti da far parlare ──────────────────────────────
   const plan = buildPlan(mode, input.turnStrategy, enabledAgents, turnIndex, input);
@@ -96,17 +96,24 @@ function buildPlan(
     agentsToSpeak = [...enabledAgents];
   }
 
-  // Usa word range dal settings, con fallback a consultationWordRange se in consultation
-  const wordRange = mode === 'consultation'
+  // Word range ottimale per modalità
+  const wordRange = mode === 'consultation' || mode === 'bar_realtime'
     ? ORCHESTRATOR.consultationWordRange
     : (input.wordRange || ORCHESTRATOR.wordRange);
+
+  // Temperature: usa il mix ottimale per modalità se l'utente non ha personalizzato
+  const modeKey = mode as keyof typeof ORCHESTRATOR.temperatureByMode;
+  const defaultTemp = ORCHESTRATOR.temperatureByMode[modeKey] ?? ORCHESTRATOR.defaultTemperature;
+  const temperature = input.temperature !== undefined && input.temperature !== ORCHESTRATOR.defaultTemperature
+    ? input.temperature
+    : defaultTemp;
 
   return {
     mode: mode as OrchestratorPlan['mode'],
     agentsToSpeak,
     systemPrompts: new Map(),
     convergence: 'neutral',
-    temperature: input.temperature ?? ORCHESTRATOR.defaultTemperature,
+    temperature,
     maxTokens: input.maxTokens ?? ORCHESTRATOR.maxTokens,
     wordRange,
     isForced: turnIndex < ORCHESTRATOR.forcedConsultationTurns,
@@ -139,8 +146,8 @@ async function callAgent(
     };
   }
 
-  const systemPrompt = buildSystemPrompt(agent, previousResponses, convergenceInstruction, plan);
-  const apiMessages = buildMessages(userMessage, history);
+  const systemPrompt = buildRichSystemPrompt(agent, previousResponses, convergenceInstruction, plan);
+  const apiMessages = buildMessages(userMessage, history, plan.mode);
 
   const result = await callProxy({
     provider: agent.provider,
@@ -176,47 +183,18 @@ async function callAgent(
   };
 }
 
-// ── System prompt con lingua dinamica ────────────────────────────────
-function buildSystemPrompt(
-  agent: AgentConfig,
-  previousResponses: { name: string; content: string }[],
-  convergenceInstruction: string,
-  plan: OrchestratorPlan,
-): string {
-  const [minWords, maxWords] = plan.wordRange;
-
-  // Trova l'istruzione lingua corrispondente
-  const langConfig = LANGUAGES.find(l => l.value === plan.language);
-  const langInstruction = langConfig?.instruction || LANGUAGES[0].instruction;
-
-  let prompt = `Sei ${agent.name}, un agente AI in BarTalk RadioChat.
-${langInstruction}
-Mantieni le risposte tra ${minWords} e ${maxWords} parole.
-Non ripetere quello che hanno già detto gli altri.`;
-
-  if (previousResponses.length > 0 && plan.mode !== 'standard') {
-    prompt += '\n\nRisposte precedenti degli altri agenti:';
-    for (const prev of previousResponses) {
-      prompt += `\n- ${prev.name}: "${prev.content.substring(0, 300)}"`;
-    }
-    prompt += '\n\nAggiungi il tuo punto di vista unico, senza ripetere quanto già detto.';
-  }
-
-  if (convergenceInstruction) {
-    prompt += convergenceInstruction;
-  }
-
-  return prompt;
-}
-
-// ── Messaggi per l'API ───────────────────────────────────────────────
+// ── Messaggi per l'API (con history slice per modalità) ──────────────
 function buildMessages(
   userMessage: string,
   history: Message[],
+  mode?: string,
 ): { role: string; content: string }[] {
   const msgs: { role: string; content: string }[] = [];
 
-  const recentHistory = history.slice(-10);
+  const modeKey = (mode || 'standard') as keyof typeof ORCHESTRATOR.historySlice;
+  const sliceSize = ORCHESTRATOR.historySlice[modeKey] ?? 10;
+
+  const recentHistory = history.slice(-sliceSize);
   for (const msg of recentHistory) {
     msgs.push({
       role: msg.senderType === 'human' ? 'user' : 'assistant',
