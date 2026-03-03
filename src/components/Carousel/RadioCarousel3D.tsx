@@ -16,28 +16,28 @@ const GRADIENT_CONFIG: Record<string, {
   from: string; to: string; border: string; title: string; badge: string;
 }> = {
   albert: {
-    from: 'rgba(34, 197, 94, 0.1)', to: 'rgba(22, 163, 74, 0.05)',
-    border: 'rgba(34, 197, 94, 0.2)', title: '#166534', badge: '#16a34a'
+    from: 'rgba(34, 197, 94, 0.15)', to: 'rgba(22, 163, 74, 0.08)',
+    border: 'rgba(34, 197, 94, 0.3)', title: '#4ade80', badge: '#16a34a'
   },
   archimede: {
-    from: 'rgba(168, 85, 247, 0.1)', to: 'rgba(147, 51, 234, 0.05)',
-    border: 'rgba(168, 85, 247, 0.2)', title: '#6b21a8', badge: '#9333ea'
+    from: 'rgba(168, 85, 247, 0.15)', to: 'rgba(147, 51, 234, 0.08)',
+    border: 'rgba(168, 85, 247, 0.3)', title: '#c084fc', badge: '#9333ea'
   },
   pitagora: {
-    from: 'rgba(6, 182, 212, 0.1)', to: 'rgba(8, 145, 178, 0.05)',
-    border: 'rgba(6, 182, 212, 0.2)', title: '#155e75', badge: '#0891b2'
+    from: 'rgba(6, 182, 212, 0.15)', to: 'rgba(8, 145, 178, 0.08)',
+    border: 'rgba(6, 182, 212, 0.3)', title: '#22d3ee', badge: '#0891b2'
   },
   newton: {
-    from: 'rgba(245, 158, 11, 0.1)', to: 'rgba(217, 119, 6, 0.05)',
-    border: 'rgba(245, 158, 11, 0.2)', title: '#92400e', badge: '#d97706'
+    from: 'rgba(245, 158, 11, 0.15)', to: 'rgba(217, 119, 6, 0.08)',
+    border: 'rgba(245, 158, 11, 0.3)', title: '#fbbf24', badge: '#d97706'
   },
   human: {
-    from: 'rgba(59, 130, 246, 0.1)', to: 'rgba(37, 99, 235, 0.05)',
-    border: 'rgba(59, 130, 246, 0.2)', title: '#1e40af', badge: '#2563eb'
+    from: 'rgba(59, 130, 246, 0.15)', to: 'rgba(37, 99, 235, 0.08)',
+    border: 'rgba(59, 130, 246, 0.3)', title: '#60a5fa', badge: '#2563eb'
   },
   system: {
-    from: 'rgba(100, 100, 100, 0.1)', to: 'rgba(60, 60, 60, 0.05)',
-    border: 'rgba(100, 100, 100, 0.2)', title: '#444', badge: '#666'
+    from: 'rgba(160, 160, 180, 0.15)', to: 'rgba(120, 120, 140, 0.08)',
+    border: 'rgba(160, 160, 180, 0.3)', title: '#d0d0e0', badge: '#888'
   },
 };
 
@@ -131,7 +131,7 @@ function createTextTexture(msg: Message, renderer?: THREE.WebGLRenderer): THREE.
 
   // Footer: timestamp
   if (msg.createdAt) {
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = '16px sans-serif';
     ctx.textAlign = 'right';
     const time = new Date(msg.createdAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
@@ -140,7 +140,7 @@ function createTextTexture(msg: Message, renderer?: THREE.WebGLRenderer): THREE.
 
   // Token info
   if (msg.tokensIn || msg.tokensOut) {
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(`${msg.tokensIn || 0}→${msg.tokensOut || 0} tok`, 30, H - 30);

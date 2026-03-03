@@ -253,11 +253,8 @@ export function ChatPage() {
   // ── Agent tab index (synced with carousel) ──
   const [agentTabIndex, setAgentTabIndex] = useState(0);
 
-  // ── Carousel state ──
-  const [carouselIndex, setCarouselIndex] = useState(() => {
-    const slice = getVisibleSlice(messages);
-    return Math.max(0, slice.length - 1);
-  });
+  // ── Carousel state (start at 0 = first message) ──
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   const [carouselZoom, setCarouselZoom] = useState(() => {
     const saved = localStorage.getItem('bartalk_carousel_zoom');
@@ -269,6 +266,10 @@ export function ChatPage() {
   });
 
   const prevMsgCountRef = useRef(0);
+
+  // ── TTS playback counter: tracks which agent message is being read ──
+  // Incremented on each radio-audio-start, reset on stop/new conversation.
+  const ttsPlayingIndexRef = useRef(-1);
 
   // ── Refs: stato sempre fresco per event listener (no stale closures) ──
   const validAgentMsgsRef = useRef(validAgentMsgs);
@@ -300,20 +301,20 @@ export function ChatPage() {
     if (cIdx >= 0) setCarouselIndex(cIdx);
   }, []);
 
-  // ── Sync: primo messaggio → mostra subito; nuovi messaggi → resta sul corrente ──
+  // ── Nuovo messaggio: mostra il primo, poi non saltare ──
   useEffect(() => {
     const count = validAgentMsgs.length;
     if (count > prevMsgCountRef.current && count > 0) {
       if (prevMsgCountRef.current === 0) {
-        // È il primo messaggio della conversazione → mostra subito (index 0)
+        // Primo messaggio della conversazione → reset TTS counter, mostra index 0
+        ttsPlayingIndexRef.current = -1;
         setAgentTabIndex(0);
         const slice = getVisibleSlice(messages);
         if (slice.length > 0) setCarouselIndex(0);
       }
-      // Se ci sono già messaggi visualizzati, NON saltare all'ultimo.
-      // L'avanzamento avviene solo via:
-      // - autorun (TTS end → onAudioEnd)
-      // - click manuale su tab/carousel
+      // Nuovi messaggi successivi: NON saltare. L'avanzamento è solo via:
+      // - TTS audio-start (sync automatico al messaggio in lettura)
+      // - Click manuale su tab/carousel
     }
     prevMsgCountRef.current = count;
   }, [validAgentMsgs, messages]);
@@ -321,54 +322,56 @@ export function ChatPage() {
   // ── Sync al cambio vista: mantieni posizione corrente ──
   useEffect(() => {
     if (activeTab === 'carousel') {
-      // Tab → Carousel: sync carousel alla posizione del tab attivo
       const msg = validAgentMsgsRef.current[agentTabIndexRef.current];
       if (msg) syncBothToMessage(msg);
     }
     if (activeTab === 'chat') {
-      // Carousel → Tab: sync tab alla posizione del carousel attivo
       const slice = getVisibleSlice(messagesRef.current);
       const msg = slice[carouselIndexRef.current];
       if (msg && msg.senderType === 'assistant') syncBothToMessage(msg);
     }
   }, [activeTab, syncBothToMessage]);
 
-  // ── TTS events: registra UNA volta, usa refs per stato fresco ──
+  // ══════════════════════════════════════════════════════════════════════
+  //  TTS SYNC: counter-based (non più ricerca per nome agente)
+  //
+  //  La coda TTS riproduce i messaggi in ordine sequenziale (seq 1, 2, 3...).
+  //  I validAgentMsgs sono nello stesso ordine.
+  //  Quindi il contatore ttsPlayingIndexRef mappa 1:1 ai messaggi.
+  //
+  //  audio-start → incrementa contatore, sincronizza display al messaggio
+  //  audio-end   → (nessuna azione extra, il prossimo audio-start gestisce)
+  //  audio-stop  → reset contatore (nuova conversazione / stop manuale)
+  // ══════════════════════════════════════════════════════════════════════
   useEffect(() => {
-    const onAudioStart = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      const agentName = detail?.agentName;
-      if (!agentName) return;
-
+    const onAudioStart = () => {
+      ttsPlayingIndexRef.current++;
+      const idx = ttsPlayingIndexRef.current;
       const agentMsgs = validAgentMsgsRef.current;
-      // Trova l'ultimo messaggio di questo agente e sincronizza tutto
-      for (let i = agentMsgs.length - 1; i >= 0; i--) {
-        if (agentMsgs[i].senderName?.toLowerCase() === agentName.toLowerCase()) {
-          syncBothToMessage(agentMsgs[i]);
-          break;
-        }
+      if (idx >= 0 && idx < agentMsgs.length) {
+        syncBothToMessage(agentMsgs[idx]);
       }
     };
 
     const onAudioEnd = () => {
-      if (!autoRunRef.current) return;
+      // Se autoRun è attivo e non c'è un prossimo audio-start (ultimo messaggio),
+      // non serve fare nulla — il display resta sull'ultimo messaggio letto.
+      // Se ci sono altri messaggi in coda, processQueue() chiamerà il prossimo
+      // audio-start che sincronizzerà automaticamente.
+    };
 
-      const agentMsgs = validAgentMsgsRef.current;
-      const currentTab = agentTabIndexRef.current;
-      const nextTab = currentTab + 1;
-
-      // Avanza al prossimo agent tab (e carousel si sincronizza)
-      if (nextTab < agentMsgs.length) {
-        const nextMsg = agentMsgs[nextTab];
-        if (nextMsg) syncBothToMessage(nextMsg);
-      }
+    const onAudioStop = () => {
+      // Reset contatore (stop manuale, nuova conversazione)
+      ttsPlayingIndexRef.current = -1;
     };
 
     window.addEventListener('radio-audio-start', onAudioStart);
     window.addEventListener('radio-audio-end', onAudioEnd);
+    window.addEventListener('radio-audio-stop', onAudioStop);
     return () => {
       window.removeEventListener('radio-audio-start', onAudioStart);
       window.removeEventListener('radio-audio-end', onAudioEnd);
+      window.removeEventListener('radio-audio-stop', onAudioStop);
     };
   }, [syncBothToMessage]);
 
@@ -482,7 +485,7 @@ export function ChatPage() {
 
           {activeTab === 'carousel' && (
             <div className="carousel-with-input">
-              <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+              <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <Suspense fallback={
                   <div className="loading-fallback">Caricamento Carousel 3D...</div>
                 }>
