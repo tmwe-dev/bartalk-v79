@@ -4,9 +4,14 @@ import { useSettingsContext } from '../../context/SettingsContext';
 import { useTTS } from '../../hooks/useTTS';
 import { UI } from '../../lib/constants';
 
-export function Navbar() {
+interface NavbarProps {
+  onToggleSidebar?: () => void;
+  sidebarCollapsed?: boolean;
+}
+
+export function Navbar({ onToggleSidebar, sidebarCollapsed }: NavbarProps) {
   const { toggleSettings, setStudioMode, studioMode } = useUIContext();
-  const { newConversation, sidebarOpen, setSidebarOpen, conversationTitle } = useConversationContext();
+  const { newConversation, conversationTitle } = useConversationContext();
   const { ttsEnabled, setTtsEnabled } = useSettingsContext();
   const { stop: stopTTS } = useTTS();
 
@@ -18,13 +23,16 @@ export function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        <button
-          className={`nav-btn ${sidebarOpen ? 'active' : ''}`}
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          title="Conversazioni"
-        >
-          ☰
-        </button>
+        {/* Hamburger: only show when sidebar is collapsed */}
+        {sidebarCollapsed && onToggleSidebar && (
+          <button
+            className="nav-btn"
+            onClick={onToggleSidebar}
+            title="Apri sidebar"
+          >
+            ☰
+          </button>
+        )}
         <h1 className="navbar-title">{UI.appName}</h1>
         <span className="navbar-version">v{UI.appVersion}</span>
         <span className="navbar-conv-title">{conversationTitle}</span>
