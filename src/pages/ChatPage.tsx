@@ -270,6 +270,18 @@ export function ChatPage() {
 
   const prevMsgCountRef = useRef(0);
 
+  // ── Refs: stato sempre fresco per event listener (no stale closures) ──
+  const validAgentMsgsRef = useRef(validAgentMsgs);
+  validAgentMsgsRef.current = validAgentMsgs;
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+  const autoRunRef = useRef(autoRun);
+  autoRunRef.current = autoRun;
+  const agentTabIndexRef = useRef(agentTabIndex);
+  agentTabIndexRef.current = agentTabIndex;
+  const carouselIndexRef = useRef(carouselIndex);
+  carouselIndexRef.current = carouselIndex;
+
   // Persist carousel settings
   useEffect(() => {
     localStorage.setItem('bartalk_carousel_zoom', String(carouselZoom));
@@ -278,79 +290,71 @@ export function ChatPage() {
     localStorage.setItem('bartalk_carousel_voffset', String(carouselVerticalOffset));
   }, [carouselVerticalOffset]);
 
-  // ── Sync: new agent messages → jump to last tab + last carousel card ──
+  // ── Sync entrambi: tab + carousel a un messaggio target ──
+  const syncBothToMessage = useCallback((msg: Message) => {
+    // Sync agent tab
+    const tabIdx = validAgentMsgsRef.current.findIndex(m => m.id === msg.id);
+    if (tabIdx >= 0) setAgentTabIndex(tabIdx);
+    // Sync carousel
+    const cIdx = getVisibleSlice(messagesRef.current).findIndex(m => m.id === msg.id);
+    if (cIdx >= 0) setCarouselIndex(cIdx);
+  }, []);
+
+  // ── Sync: nuovo messaggio → salta all'ultimo ──
   useEffect(() => {
     const count = validAgentMsgs.length;
     if (count > prevMsgCountRef.current && count > 0) {
       setAgentTabIndex(count - 1);
-      // Also update carousel
       const slice = getVisibleSlice(messages);
       if (slice.length > 0) setCarouselIndex(slice.length - 1);
     }
     prevMsgCountRef.current = count;
   }, [validAgentMsgs, messages]);
 
-  // Tab switch → sync carousel to current agent tab (maintain state across views)
+  // ── Sync al cambio vista: mantieni posizione corrente ──
   useEffect(() => {
     if (activeTab === 'carousel') {
-      // Sync carousel card to the agent tab that was active
-      const msg = validAgentMsgs[agentTabIndex];
-      if (msg) {
-        const slice = getVisibleSlice(messages);
-        const cIdx = slice.findIndex(m => m.id === msg.id);
-        if (cIdx >= 0) setCarouselIndex(cIdx);
-        else if (slice.length > 0) setCarouselIndex(slice.length - 1);
-      }
+      // Tab → Carousel: sync carousel alla posizione del tab attivo
+      const msg = validAgentMsgsRef.current[agentTabIndexRef.current];
+      if (msg) syncBothToMessage(msg);
     }
     if (activeTab === 'chat') {
-      // Sync agent tab to the carousel card that was active
-      const slice = getVisibleSlice(messages);
-      const msg = slice[carouselIndex];
-      if (msg && msg.senderType === 'assistant') {
-        const tabIdx = validAgentMsgs.findIndex(m => m.id === msg.id);
-        if (tabIdx >= 0) setAgentTabIndex(tabIdx);
-      }
+      // Carousel → Tab: sync tab alla posizione del carousel attivo
+      const slice = getVisibleSlice(messagesRef.current);
+      const msg = slice[carouselIndexRef.current];
+      if (msg && msg.senderType === 'assistant') syncBothToMessage(msg);
     }
-  }, [activeTab]);
+  }, [activeTab, syncBothToMessage]);
 
-  // ── TTS sync: audio start → activate agent's tab + carousel card ──
+  // ── TTS events: registra UNA volta, usa refs per stato fresco ──
   useEffect(() => {
     const onAudioStart = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       const agentName = detail?.agentName;
       if (!agentName) return;
 
-      // Find agent tab
-      for (let i = validAgentMsgs.length - 1; i >= 0; i--) {
-        if (validAgentMsgs[i].senderName?.toLowerCase() === agentName.toLowerCase()) {
-          setAgentTabIndex(i);
-          break;
-        }
-      }
-      // Find carousel card
-      const slice = getVisibleSlice(messages);
-      for (let i = slice.length - 1; i >= 0; i--) {
-        if ((slice[i] as Message).senderName?.toLowerCase() === agentName.toLowerCase()) {
-          setCarouselIndex(i);
+      const agentMsgs = validAgentMsgsRef.current;
+      // Trova l'ultimo messaggio di questo agente e sincronizza tutto
+      for (let i = agentMsgs.length - 1; i >= 0; i--) {
+        if (agentMsgs[i].senderName?.toLowerCase() === agentName.toLowerCase()) {
+          syncBothToMessage(agentMsgs[i]);
           break;
         }
       }
     };
 
-    // ── TTS end: autoRun → advance to next tab ──
     const onAudioEnd = () => {
-      if (!autoRun) return;
-      // Auto-advance agent tab
-      setAgentTabIndex(prev => {
-        const maxIdx = validAgentMsgs.length - 1;
-        return prev < maxIdx ? prev + 1 : prev;
-      });
-      // Auto-advance carousel
-      setCarouselIndex(prev => {
-        const slice = getVisibleSlice(messages);
-        const maxIdx = slice.length - 1;
-        return prev < maxIdx ? prev + 1 : prev;
-      });
+      if (!autoRunRef.current) return;
+
+      const agentMsgs = validAgentMsgsRef.current;
+      const currentTab = agentTabIndexRef.current;
+      const nextTab = currentTab + 1;
+
+      // Avanza al prossimo agent tab (e carousel si sincronizza)
+      if (nextTab < agentMsgs.length) {
+        const nextMsg = agentMsgs[nextTab];
+        if (nextMsg) syncBothToMessage(nextMsg);
+      }
     };
 
     window.addEventListener('radio-audio-start', onAudioStart);
@@ -359,29 +363,25 @@ export function ChatPage() {
       window.removeEventListener('radio-audio-start', onAudioStart);
       window.removeEventListener('radio-audio-end', onAudioEnd);
     };
-  }, [messages, validAgentMsgs, autoRun]);
+  }, [syncBothToMessage]);
 
-  // ── Sync: agent tab click → carousel sync ──
+  // ── Click: agent tab → sync carousel ──
   const onAgentTabClick = useCallback((idx: number) => {
-    setAgentTabIndex(idx);
-    // Find the matching message in the carousel slice
-    const msg = validAgentMsgs[idx];
-    if (!msg) return;
-    const slice = getVisibleSlice(messages);
-    const cIdx = slice.findIndex(m => m.id === msg.id);
-    if (cIdx >= 0) setCarouselIndex(cIdx);
-  }, [validAgentMsgs, messages]);
+    const msg = validAgentMsgsRef.current[idx];
+    if (msg) syncBothToMessage(msg);
+    else setAgentTabIndex(idx);
+  }, [syncBothToMessage]);
 
+  // ── Click: carousel → sync agent tab ──
   const onCarouselIndexChange = useCallback((idx: number) => {
     setCarouselIndex(idx);
-    // Sync agent tab: find matching agent message
-    const slice = getVisibleSlice(messages);
+    const slice = getVisibleSlice(messagesRef.current);
     const msg = slice[idx];
     if (msg && msg.senderType === 'assistant') {
-      const tabIdx = validAgentMsgs.findIndex(m => m.id === msg.id);
+      const tabIdx = validAgentMsgsRef.current.findIndex(m => m.id === msg.id);
       if (tabIdx >= 0) setAgentTabIndex(tabIdx);
     }
-  }, [messages, validAgentMsgs]);
+  }, []);
 
   return (
     <div className="app-layout-row">
