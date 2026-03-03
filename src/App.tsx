@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { SettingsProvider } from './context/SettingsContext';
 import { AgentProvider } from './context/AgentContext';
 import { ConversationProvider } from './context/ConversationContext';
+import { TaskProvider } from './context/TaskContext';
 import { UIProvider, useUIContext } from './context/UIContext';
 import { SettingsModal } from './components/Settings/SettingsModal';
 import { ToastContainer } from './components/Common/Toast';
@@ -43,11 +44,13 @@ export default function App() {
     <SettingsProvider>
       <AgentProvider>
         <ConversationProvider>
-          <UIProvider>
-            <AppContent />
-            <SettingsModal />
-            <ToastContainer />
-          </UIProvider>
+          <TaskProvider>
+            <UIProvider>
+              <AppContent />
+              <SettingsModal />
+              <ToastContainer />
+            </UIProvider>
+          </TaskProvider>
         </ConversationProvider>
       </AgentProvider>
     </SettingsProvider>

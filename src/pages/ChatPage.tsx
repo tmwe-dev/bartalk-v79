@@ -5,16 +5,18 @@ import { InputBox } from '../components/Chat/InputBox';
 import { PodcastMode } from '../components/Podcast/PodcastMode';
 import { FloatingZoomControl } from '../components/Carousel/FloatingZoomControl';
 import { AudioControlBar } from '../components/Chat/AudioControlBar';
+import { TaskPanel } from '../components/Tasks/TaskPanel';
 import { useConversationContext } from '../context/ConversationContext';
 import { useSettingsContext } from '../context/SettingsContext';
 import { useAgentContext } from '../context/AgentContext';
+import { useTaskContext } from '../context/TaskContext';
 import { formatTime, truncate } from '../lib/utils';
 
 const RadioCarousel3D = lazy(() =>
   import('../components/Carousel/RadioCarousel3D').then(m => ({ default: m.RadioCarousel3D }))
 );
 
-type MainTab = 'chat' | 'carousel' | 'podcast';
+type MainTab = 'chat' | 'carousel' | 'podcast' | 'tasks';
 const MAX_SLOTS = 8;
 
 function getVisibleSlice(messages: { senderType: string }[]) {
@@ -134,6 +136,7 @@ export function ChatPage() {
   const [activeTab, setActiveTab] = useState<MainTab>('chat');
   const { messages } = useConversationContext();
   const { ttsEnabled } = useSettingsContext();
+  const { activeTask } = useTaskContext();
 
   // Sidebar: open by default on desktop, closed on mobile
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -276,6 +279,14 @@ export function ChatPage() {
             <span className="main-tab-label">Podcast</span>
           </button>
           <button
+            className={`main-tab ${activeTab === 'tasks' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tasks')}
+          >
+            <span className="main-tab-icon">🎯</span>
+            <span className="main-tab-label">Task</span>
+            {activeTask?.isActive && <span className="task-tab-badge" />}
+          </button>
+          <button
             className={`main-tab ${autoAdvance ? 'active' : ''}`}
             onClick={() => setAutoAdvance(!autoAdvance)}
             title={autoAdvance ? 'Auto-avanzamento ON' : 'Auto-avanzamento OFF'}
@@ -317,6 +328,12 @@ export function ChatPage() {
           {activeTab === 'podcast' && (
             <div className="tab-content-padded">
               <PodcastMode />
+            </div>
+          )}
+
+          {activeTab === 'tasks' && (
+            <div className="tab-content-padded">
+              <TaskPanel />
             </div>
           )}
         </div>

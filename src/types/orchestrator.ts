@@ -39,6 +39,7 @@ export interface OrchestratorInput {
   temperature: number;
   maxTokens: number;
   wordRange: [number, number];
+  taskContext?: string;  // Contesto task/obiettivo per il prompt
 }
 
 export interface OrchestratorResult {

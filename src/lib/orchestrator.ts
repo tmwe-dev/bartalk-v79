@@ -57,6 +57,7 @@ export async function orchestrate(
         previousResponses,
         convergenceInstruction,
         plan,
+        input.taskContext,
       );
 
       if (response.content) {
@@ -129,6 +130,7 @@ async function callAgent(
   previousResponses: { name: string; content: string }[],
   convergenceInstruction: string,
   plan: OrchestratorPlan,
+  taskContext?: string,
 ): Promise<AgentResponse> {
   const startTime = Date.now();
   const apiKey = getAPIKey(agent.provider);
@@ -146,7 +148,7 @@ async function callAgent(
     };
   }
 
-  const systemPrompt = buildRichSystemPrompt(agent, previousResponses, convergenceInstruction, plan);
+  const systemPrompt = buildRichSystemPrompt(agent, previousResponses, convergenceInstruction, plan, taskContext);
   const apiMessages = buildMessages(userMessage, history, plan.mode);
 
   const result = await callProxy({

@@ -149,6 +149,7 @@ export function buildRichSystemPrompt(
   previousResponses: { name: string; content: string }[],
   convergenceInstruction: string,
   plan: OrchestratorPlan,
+  taskContext?: string,
 ): string {
   const lang = plan.language || 'it';
   const [minWords, maxWords] = plan.wordRange;
@@ -217,7 +218,12 @@ export function buildRichSystemPrompt(
     parts.push(convergenceInstruction);
   }
 
-  // 8. Turno forzato
+  // 8. Contesto Task/Obiettivo
+  if (taskContext) {
+    parts.push(taskContext);
+  }
+
+  // 9. Turno forzato
   if (plan.isForced) {
     const forcedNote = lang === 'it'
       ? '📢 Questo è uno dei primi turni della conversazione. Presenta il tuo punto di vista distintivo e stabilisci la tua posizione sul tema.'

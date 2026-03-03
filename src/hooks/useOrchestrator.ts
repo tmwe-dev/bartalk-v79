@@ -3,6 +3,7 @@ import { useConversationContext } from '../context/ConversationContext';
 import { useSettingsContext } from '../context/SettingsContext';
 import { useAgentContext } from '../context/AgentContext';
 import { useUIContext } from '../context/UIContext';
+import { useTaskContext } from '../context/TaskContext';
 import { orchestrate } from '../lib/orchestrator';
 import { enqueueTTS } from '../lib/tts';
 import { handleCommand } from '../lib/commands';
@@ -15,6 +16,7 @@ export function useOrchestrator() {
     useSettingsContext();
   const { enabledAgents, getVoiceId } = useAgentContext();
   const { openSettings } = useUIContext();
+  const { getTaskPromptContext } = useTaskContext();
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim()) return;
@@ -68,6 +70,7 @@ export function useOrchestrator() {
           temperature,
           maxTokens,
           wordRange,
+          taskContext: getTaskPromptContext(),
         },
         // Callback: ogni risposta agente arriva in tempo reale
         (response: AgentResponse) => {
@@ -108,7 +111,7 @@ export function useOrchestrator() {
     enabledAgents, messages, turnIndex, conversationMode, turnStrategy,
     ttsEnabled, language, temperature, maxTokens, wordRange,
     conversationId, addMessage, setWaiting, startTurn,
-    incrementTurn, getVoiceId, openSettings,
+    incrementTurn, getVoiceId, openSettings, getTaskPromptContext,
   ]);
 
   return { sendMessage };
