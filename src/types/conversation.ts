@@ -10,6 +10,8 @@ export interface Message {
   tokensIn?: number;
   tokensOut?: number;
   duration?: number;
+  isDemo?: boolean;
+  isError?: boolean;
 }
 
 export interface Conversation {

@@ -15,6 +15,7 @@ export function PreferencesTab() {
     conversationMode, setConversationMode,
     turnStrategy, setTurnStrategy,
     ttsEnabled, setTtsEnabled,
+    autoRun, setAutoRun,
     language, setLanguage,
     temperature, setTemperature,
     maxTokens, setMaxTokens,
@@ -174,6 +175,24 @@ export function PreferencesTab() {
           </span>
           <span className="radio-desc">
             Usa ElevenLabs per le voci degli agenti (richiede chiave API)
+          </span>
+        </label>
+      </div>
+
+      {/* ── AUTO-RUN ─────────────────────────────────── */}
+      <div className="field-group">
+        <label className="radio-option">
+          <input
+            type="checkbox"
+            checked={autoRun}
+            onChange={(e) => setAutoRun(e.target.checked)}
+          />
+          <span className="radio-label">
+            {autoRun ? '🔄 AutoRun attivo' : '⏸ AutoRun disattivato'}
+          </span>
+          <span className="radio-desc">
+            Avanza automaticamente al prossimo agente al termine dell'audio TTS.
+            I messaggi demo o con errore vengono saltati.
           </span>
         </label>
       </div>

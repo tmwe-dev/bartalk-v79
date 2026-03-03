@@ -84,6 +84,8 @@ export function useOrchestrator() {
             tokensIn: response.tokensIn,
             tokensOut: response.tokensOut,
             duration: response.duration,
+            isDemo: response.isDemo || false,
+            isError: !!response.error,
           });
 
           // TTS: accoda la risposta

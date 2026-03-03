@@ -23,9 +23,14 @@ export function MessageList() {
     );
   }
 
+  // Filter out demo/error null messages
+  const visibleMessages = messages.filter(msg =>
+    !msg.isDemo && !msg.isError
+  );
+
   return (
     <div className="message-list">
-      {messages.map(msg => (
+      {visibleMessages.map(msg => (
         <MessageBubble key={msg.id} message={msg} />
       ))}
       <div ref={bottomRef} />

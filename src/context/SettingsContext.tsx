@@ -9,6 +9,7 @@ interface SettingsContextValue {
   conversationMode: ConversationMode;
   turnStrategy: TurnStrategy;
   ttsEnabled: boolean;
+  autoRun: boolean;
   language: AppLanguage;
   temperature: number;
   maxTokens: number;
@@ -19,6 +20,7 @@ interface SettingsContextValue {
   setConversationMode: (mode: ConversationMode) => void;
   setTurnStrategy: (strategy: TurnStrategy) => void;
   setTtsEnabled: (enabled: boolean) => void;
+  setAutoRun: (enabled: boolean) => void;
   setLanguage: (lang: AppLanguage) => void;
   setTemperature: (temp: number) => void;
   setMaxTokens: (tokens: number) => void;
@@ -33,6 +35,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [conversationMode, setConversationMode] = useState<ConversationMode>('consultation');
   const [turnStrategy, setTurnStrategy] = useState<TurnStrategy>('round_robin');
   const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [autoRun, setAutoRun] = useState(true);
   const [language, setLanguage] = useState<AppLanguage>('it');
   const [temperature, setTemperature] = useState<number>(ORCHESTRATOR.defaultTemperature as number);
   const [maxTokens, setMaxTokens] = useState<number>(ORCHESTRATOR.maxTokens as number);
@@ -45,6 +48,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     if (saved.conversationMode) setConversationMode(saved.conversationMode);
     if (saved.turnStrategy) setTurnStrategy(saved.turnStrategy);
     if (saved.ttsEnabled !== undefined) setTtsEnabled(saved.ttsEnabled);
+    if (saved.autoRun !== undefined) setAutoRun(saved.autoRun);
     if (saved.language) setLanguage(saved.language);
     if (saved.temperature !== undefined) setTemperature(saved.temperature);
     if (saved.maxTokens !== undefined) setMaxTokens(saved.maxTokens);
@@ -60,12 +64,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       conversationMode,
       turnStrategy,
       ttsEnabled,
+      autoRun,
       language,
       temperature,
       maxTokens,
       wordRange,
     });
-  }, [conversationMode, turnStrategy, ttsEnabled, language, temperature, maxTokens, wordRange]);
+  }, [conversationMode, turnStrategy, ttsEnabled, autoRun, language, temperature, maxTokens, wordRange]);
 
   // Auto-save API keys
   useEffect(() => {
@@ -99,12 +104,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       conversationMode,
       turnStrategy,
       ttsEnabled,
+      autoRun,
       language,
       temperature,
       maxTokens,
       wordRange,
     });
-  }, [apiKeys, conversationMode, turnStrategy, ttsEnabled, language, temperature, maxTokens, wordRange]);
+  }, [apiKeys, conversationMode, turnStrategy, ttsEnabled, autoRun, language, temperature, maxTokens, wordRange]);
 
   return (
     <ConText.Provider value={{
@@ -112,6 +118,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       conversationMode,
       turnStrategy,
       ttsEnabled,
+      autoRun,
       language,
       temperature,
       maxTokens,
@@ -122,6 +129,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setConversationMode,
       setTurnStrategy,
       setTtsEnabled,
+      setAutoRun,
       setLanguage,
       setTemperature,
       setMaxTokens,

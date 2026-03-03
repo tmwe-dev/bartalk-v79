@@ -312,6 +312,7 @@ export interface AppSettings {
   conversationMode: ConversationMode;
   turnStrategy: TurnStrategy;
   ttsEnabled: boolean;
+  autoRun: boolean;
   language: AppLanguage;
   temperature: number;
   maxTokens: number;

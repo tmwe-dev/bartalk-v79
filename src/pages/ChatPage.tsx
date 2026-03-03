@@ -1,10 +1,11 @@
-import { useState, useCallback, lazy, Suspense, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, lazy, Suspense, useEffect, useRef } from 'react';
 import { Navbar } from '../components/Layout/Navbar';
 import { ChatContainer } from '../components/Chat/ChatContainer';
 import { InputBox } from '../components/Chat/InputBox';
 import { PodcastMode } from '../components/Podcast/PodcastMode';
 import { FloatingZoomControl } from '../components/Carousel/FloatingZoomControl';
 import { AudioControlBar } from '../components/Chat/AudioControlBar';
+import { AgentTabs } from '../components/Chat/AgentTabs';
 import { TaskPanel } from '../components/Tasks/TaskPanel';
 import { useConversationContext } from '../context/ConversationContext';
 import { useSettingsContext } from '../context/SettingsContext';
@@ -18,6 +19,7 @@ import {
 } from '../lib/memory';
 import { resetTTS } from '../lib/tts';
 import { StudioPage } from '../components/Studio/StudioPage';
+import type { Message } from '../types/conversation';
 
 const RadioCarousel3D = lazy(() =>
   import('../components/Carousel/RadioCarousel3D').then(m => ({ default: m.RadioCarousel3D }))
@@ -26,10 +28,16 @@ const RadioCarousel3D = lazy(() =>
 type MainTab = 'chat' | 'carousel' | 'podcast' | 'tasks' | 'studio';
 const MAX_SLOTS = 8;
 
-function getVisibleSlice(messages: { senderType: string }[]) {
+/** Carousel visible slice: human + valid assistant messages (no demo/error) */
+function getVisibleSlice(messages: Message[]) {
   return messages
-    .filter(m => m.senderType === 'assistant' || m.senderType === 'human')
+    .filter(m => (m.senderType === 'assistant' || m.senderType === 'human') && !m.isDemo && !m.isError)
     .slice(-MAX_SLOTS);
+}
+
+/** Agent tabs: only valid assistant messages (no demo/error) */
+function getValidAgentMessages(messages: Message[]) {
+  return messages.filter(m => m.senderType === 'assistant' && !m.isDemo && !m.isError);
 }
 
 // ── Left Sidebar (permanente, stile v7.x) ────────────────────────────
@@ -226,7 +234,7 @@ function LeftSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: ()
 export function ChatPage() {
   const [activeTab, setActiveTab] = useState<MainTab>('chat');
   const { messages } = useConversationContext();
-  const { ttsEnabled } = useSettingsContext();
+  const { ttsEnabled, autoRun, setAutoRun } = useSettingsContext();
   const { activeTask } = useTaskContext();
 
   // Sidebar: open by default on desktop, closed on mobile
@@ -238,14 +246,16 @@ export function ChatPage() {
     setSidebarCollapsed(prev => !prev);
   }, []);
 
+  // ── Valid agent messages (no demo/error) ──
+  const validAgentMsgs = useMemo(() => getValidAgentMessages(messages), [messages]);
+
+  // ── Agent tab index (synced with carousel) ──
+  const [agentTabIndex, setAgentTabIndex] = useState(0);
+
   // ── Carousel state ──
   const [carouselIndex, setCarouselIndex] = useState(() => {
     const slice = getVisibleSlice(messages);
     return Math.max(0, slice.length - 1);
-  });
-
-  const [autoAdvance, setAutoAdvance] = useState(() => {
-    return localStorage.getItem('bartalk_auto_advance') !== 'false';
   });
 
   const [carouselZoom, setCarouselZoom] = useState(() => {
@@ -266,55 +276,64 @@ export function ChatPage() {
   useEffect(() => {
     localStorage.setItem('bartalk_carousel_voffset', String(carouselVerticalOffset));
   }, [carouselVerticalOffset]);
-  useEffect(() => {
-    localStorage.setItem('bartalk_auto_advance', String(autoAdvance));
-  }, [autoAdvance]);
 
-  // Auto-advance on new messages
+  // ── Sync: new agent messages → jump to last tab + last carousel card ──
   useEffect(() => {
-    const slice = getVisibleSlice(messages);
-    const count = slice.length;
+    const count = validAgentMsgs.length;
     if (count > prevMsgCountRef.current && count > 0) {
-      setCarouselIndex(count - 1);
+      setAgentTabIndex(count - 1);
+      // Also update carousel
+      const slice = getVisibleSlice(messages);
+      if (slice.length > 0) setCarouselIndex(slice.length - 1);
     }
     prevMsgCountRef.current = count;
-  }, [messages]);
+  }, [validAgentMsgs, messages]);
 
-  // Tab switch → jump to last
+  // Tab switch → jump to last carousel card
   useEffect(() => {
     if (activeTab === 'carousel') {
       const slice = getVisibleSlice(messages);
-      if (slice.length > 0) {
-        setCarouselIndex(slice.length - 1);
-      }
+      if (slice.length > 0) setCarouselIndex(slice.length - 1);
     }
   }, [activeTab]);
 
-  // TTS sync
+  // ── TTS sync: audio start → activate agent's tab + carousel card ──
   useEffect(() => {
     const onAudioStart = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       const agentName = detail?.agentName;
       if (!agentName) return;
-      const slice = getVisibleSlice(messages);
-      let targetIdx = -1;
-      for (let i = slice.length - 1; i >= 0; i--) {
-        const m = slice[i] as { senderType: string; senderName?: string };
-        if (m.senderName?.toLowerCase() === agentName.toLowerCase()) {
-          targetIdx = i;
+
+      // Find agent tab
+      for (let i = validAgentMsgs.length - 1; i >= 0; i--) {
+        if (validAgentMsgs[i].senderName?.toLowerCase() === agentName.toLowerCase()) {
+          setAgentTabIndex(i);
           break;
         }
       }
-      if (targetIdx >= 0) setCarouselIndex(targetIdx);
+      // Find carousel card
+      const slice = getVisibleSlice(messages);
+      for (let i = slice.length - 1; i >= 0; i--) {
+        if ((slice[i] as Message).senderName?.toLowerCase() === agentName.toLowerCase()) {
+          setCarouselIndex(i);
+          break;
+        }
+      }
     };
 
+    // ── TTS end: autoRun → advance to next tab ──
     const onAudioEnd = () => {
-      if (!autoAdvance) return;
+      if (!autoRun) return;
+      // Auto-advance agent tab
+      setAgentTabIndex(prev => {
+        const maxIdx = validAgentMsgs.length - 1;
+        return prev < maxIdx ? prev + 1 : prev;
+      });
+      // Auto-advance carousel
       setCarouselIndex(prev => {
         const slice = getVisibleSlice(messages);
         const maxIdx = slice.length - 1;
-        const next = prev + 1;
-        return next <= maxIdx ? next : prev;
+        return prev < maxIdx ? prev + 1 : prev;
       });
     };
 
@@ -324,11 +343,29 @@ export function ChatPage() {
       window.removeEventListener('radio-audio-start', onAudioStart);
       window.removeEventListener('radio-audio-end', onAudioEnd);
     };
-  }, [messages, autoAdvance]);
+  }, [messages, validAgentMsgs, autoRun]);
+
+  // ── Sync: agent tab click → carousel sync ──
+  const onAgentTabClick = useCallback((idx: number) => {
+    setAgentTabIndex(idx);
+    // Find the matching message in the carousel slice
+    const msg = validAgentMsgs[idx];
+    if (!msg) return;
+    const slice = getVisibleSlice(messages);
+    const cIdx = slice.findIndex(m => m.id === msg.id);
+    if (cIdx >= 0) setCarouselIndex(cIdx);
+  }, [validAgentMsgs, messages]);
 
   const onCarouselIndexChange = useCallback((idx: number) => {
     setCarouselIndex(idx);
-  }, []);
+    // Sync agent tab: find matching agent message
+    const slice = getVisibleSlice(messages);
+    const msg = slice[idx];
+    if (msg && msg.senderType === 'assistant') {
+      const tabIdx = validAgentMsgs.findIndex(m => m.id === msg.id);
+      if (tabIdx >= 0) setAgentTabIndex(tabIdx);
+    }
+  }, [messages, validAgentMsgs]);
 
   return (
     <div className="app-layout-row">
@@ -345,6 +382,15 @@ export function ChatPage() {
         <Navbar onToggleSidebar={toggleSidebar} sidebarCollapsed={sidebarCollapsed} />
 
         {ttsEnabled && <AudioControlBar />}
+
+        {/* Agent Tabs (horizontal, always visible when there are messages) */}
+        {validAgentMsgs.length > 0 && (
+          <AgentTabs
+            validMessages={validAgentMsgs}
+            activeIndex={agentTabIndex}
+            onTabClick={onAgentTabClick}
+          />
+        )}
 
         {/* Tab Bar */}
         <div className="main-tab-bar">
@@ -385,11 +431,11 @@ export function ChatPage() {
             <span className="main-tab-label">Studio</span>
           </button>
           <button
-            className={`main-tab ${autoAdvance ? 'active' : ''}`}
-            onClick={() => setAutoAdvance(!autoAdvance)}
-            title={autoAdvance ? 'Auto-avanzamento ON' : 'Auto-avanzamento OFF'}
+            className={`main-tab ${autoRun ? 'active' : ''}`}
+            onClick={() => setAutoRun(!autoRun)}
+            title={autoRun ? 'AutoRun ON' : 'AutoRun OFF'}
           >
-            <span className="main-tab-icon">{autoAdvance ? '🔄' : '⏸'}</span>
+            <span className="main-tab-icon">{autoRun ? '🔄' : '⏸'}</span>
             <span className="main-tab-label">Auto</span>
           </button>
         </div>
