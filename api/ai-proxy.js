@@ -63,6 +63,8 @@ if (ALLOWED_ORIGINS_EXACT.length === 0) {
 }
 
 const LOCALHOST_PATTERN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+// Vercel preview deployments: *.vercel.app
+const VERCEL_PREVIEW_PATTERN = /^https:\/\/bartalk-v79[a-z0-9-]*\.vercel\.app$/;
 
 function getAllowedOrigin(req) {
   const origin = req.headers?.origin || '';
@@ -70,6 +72,8 @@ function getAllowedOrigin(req) {
   if (!clean) return null;
   // Controlla domini esatti
   if (ALLOWED_ORIGINS_EXACT.includes(clean)) return clean;
+  // Controlla Vercel preview deployments (bartalk-v79-*.vercel.app)
+  if (VERCEL_PREVIEW_PATTERN.test(clean)) return clean;
   // Controlla localhost (solo sviluppo)
   if (LOCALHOST_PATTERN.test(clean)) return clean;
   return null;

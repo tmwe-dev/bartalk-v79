@@ -112,11 +112,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           const mergedKeys: APIKeyEntry[] = [];
 
           for (const vk of vaultKeys) {
-            // Chiave nel vault: usa placeholder (il proxy la legge dal DB)
+            // Chiave nel vault: preserva la chiave reale in localStorage se esiste,
+            // altrimenti usa placeholder (il proxy leggerà dal vault server-side)
             const localMatch = localKeys.find(lk => lk.provider === vk.provider);
+            const hasRealLocalKey = localMatch?.apiKey && localMatch.apiKey !== '••••••••';
             mergedKeys.push({
               provider: vk.provider as APIKeyEntry['provider'],
-              apiKey: localMatch?.apiKey || '••••••••', // placeholder, proxy usa vault
+              apiKey: hasRealLocalKey ? localMatch.apiKey : '••••••••',
               model: vk.model || localMatch?.model || undefined,
             });
           }
