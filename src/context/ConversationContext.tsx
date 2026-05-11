@@ -233,6 +233,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
           id: m.id,
           conversationId: m.conversation_id,
           senderType: m.sender_type,
+          senderName: m.agent_name || (m.sender_type === 'human' ? 'Tu' : 'Sistema'),
           agentName: m.agent_name || undefined,
           provider: m.provider || undefined,
           content: m.content,
