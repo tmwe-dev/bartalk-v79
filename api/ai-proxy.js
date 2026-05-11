@@ -200,7 +200,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing provider' });
     }
 
-    // ── Risolvi API key: vault DB (autenticato) → client (skip mode) ──
+    // ── Risolvi API key: vault DB → client → server-side env fallback ──
     let apiKey = clientApiKey;
     let model = requestModel;
 
@@ -210,6 +210,20 @@ export default async function handler(req, res) {
       if (vaultEntry) {
         apiKey = vaultEntry.apiKey;
         if (!model && vaultEntry.model) model = vaultEntry.model;
+      }
+    }
+
+    // Fallback: chiavi server-side da Vercel Environment Variables
+    if (!apiKey) {
+      const SERVER_KEYS = {
+        openai: process.env.OPENAI_API_KEY,
+        anthropic: process.env.ANTHROPIC_API_KEY,
+        gemini: process.env.GOOGLE_API_KEY,
+        groq: process.env.GROQ_API_KEY,
+      };
+      apiKey = SERVER_KEYS[provider];
+      if (apiKey) {
+        console.log(`[ai-proxy] Using server-side key for ${provider}`);
       }
     }
 

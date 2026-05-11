@@ -247,17 +247,8 @@ async function callAgent(
   const apiKey = getAPIKey(agent.provider);
   const model = getModel(agent.provider) || DEFAULT_MODELS[agent.provider];
 
-  if (!apiKey) {
-    return {
-      agentName: agent.name,
-      provider: agent.provider,
-      content: agent.demoResponse,
-      tokensIn: 0,
-      tokensOut: 0,
-      duration: Date.now() - startTime,
-      isDemo: true,
-    };
-  }
+  // Se non c'è chiave client-side, il proxy userà le chiavi server-side (env vars).
+  // Non restituire più demo response — lascia che il proxy gestisca il fallback.
 
   const systemPrompt = buildRichSystemPrompt(agent, previousResponses, convergenceInstruction, plan, taskContext, userMessage);
 
@@ -273,7 +264,7 @@ async function callAgent(
     systemPrompt,
     temperature: plan.temperature,
     maxTokens: plan.maxTokens,
-    apiKey,
+    apiKey: apiKey || '', // Se vuoto, il proxy usa chiavi server-side
   });
 
   if (result.error) {

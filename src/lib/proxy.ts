@@ -44,9 +44,9 @@ export async function callProxy(req: ProxyRequest): Promise<ProxyResponse> {
       headers['X-BT-Skip-Auth'] = 'true';
     }
 
-    // Se la chiave è un placeholder del vault (utente autenticato), non inviarla.
-    // Il proxy la leggerà direttamente dal DB server-side.
-    const isVaultPlaceholder = req.apiKey === '••••••••' || !req.apiKey;
+    // Se la chiave è un placeholder del vault, vuota, o assente → non inviarla.
+    // Il proxy la leggerà dal DB (utente autenticato) o userà le env vars server-side.
+    const isVaultPlaceholder = req.apiKey === '••••••••' || !req.apiKey || req.apiKey.trim() === '';
     const bodyPayload: Record<string, unknown> = {
       provider: req.provider,
       model: req.model,

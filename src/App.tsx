@@ -8,6 +8,7 @@ import { UIProvider, useUIContext } from './context/UIContext';
 import { AuthGate } from './components/Auth/AuthGate';
 import { SettingsModal } from './components/Settings/SettingsModal';
 import { ToastContainer } from './components/Common/Toast';
+import { ErrorBoundary } from './components/Common/ErrorBoundary';
 import { ChatPage } from './pages/ChatPage';
 import { StudioPage } from './components/Studio/StudioPage';
 import { Navbar } from './components/Layout/Navbar';
@@ -43,22 +44,26 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <SettingsProvider>
-        <AgentProvider>
-          <ConversationProvider>
-            <TaskProvider>
-              <UIProvider>
-                <AuthGate>
-                  <AppContent />
-                </AuthGate>
-                <SettingsModal />
-                <ToastContainer />
-              </UIProvider>
-            </TaskProvider>
-          </ConversationProvider>
-        </AgentProvider>
-      </SettingsProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <SettingsProvider>
+          <AgentProvider>
+            <ConversationProvider>
+              <TaskProvider>
+                <UIProvider>
+                  <AuthGate>
+                    <ErrorBoundary>
+                      <AppContent />
+                    </ErrorBoundary>
+                  </AuthGate>
+                  <SettingsModal />
+                  <ToastContainer />
+                </UIProvider>
+              </TaskProvider>
+            </ConversationProvider>
+          </AgentProvider>
+        </SettingsProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
