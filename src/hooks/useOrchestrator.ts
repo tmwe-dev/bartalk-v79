@@ -7,6 +7,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { orchestrate } from '../lib/orchestrator';
 import { enqueueTTS } from '../lib/tts';
 import { handleCommand } from '../lib/commands';
+import { validateUserMessage } from '../lib/sanitize';
 import type { AgentResponse } from '../types/orchestrator';
 
 export function useOrchestrator() {
@@ -21,7 +22,19 @@ export function useOrchestrator() {
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
-    // Controlla comandi slash
+    // Validazione e sanitizzazione input
+    const validation = validateUserMessage(text);
+    if (!validation.valid) {
+      addMessage({
+        senderType: 'system',
+        senderName: 'Sistema',
+        content: validation.error || 'Messaggio non valido.',
+      });
+      return;
+    }
+    const sanitizedText = validation.sanitized;
+
+    // Controlla comandi slash (usa testo originale per i comandi)
     if (text.trim().startsWith('/')) {
       const cmd = handleCommand(text);
       if (cmd.handled) {
@@ -46,11 +59,11 @@ export function useOrchestrator() {
 
     if (enabledAgents.length === 0) return;
 
-    // Aggiungi messaggio utente
+    // Aggiungi messaggio utente (sanitizzato)
     addMessage({
       senderType: 'human',
       senderName: 'Tu',
-      content: text,
+      content: sanitizedText,
     });
 
     setWaiting(true);
@@ -60,7 +73,7 @@ export function useOrchestrator() {
       await orchestrate(
         {
           conversationId,
-          userMessage: text,
+          userMessage: sanitizedText,
           messages,
           turnIndex,
           mode: conversationMode,

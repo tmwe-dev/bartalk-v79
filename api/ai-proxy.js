@@ -63,6 +63,8 @@ if (ALLOWED_ORIGINS_EXACT.length === 0) {
 }
 
 const LOCALHOST_PATTERN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+// Pattern per preview deploys di Vercel (bartalk-v79-*-tmweapps-projects.vercel.app)
+const VERCEL_PREVIEW_PATTERN = /^https:\/\/bartalk-v79-[a-z0-9-]+-tmweapps-projects\.vercel\.app$/;
 
 function getAllowedOrigin(req) {
   const origin = req.headers?.origin || '';
@@ -70,6 +72,8 @@ function getAllowedOrigin(req) {
   if (!clean) return null;
   // Controlla domini esatti
   if (ALLOWED_ORIGINS_EXACT.includes(clean)) return clean;
+  // Controlla preview deploys Vercel
+  if (VERCEL_PREVIEW_PATTERN.test(clean)) return clean;
   // Controlla localhost (solo sviluppo)
   if (LOCALHOST_PATTERN.test(clean)) return clean;
   return null;
@@ -98,20 +102,62 @@ function verifyJWT(token) {
 }
 
 // --- SECURITY: Rate limiting (in-memory, per Vercel instance) ---
+// Doppio livello: globale per IP + specifico per provider
 const rateMap = new Map();
 const RATE_WINDOW = 60 * 1000; // 1 min
-const RATE_LIMIT = 100;        // max 100 requests/min per IP
+const RATE_LIMIT = 60;         // max 60 requests/min per IP (abbassato da 100)
+const RATE_LIMIT_PER_PROVIDER = 20; // max 20 req/min per IP per singolo provider
+const RATE_BURST_LIMIT = 10;   // max 10 request in 5 secondi (anti-burst)
+const BURST_WINDOW = 5 * 1000;
 
-function checkRate(ip) {
+// Cleanup automatico per evitare memory leak su cold-start lunghi
+let lastCleanup = Date.now();
+function cleanupRateMap() {
   const now = Date.now();
-  const entry = rateMap.get(ip);
-  if (!entry || now - entry.windowStart > RATE_WINDOW) {
-    rateMap.set(ip, { windowStart: now, count: 1 });
-    return true;
+  if (now - lastCleanup < RATE_WINDOW * 2) return;
+  lastCleanup = now;
+  for (const [key, entry] of rateMap) {
+    if (now - entry.windowStart > RATE_WINDOW * 2) rateMap.delete(key);
   }
-  entry.count++;
-  if (entry.count > RATE_LIMIT) return false;
-  return true;
+}
+
+function checkRate(ip, provider) {
+  cleanupRateMap();
+  const now = Date.now();
+
+  // 1. Rate limit globale per IP
+  const globalKey = `ip:${ip}`;
+  const globalEntry = rateMap.get(globalKey);
+  if (!globalEntry || now - globalEntry.windowStart > RATE_WINDOW) {
+    rateMap.set(globalKey, { windowStart: now, count: 1 });
+  } else {
+    globalEntry.count++;
+    if (globalEntry.count > RATE_LIMIT) return { ok: false, reason: 'ip_limit' };
+  }
+
+  // 2. Rate limit per IP+provider
+  if (provider) {
+    const providerKey = `ip:${ip}:${provider}`;
+    const provEntry = rateMap.get(providerKey);
+    if (!provEntry || now - provEntry.windowStart > RATE_WINDOW) {
+      rateMap.set(providerKey, { windowStart: now, count: 1 });
+    } else {
+      provEntry.count++;
+      if (provEntry.count > RATE_LIMIT_PER_PROVIDER) return { ok: false, reason: 'provider_limit' };
+    }
+  }
+
+  // 3. Burst protection (anti-spam rapido)
+  const burstKey = `burst:${ip}`;
+  const burstEntry = rateMap.get(burstKey);
+  if (!burstEntry || now - burstEntry.windowStart > BURST_WINDOW) {
+    rateMap.set(burstKey, { windowStart: now, count: 1 });
+  } else {
+    burstEntry.count++;
+    if (burstEntry.count > RATE_BURST_LIMIT) return { ok: false, reason: 'burst_limit' };
+  }
+
+  return { ok: true };
 }
 
 // --- Upstream error → proper HTTP status mapping ---
@@ -162,12 +208,8 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Origin not allowed' });
   }
 
-  // Rate limit
+  // Rate limit (pre-validation, senza provider)
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
-  if (!checkRate(clientIp)) {
-    res.setHeader('Retry-After', '60');
-    return res.status(429).json({ error: `Rate limit exceeded. Max ${RATE_LIMIT} requests/min.` });
-  }
 
   // --- Body size check ---
   const bodySize = JSON.stringify(req.body || {}).length;
@@ -186,8 +228,6 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid or expired auth token' });
     }
   } else if (!skipAuth) {
-    // Se SUPABASE_JWT_SECRET è configurato, richiedi autenticazione
-    // Altrimenti, consenti accesso anonimo (backward compatibility)
     if (SUPABASE_JWT_SECRET) {
       return res.status(401).json({ error: 'Authentication required. Use login or skip mode.' });
     }
@@ -196,8 +236,81 @@ export default async function handler(req, res) {
   try {
     const { provider, model: requestModel, messages, systemPrompt, temperature, maxTokens, apiKey: clientApiKey, tools } = req.body;
 
-    if (!provider) {
-      return res.status(400).json({ error: 'Missing provider' });
+    // ── INPUT VALIDATION ──────────────────────────────────────────────
+
+    // Provider: deve essere uno dei 4 supportati
+    const VALID_PROVIDERS = ['openai', 'anthropic', 'gemini', 'groq'];
+    if (!provider || !VALID_PROVIDERS.includes(provider)) {
+      return res.status(400).json({
+        error: `Invalid provider. Must be one of: ${VALID_PROVIDERS.join(', ')}`,
+      });
+    }
+
+    // Rate limit (con provider per granularità)
+    const rateCheck = checkRate(clientIp, provider);
+    if (!rateCheck.ok) {
+      const retryAfter = rateCheck.reason === 'burst_limit' ? '5' : '60';
+      res.setHeader('Retry-After', retryAfter);
+      const messages_map = {
+        ip_limit: `Rate limit exceeded. Max ${RATE_LIMIT} requests/min.`,
+        provider_limit: `Too many requests to ${provider}. Max ${RATE_LIMIT_PER_PROVIDER}/min per provider.`,
+        burst_limit: 'Too many requests in a short time. Please wait a few seconds.',
+      };
+      return res.status(429).json({ error: messages_map[rateCheck.reason] || 'Rate limit exceeded.' });
+    }
+
+    // Messages: deve essere un array non vuoto
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'Messages must be a non-empty array.' });
+    }
+
+    // Messages: max 100 messaggi per richiesta
+    if (messages.length > 100) {
+      return res.status(400).json({ error: `Too many messages (${messages.length}). Max 100 per request.` });
+    }
+
+    // Messages: valida struttura di ogni messaggio
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i];
+      if (!msg || typeof msg !== 'object') {
+        return res.status(400).json({ error: `Invalid message at index ${i}: must be an object.` });
+      }
+      if (!msg.role || !['user', 'assistant', 'system'].includes(msg.role)) {
+        return res.status(400).json({ error: `Invalid role at index ${i}: must be user, assistant, or system.` });
+      }
+      if (typeof msg.content !== 'string') {
+        return res.status(400).json({ error: `Invalid content at index ${i}: must be a string.` });
+      }
+      // Singolo messaggio max 32KB (previene abuse con payload enormi)
+      if (msg.content.length > 32768) {
+        return res.status(400).json({ error: `Message at index ${i} too long (${Math.round(msg.content.length/1024)}KB). Max 32KB per message.` });
+      }
+    }
+
+    // Temperature: deve essere tra 0 e 2
+    if (temperature !== undefined && temperature !== null) {
+      const temp = Number(temperature);
+      if (isNaN(temp) || temp < 0 || temp > 2) {
+        return res.status(400).json({ error: 'Temperature must be between 0 and 2.' });
+      }
+    }
+
+    // MaxTokens: deve essere tra 1 e 16384
+    if (maxTokens !== undefined && maxTokens !== null) {
+      const mt = Number(maxTokens);
+      if (isNaN(mt) || mt < 1 || mt > 16384) {
+        return res.status(400).json({ error: 'maxTokens must be between 1 and 16384.' });
+      }
+    }
+
+    // Model: se specificato, deve essere una stringa ragionevole
+    if (requestModel && (typeof requestModel !== 'string' || requestModel.length > 100)) {
+      return res.status(400).json({ error: 'Invalid model name.' });
+    }
+
+    // SystemPrompt: max 16KB
+    if (systemPrompt && (typeof systemPrompt !== 'string' || systemPrompt.length > 16384)) {
+      return res.status(400).json({ error: 'System prompt too long. Max 16KB.' });
     }
 
     // ── Risolvi API key: vault DB → client → server-side env fallback ──

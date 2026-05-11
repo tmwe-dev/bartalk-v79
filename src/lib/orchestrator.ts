@@ -170,6 +170,50 @@ function shouldSkipAgent(
   return agreementCount >= 2;
 }
 
+// ── Messaggi errore user-friendly ────────────────────────────────────
+
+function getUserFriendlyError(agentName: string, provider: string, error: string, detail?: string): string {
+  const errorLower = (error + ' ' + (detail || '')).toLowerCase();
+
+  // Rate limit
+  if (errorLower.includes('429') || errorLower.includes('rate limit') || errorLower.includes('too many')) {
+    return `${agentName} ha ricevuto troppe richieste. Attendi qualche secondo e riprova.`;
+  }
+
+  // Chiave API non valida
+  if (errorLower.includes('401') || errorLower.includes('403') || errorLower.includes('invalid') && errorLower.includes('key')) {
+    return `${agentName} non riesce ad autenticarsi con ${provider}. Verifica la chiave API nelle Impostazioni.`;
+  }
+
+  // Chiave mancante
+  if (errorLower.includes('missing apikey') || errorLower.includes('missing api')) {
+    return `${agentName} non ha una chiave API configurata. Vai nelle Impostazioni per aggiungerla.`;
+  }
+
+  // Errore di rete
+  if (errorLower.includes('network') || errorLower.includes('rete') || errorLower.includes('fetch') || errorLower.includes('timeout')) {
+    return `${agentName} non riesce a connettersi. Controlla la connessione internet e riprova.`;
+  }
+
+  // Server del provider giù
+  if (errorLower.includes('502') || errorLower.includes('503') || errorLower.includes('504') || errorLower.includes('500')) {
+    return `${agentName} è temporaneamente non disponibile (problemi con ${provider}). Riprova tra poco.`;
+  }
+
+  // Contenuto troppo lungo
+  if (errorLower.includes('413') || errorLower.includes('too large') || errorLower.includes('token') && errorLower.includes('limit')) {
+    return `Il messaggio è troppo lungo per ${agentName}. Prova a ridurre la lunghezza della conversazione.`;
+  }
+
+  // Tentativi esauriti
+  if (errorLower.includes('tentativi') || errorLower.includes('retry')) {
+    return `${agentName} non è riuscito a rispondere dopo diversi tentativi. Riprova tra qualche momento.`;
+  }
+
+  // Fallback generico — comunque leggibile
+  return `${agentName} ha riscontrato un problema. Riprova o controlla le impostazioni.`;
+}
+
 // ── Costruisce il piano ──────────────────────────────────────────────
 
 function buildPlan(
@@ -268,10 +312,12 @@ async function callAgent(
   });
 
   if (result.error) {
+    // Messaggi user-friendly basati sul tipo di errore
+    const friendlyMessage = getUserFriendlyError(agent.name, agent.provider, result.error, result.detail);
     return {
       agentName: agent.name,
       provider: agent.provider,
-      content: `[Errore ${agent.provider}: ${result.detail || result.error}]`,
+      content: friendlyMessage,
       tokensIn: 0,
       tokensOut: 0,
       duration: Date.now() - startTime,
