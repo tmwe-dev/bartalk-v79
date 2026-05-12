@@ -7,6 +7,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { AuthState, AuthUser, AuthContextValue } from '../types/auth';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { pullAllFromDB } from '../lib/dbSync';
 
 // ── Chiave localStorage per skip mode ────────────────────────────────
 const SKIP_KEY = 'bartalk_auth_skipped';
@@ -66,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             displayName: session.user.user_metadata?.display_name,
           });
           setAuthState('authenticated');
+          // Sync DB → localStorage al login
+          pullAllFromDB().catch(err => console.warn('[auth] DB sync fallito:', err));
         } else {
           setAuthState('unauthenticated');
         }
@@ -95,6 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAuthState('authenticated');
           setIsSkipMode(false);
           localStorage.removeItem(SKIP_KEY);
+          // Sync DB → localStorage quando auth cambia
+          pullAllFromDB().catch(err => console.warn('[auth] DB sync fallito:', err));
         } else if (!isSkipMode) {
           setUser(null);
           setAuthState('unauthenticated');

@@ -1,22 +1,26 @@
+/**
+ * BarTalk v8.2 — App Root
+ * BrowserRouter wraps everything so all children can use useNavigate.
+ * Context providers sit between BrowserRouter and Routes.
+ */
+
 import { useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { AgentProvider } from './context/AgentContext';
 import { ConversationProvider } from './context/ConversationContext';
 import { TaskProvider } from './context/TaskContext';
 import { UIProvider, useUIContext } from './context/UIContext';
-import { AuthGate } from './components/Auth/AuthGate';
+import { ThemeProvider } from './context/ThemeContext';
 import { SettingsModal } from './components/Settings/SettingsModal';
 import { ToastContainer } from './components/Common/Toast';
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
-import { ChatPage } from './pages/ChatPage';
-import { StudioPage } from './components/Studio/StudioPage';
-import { Navbar } from './components/Layout/Navbar';
+import { AppRoutes } from './router';
 
-function AppContent() {
-  const { toggleSettings, studioMode } = useUIContext();
+function KeyboardShortcuts() {
+  const { toggleSettings } = useUIContext();
 
-  // Ctrl+K per aprire impostazioni
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -28,42 +32,34 @@ function AppContent() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleSettings]);
 
-  if (studioMode) {
-    return (
-      <div className="app-layout">
-        <Navbar />
-        <div className="main-content-area" style={{ padding: 16 }}>
-          <StudioPage />
-        </div>
-      </div>
-    );
-  }
-
-  return <ChatPage />;
+  return null;
 }
 
 export default function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <SettingsProvider>
-          <AgentProvider>
-            <ConversationProvider>
-              <TaskProvider>
-                <UIProvider>
-                  <AuthGate>
+      <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <SettingsProvider>
+            <AgentProvider>
+              <ConversationProvider>
+                <TaskProvider>
+                  <UIProvider>
                     <ErrorBoundary>
-                      <AppContent />
+                      <AppRoutes />
                     </ErrorBoundary>
-                  </AuthGate>
-                  <SettingsModal />
-                  <ToastContainer />
-                </UIProvider>
-              </TaskProvider>
-            </ConversationProvider>
-          </AgentProvider>
-        </SettingsProvider>
-      </AuthProvider>
+                    <SettingsModal />
+                    <ToastContainer />
+                    <KeyboardShortcuts />
+                  </UIProvider>
+                </TaskProvider>
+              </ConversationProvider>
+            </AgentProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </BrowserRouter>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

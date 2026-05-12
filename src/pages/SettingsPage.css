@@ -1,0 +1,374 @@
+/* BarTalk v8.2 — Settings Page */
+
+.settings-page {
+  min-height: 100vh;
+  background: #0a0a0f;
+  color: #fff;
+  padding: 20px;
+}
+
+.settings-page-header {
+  max-width: 960px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-back-btn {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.7);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.settings-back-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+.settings-page-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.settings-page-layout {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+}
+
+/* Sidebar */
+.settings-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-sidebar-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  font-size: 14px;
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.settings-sidebar-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.9);
+}
+
+.settings-sidebar-btn.active {
+  background: rgba(139,92,246,0.15);
+  color: #8B5CF6;
+}
+
+.settings-sidebar-icon {
+  font-size: 16px;
+}
+
+/* Content */
+.settings-content {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 28px;
+}
+
+.settings-section h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
+.settings-group {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.settings-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.settings-group h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: rgba(255,255,255,0.8);
+}
+
+.settings-muted {
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+/* Toggle */
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  cursor: pointer;
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+}
+
+.toggle-slider {
+  width: 36px;
+  height: 20px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+
+.settings-toggle input:checked + .toggle-slider {
+  background: #8B5CF6;
+}
+
+.settings-toggle input:checked + .toggle-slider::after {
+  transform: translateX(16px);
+}
+
+.settings-toggle input {
+  display: none;
+}
+
+/* Field */
+.settings-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+}
+
+.settings-field select,
+.settings-field input[type="range"] {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.settings-field input[type="range"] {
+  width: 140px;
+}
+
+/* Agents grid */
+.settings-agents-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.settings-agent-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.settings-agent-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.settings-agent-emoji {
+  font-size: 20px;
+}
+
+.settings-agent-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.settings-agent-model {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 10px;
+}
+
+/* Info box */
+.settings-info-box {
+  background: rgba(139,92,246,0.08);
+  border: 1px solid rgba(139,92,246,0.2);
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 13px;
+}
+
+.settings-info-box strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.settings-info-box p {
+  margin: 0;
+  color: rgba(255,255,255,0.6);
+}
+
+/* Account */
+.settings-account-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.settings-account-avatar {
+  font-size: 32px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+}
+
+.settings-account-email {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.settings-account-name {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+}
+
+.settings-account-plan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  color: rgba(255,255,255,0.6);
+}
+
+.settings-account-plan strong {
+  color: #8B5CF6;
+}
+
+/* Info grid */
+.settings-info-grid {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+}
+
+/* Buttons */
+.settings-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.settings-btn.primary {
+  background: #8B5CF6;
+  color: #fff;
+}
+
+.settings-btn.primary:hover {
+  background: #7C3AED;
+}
+
+.settings-btn.secondary {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
+}
+
+.settings-btn.secondary:hover {
+  background: rgba(255,255,255,0.14);
+}
+
+.settings-btn.danger {
+  background: rgba(239,68,68,0.15);
+  color: #EF4444;
+}
+
+.settings-btn.danger:hover {
+  background: rgba(239,68,68,0.25);
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .settings-page-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .settings-agents-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Loading state ─────────────────────────────── */
+.settings-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.settings-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: settings-spin 0.8s linear infinite;
+}
+@keyframes settings-spin {
+  to { transform: rotate(360deg); }
+}

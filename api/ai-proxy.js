@@ -191,9 +191,9 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     return res.status(200).json({
       status: 'ok',
-      version: '8.1.0',
+      version: '8.2.5',
       node: process.version,
-      providers: ['anthropic', 'openai', 'gemini', 'groq'],
+      providers: ['anthropic', 'openai', 'gemini', 'groq', 'xai'],
       timestamp: new Date().toISOString()
     });
   }
@@ -210,6 +210,14 @@ export default async function handler(req, res) {
 
   // Rate limit (pre-validation, senza provider)
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+
+  // Per-user rate limit (authenticated users: stricter, by userId instead of IP)
+  if (userId) {
+    const userRate = checkRate(`user:${userId}`, null);
+    if (!userRate.ok) {
+      return res.status(429).json({ error: 'Rate limit exceeded (user)', retryAfter: 60 });
+    }
+  }
 
   // --- Body size check ---
   const bodySize = JSON.stringify(req.body || {}).length;
@@ -239,7 +247,7 @@ export default async function handler(req, res) {
     // ── INPUT VALIDATION ──────────────────────────────────────────────
 
     // Provider: deve essere uno dei 4 supportati
-    const VALID_PROVIDERS = ['openai', 'anthropic', 'gemini', 'groq'];
+    const VALID_PROVIDERS = ['openai', 'anthropic', 'gemini', 'groq', 'xai'];
     if (!provider || !VALID_PROVIDERS.includes(provider)) {
       return res.status(400).json({
         error: `Invalid provider. Must be one of: ${VALID_PROVIDERS.join(', ')}`,
@@ -333,6 +341,7 @@ export default async function handler(req, res) {
         anthropic: process.env.ANTHROPIC_API_KEY,
         gemini: process.env.GOOGLE_API_KEY,
         groq: process.env.GROQ_API_KEY,
+        xai: process.env.XAI_API_KEY,
       };
       apiKey = SERVER_KEYS[provider];
       if (apiKey) {
@@ -584,7 +593,9 @@ export default async function handler(req, res) {
         break;
       }
 
-      case 'groq': {
+      case 'groq':
+      case 'xai': {
+        // Groq e xAI usano entrambi il formato OpenAI-compatible
         const groqMessages = [];
         if (systemPrompt) groqMessages.push({ role: 'system', content: systemPrompt });
         for (const m of (messages || [])) {
@@ -592,14 +603,20 @@ export default async function handler(req, res) {
         }
         if (groqMessages.length === 0) groqMessages.push({ role: 'user', content: 'Ciao' });
 
-        const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const isXAI = provider === 'xai';
+        const apiBaseUrl = isXAI
+          ? 'https://api.x.ai/v1/chat/completions'
+          : 'https://api.groq.com/openai/v1/chat/completions';
+        const defaultModel = isXAI ? 'grok-3-mini' : 'llama-3.3-70b-versatile';
+
+        const groqRes = await fetch(apiBaseUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + apiKey
           },
           body: JSON.stringify({
-            model: model || 'llama-3.3-70b-versatile',
+            model: model || defaultModel,
             max_tokens: maxTokens || 2048,
             temperature: temperature != null ? temperature : 0.7,
             messages: groqMessages
@@ -608,11 +625,12 @@ export default async function handler(req, res) {
 
         if (!groqRes.ok) {
           const errText = await groqRes.text();
-          console.error('[ai-proxy] Groq error:', groqRes.status, errText.substring(0, 200));
+          const providerName = isXAI ? 'xAI' : 'Groq';
+          console.error(`[ai-proxy] ${providerName} error:`, groqRes.status, errText.substring(0, 200));
           return res.status(mapUpstreamStatus(groqRes.status)).json({
-            error: `Groq ${groqRes.status}`,
+            error: `${providerName} ${groqRes.status}`,
             detail: errText.substring(0, 300),
-            provider: 'groq'
+            provider
           });
         }
 

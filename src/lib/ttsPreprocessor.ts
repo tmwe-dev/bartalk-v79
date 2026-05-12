@@ -33,17 +33,17 @@ function stripMarkdown(text: string): string {
   // Strikethrough: ~~text~~
   t = t.replace(/~~(.+?)~~/g, '$1');
 
+  // Code blocks BEFORE inline code (```...``` contiene backtick che inline code consumerebbe)
+  t = t.replace(/```[\s\S]*?```/g, '');
+
   // Inline code: `code`
   t = t.replace(/`([^`]+)`/g, '$1');
 
-  // Code blocks: ```...```
-  t = t.replace(/```[\s\S]*?```/g, '');
+  // Images BEFORE links (![alt](url) verrebbe catturato da [text](url))
+  t = t.replace(/!\[([^\]]*)\]\([^)]+\)/g, '');
 
   // Links: [text](url) → text
   t = t.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-
-  // Images: ![alt](url) → rimuovi
-  t = t.replace(/!\[([^\]]*)\]\([^)]+\)/g, '');
 
   // Bullet lists: - item or * item → pausa
   t = t.replace(/^[\s]*[-*+]\s+/gm, '. ');
