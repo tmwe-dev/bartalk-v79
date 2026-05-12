@@ -21,3 +21,27 @@ export type * from './tasks';
 
 // ── Orchestrator types ─────────────────────────────────────────────────
 export type * from './orchestrator';
+
+// ── Course types ──────────────────────────────────────────────────────
+export type * from './courses';
+
+// ── Maestro types ─────────────────────────────────────────────────────
+export type * from './maestro';
+
+// ── Life Tutor types ──────────────────────────────────────────────────
+export type * from './lifeTutor';
+
+// ── Education / xAPI types ────────────────────────────────────────────
+export type * from './education';
+
+// ── Billing types ─────────────────────────────────────────────────────
+export type * from './billing';
+
+// ── Audit types ───────────────────────────────────────────────────────
+export type * from './audit';
+
+// ── Tool types ────────────────────────────────────────────────────────
+export type * from './tools';
+
+// ── Menu types ────────────────────────────────────────────────────────
+export type * from './menu';

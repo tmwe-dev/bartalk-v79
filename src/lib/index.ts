@@ -44,3 +44,20 @@ export type { ValidationResult } from './sanitize';
 // ── Proxy (legacy, prefer apiService) ──────────────────────────────────
 export { callProxy } from './proxy';
 export type { ProxyRequest, ProxyResponse } from './proxy';
+
+// ── API Key Resolver ──────────────────────────────────────────────────
+export { resolveApiKey, resolveApiKeyOrThrow, PRIORITY_ORDERS } from './apiKeyResolver';
+export type { ResolvedApiKey } from './apiKeyResolver';
+
+// ── Auth Token ────────────────────────────────────────────────────────
+export { buildAuthHeaders, buildAuthHeadersAsync, getAuthToken, getAuthTokenAsync } from './authToken';
+
+// ── Feature Gating ────────────────────────────────────────────────────
+export { isFeatureAvailable, getRequiredTier, getLockedFeatures, tierLabel } from './featureGating';
+export type { UserTier } from './featureGating';
+
+// ── Maestro Engine ────────────────────────────────────────────────────
+export { generateTeachingResponse, generateWelcomeMessage } from './maestroEngine';
+
+// ── Assessment Engine ─────────────────────────────────────────────────
+export { evaluateAnswers, getScoreInfo, shouldUnlockNext, PASS_THRESHOLD } from './assessmentEngine';

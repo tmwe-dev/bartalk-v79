@@ -1,5 +1,5 @@
 /**
- * BarTalk v8.2 — App Root
+ * BarTalk v8.2.5 — App Root
  * BrowserRouter wraps everything so all children can use useNavigate.
  * Context providers sit between BrowserRouter and Routes.
  */
@@ -13,9 +13,15 @@ import { ConversationProvider } from './context/ConversationContext';
 import { TaskProvider } from './context/TaskContext';
 import { UIProvider, useUIContext } from './context/UIContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { BillingProvider } from './context/BillingContext';
+import { XAPIProvider } from './context/xAPIContext';
+import { LTIProvider } from './context/LTIContext';
+import { CourseProvider } from './context/CourseContext';
+import { MaestroProvider } from './context/MaestroContext';
 import { SettingsModal } from './components/Settings/SettingsModal';
 import { ToastContainer } from './components/Common/Toast';
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
+import { CookieBanner } from './components/Legal/CookieBanner';
 import { AppRoutes } from './router';
 
 function KeyboardShortcuts() {
@@ -45,14 +51,25 @@ export default function App() {
             <AgentProvider>
               <ConversationProvider>
                 <TaskProvider>
-                  <UIProvider>
-                    <ErrorBoundary>
-                      <AppRoutes />
-                    </ErrorBoundary>
-                    <SettingsModal />
-                    <ToastContainer />
-                    <KeyboardShortcuts />
-                  </UIProvider>
+                  <BillingProvider>
+                    <XAPIProvider>
+                      <LTIProvider>
+                        <CourseProvider>
+                          <MaestroProvider>
+                            <UIProvider>
+                              <ErrorBoundary>
+                                <AppRoutes />
+                              </ErrorBoundary>
+                              <SettingsModal />
+                              <ToastContainer />
+                              <KeyboardShortcuts />
+                              <CookieBanner />
+                            </UIProvider>
+                          </MaestroProvider>
+                        </CourseProvider>
+                      </LTIProvider>
+                    </XAPIProvider>
+                  </BillingProvider>
                 </TaskProvider>
               </ConversationProvider>
             </AgentProvider>

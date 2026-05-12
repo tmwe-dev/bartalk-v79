@@ -50,6 +50,9 @@ export const TTS = {
   stability: 0.5,
   similarityBoost: 0.75,
   style: 0.3,
+  useSpeakerBoost: true,
+  outputFormat: 'mp3_22050_32',
+  chunkMaxChars: 1000,
   maxChars: 4000,
   apiBase: 'https://api.elevenlabs.io/v1',
 } as const;
@@ -73,6 +76,24 @@ export const ORCHESTRATOR = {
     consultation: 8,     // Meno contesto per non sovraccaricare
     bar_realtime: 6,     // Minimo per velocità
   },
+} as const;
+
+// ── Skip Mode — Limiti per utenti non autenticati ──────────────────
+export const SKIP_MODE = {
+  maxAIMessages: 500,
+  maxTTSRequests: 10,
+  maxCourses: 3,
+  expiryDays: 7,
+  warningThresholdPercent: 80,
+} as const;
+
+// ── Rate Limits — Protezione anti-abuso ─────────────────────────────
+export const RATE_LIMITS = {
+  aiRequestsPerMinute: 10,
+  ttsRequestsPerMinute: 5,
+  inputMaxChars: 500,
+  ttsMaxQueueSize: 5,
+  ttsMaxCharsPerItem: 2000,
 } as const;
 
 // ── Proxy ────────────────────────────────────────────────────────────

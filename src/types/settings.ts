@@ -317,4 +317,6 @@ export interface AppSettings {
   temperature: number;
   maxTokens: number;
   wordRange: [number, number];
+  lifeTutorEnabled?: boolean;
+  webResourcesEnabled?: boolean;
 }
