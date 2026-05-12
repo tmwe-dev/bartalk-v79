@@ -3,7 +3,7 @@
  * Placeholder components shown during content loading.
  */
 
-import React from 'react';
+// React 19 JSX transform — no explicit import needed
 
 interface SkeletonProps {
   width?: string;
