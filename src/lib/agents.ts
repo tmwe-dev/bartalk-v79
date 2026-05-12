@@ -1,5 +1,10 @@
 import type { AgentConfig, ProviderType } from '../types/agents';
 
+/**
+ * Definizioni degli agenti AI di BarTalk.
+ * Ogni agente ha un provider, modello, voce TTS e identità visiva.
+ * @see {@link AgentConfig} per la struttura completa.
+ */
 export const AGENTS: AgentConfig[] = [
   {
     id: 'albert',
@@ -43,11 +48,11 @@ export const AGENTS: AgentConfig[] = [
   {
     id: 'newton',
     name: 'Newton',
-    provider: 'groq',
+    provider: 'xai',
     emoji: '🟠',
     color: '#f59e0b',
     glowColor: 'rgba(245,158,11,0.4)',
-    defaultModel: 'llama-3.3-70b-versatile',
+    defaultModel: 'grok-3-mini',
     defaultVoiceId: 'onwK4e9ZLuTAKqWW03F9',
     staticImage: '/assets/newton-static.png',
     talkGif: '/assets/newton-talk.gif',
@@ -70,6 +75,7 @@ export function senderTypeToProvider(senderType: string): ProviderType {
   if (s === 'chatgpt' || s === 'openai') return 'openai';
   if (s === 'claude' || s === 'anthropic') return 'anthropic';
   if (s === 'groq' || s === 'llama') return 'groq';
+  if (s === 'xai' || s === 'grok') return 'xai';
   return 'gemini';
 }
 
@@ -78,5 +84,6 @@ export function providerToSenderType(provider: ProviderType): string {
   if (provider === 'openai') return 'chatgpt';
   if (provider === 'anthropic') return 'claude';
   if (provider === 'groq') return 'groq';
+  if (provider === 'xai') return 'xai';
   return 'gemini';
 }

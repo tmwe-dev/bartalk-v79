@@ -1,7 +1,7 @@
 // ── Testi UI (italiano) ──────────────────────────────────────────────
 export const UI = {
   appName: 'BarTalk',
-  appVersion: '8.1',
+  appVersion: '8.2.5',
   send: 'Invia',
   placeholder: 'Scrivi un messaggio...',
   settings: 'Impostazioni',
@@ -41,6 +41,7 @@ export const DEFAULT_MODELS = {
   anthropic: 'claude-sonnet-4-20250514',
   gemini: 'gemini-2.0-flash',
   groq: 'llama-3.3-70b-versatile',
+  xai: 'grok-3-mini',
 } as const;
 
 // ── TTS ──────────────────────────────────────────────────────────────

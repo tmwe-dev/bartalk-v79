@@ -2,6 +2,7 @@ import type { ProviderType } from '../types/agents';
 import { PROXY_URL, ORCHESTRATOR } from './constants';
 import { supabase } from './supabase';
 import { captureAPIError } from './errorTracker';
+import { recordSuccess, recordFailure } from './providerHealth';
 
 export interface ProxyRequest {
   provider: ProviderType;
@@ -159,11 +160,14 @@ export async function callProxy(req: ProxyRequest): Promise<ProxyResponse> {
         console.log(`[proxy] ${req.provider} successo al tentativo ${attempt + 1}`);
       }
 
+      const duration = (data.duration as number) || Date.now() - startTime;
+      recordSuccess(req.provider, duration);
+
       return {
         content: (data.content as string) || '',
         tokensIn: (data.tokensIn as number) || 0,
         tokensOut: (data.tokensOut as number) || 0,
-        duration: (data.duration as number) || Date.now() - startTime,
+        duration,
       };
     } catch (err) {
       console.error(`[proxy] ${req.provider} network error (tentativo ${attempt + 1}):`, err);
@@ -181,7 +185,8 @@ export async function callProxy(req: ProxyRequest): Promise<ProxyResponse> {
     }
   }
 
-  // Tutti i retry esauriti — traccia l'errore
+  // Tutti i retry esauriti — traccia l'errore e registra il fallimento
+  recordFailure(req.provider);
   const finalError = lastError || {
     content: '',
     tokensIn: 0,

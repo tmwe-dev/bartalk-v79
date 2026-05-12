@@ -3,8 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BarTalk v8.0</title>
+    <meta name="description" content="BarTalk — Multi-agent AI chat platform with 5 AI providers" />
+    <meta name="theme-color" content="#0f0f14" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f5fa" media="(prefers-color-scheme: light)" />
+    <title>BarTalk v8.2</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎙️</text></svg>">
+    <!-- Preconnect to API endpoints for faster AI calls -->
+    <link rel="preconnect" href="https://api.openai.com" />
+    <link rel="preconnect" href="https://api.anthropic.com" />
+    <link rel="preconnect" href="https://api.elevenlabs.io" />
+    <!-- DNS prefetch for secondary providers -->
+    <link rel="dns-prefetch" href="https://generativelanguage.googleapis.com" />
+    <link rel="dns-prefetch" href="https://api.x.ai" />
+    <link rel="dns-prefetch" href="https://api.groq.com" />
+    <!-- Preload critical font -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   </head>
   <body>
     <div id="root"></div>
