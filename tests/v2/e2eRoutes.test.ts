@@ -1,5 +1,5 @@
 /**
- * BarTalk v8.2.5 — E2E Route Rendering Tests (Vitest + jsdom)
+ * BarTalk v8.2.6 — E2E Route Rendering Tests (Vitest + jsdom)
  * Tests that all V2 routes render without crashing.
  * Uses vitest with jsdom, NOT Playwright (no browser needed).
  */
@@ -16,18 +16,50 @@ vi.mock('../../src/lib/proxy', () => ({
 
 vi.mock('../../src/lib/constants', () => ({
   PROXY_URL: '/api/ai-proxy',
-  VERSION: '8.2.5',
+  VERSION: '8.2.6',
   ORCHESTRATOR: {
+    forcedConsultationTurns: 4,
     defaultTemperature: 0.7,
     maxTokens: 2048,
-    agentCooldown: 2000,
-    maxRounds: 8,
-    roundDelay: 1500,
-    systemPrompt: 'test',
+    wordRange: [80, 200],
+    consultationWordRange: [60, 150],
+    temperatureByMode: { standard: 0.7, consultation: 0.8, bar_realtime: 0.9 },
+    historySlice: { standard: 12, consultation: 8, bar_realtime: 6 },
   },
   UI: {
-    maxVisibleMessages: 100,
-    inputMaxLength: 16000,
+    appName: 'BarTalk',
+    appVersion: '8.2.6',
+    send: 'Invia',
+    placeholder: 'Scrivi un messaggio...',
+    settings: 'Impostazioni',
+    apiKeys: 'Chiavi API',
+    voices: 'Voci',
+    preferences: 'Preferenze',
+    save: 'Salva',
+    cancel: 'Annulla',
+    reset: 'Ripristina',
+    test: 'Testa',
+    close: 'Chiudi',
+    enabled: 'Attivo',
+    disabled: 'Disattivo',
+    thinking: 'sta pensando...',
+    noKeys: 'Nessuna chiave API configurata.',
+    demo: '[Demo]',
+    studio: 'Studio Tecnico',
+    agents: 'Agenti',
+    modStandard: 'Standard',
+    modConsultation: 'Consultazione',
+    modBarRealtime: 'Bar Realtime',
+    turnRoundRobin: 'A turno',
+    turnRandom: 'Casuale',
+    turnSmart: 'Intelligente',
+    ttsOn: 'Voci attive',
+    ttsOff: 'Voci disattive',
+    copyOk: 'Copiato!',
+    errorPrefix: 'Errore',
+    convergenceStagnation: 'stagnante',
+    convergenceAgreement: 'accordo',
+    convergenceDivergence: 'divergenza',
   },
   DEFAULT_MODELS: {
     openai: 'gpt-4o',
@@ -35,6 +67,31 @@ vi.mock('../../src/lib/constants', () => ({
     gemini: 'gemini-2.0-flash',
     groq: 'llama-3.3-70b-versatile',
     xai: 'grok-3-mini',
+  },
+  TTS: {
+    model: 'eleven_multilingual_v2',
+    stability: 0.5,
+    similarityBoost: 0.75,
+    style: 0.3,
+    useSpeakerBoost: true,
+    outputFormat: 'mp3_22050_32',
+    chunkMaxChars: 1000,
+    maxChars: 4000,
+    apiBase: 'https://api.elevenlabs.io/v1',
+  },
+  SKIP_MODE: {
+    maxAIMessages: 500,
+    maxTTSRequests: 10,
+    maxCourses: 3,
+    expiryDays: 7,
+    warningThresholdPercent: 80,
+  },
+  RATE_LIMITS: {
+    aiRequestsPerMinute: 10,
+    ttsRequestsPerMinute: 5,
+    inputMaxChars: 500,
+    ttsMaxQueueSize: 5,
+    ttsMaxCharsPerItem: 2000,
   },
 }));
 
