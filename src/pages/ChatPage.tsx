@@ -235,7 +235,7 @@ function LeftSidebar({ collapsed, onToggle, onClose }: { collapsed: boolean; onT
 export function ChatPage() {
   const [activeTab, setActiveTab] = useState<MainTab>('chat');
   const { messages } = useConversationContext();
-  const { ttsEnabled, autoRun, setAutoRun } = useSettingsContext();
+  const { autoRun, setAutoRun } = useSettingsContext();
   const { activeTask } = useTaskContext();
 
   // Sidebar: open by default on desktop, closed on mobile
@@ -415,7 +415,7 @@ export function ChatPage() {
           hasActiveTask={activeTask?.isActive}
         />
 
-        {ttsEnabled && <AudioControlBar />}
+        <AudioControlBar />
 
         {/* Agent Tabs (horizontal, always visible when there are messages) */}
         {validAgentMsgs.length > 0 && (

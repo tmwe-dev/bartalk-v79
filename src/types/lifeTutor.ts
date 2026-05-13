@@ -445,7 +445,7 @@ export interface LifeTutorConfig {
 }
 
 export const DEFAULT_LIFE_TUTOR_CONFIG: LifeTutorConfig = {
-  enabled: false,
+  enabled: true,
   tutorName: 'Life Tutor',
   memoryDepth: 'standard',
   autoExtract: true,

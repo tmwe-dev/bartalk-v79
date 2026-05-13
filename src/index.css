@@ -1061,8 +1061,13 @@ body {
 .message-agent { align-self: flex-start; }
 .message-system { align-self: center; max-width: 60%; }
 
-.message-avatar { flex-shrink: 0; }
+.message-avatar { flex-shrink: 0; position: relative; }
 .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.avatar-elevenlabs-badge {
+  position: absolute; bottom: 0; right: -2px; width: 12px; height: 12px;
+  border-radius: 50%; background: #38bdf8; border: 2px solid rgba(20,10,40,0.9);
+  box-shadow: 0 0 6px rgba(56,189,248,0.5);
+}
 
 .message-body {
   padding: 10px 14px;
@@ -1102,6 +1107,11 @@ body {
 .message-sender {
   font-size: 13px;
   font-weight: 600;
+}
+.message-voice-name {
+  font-size: 11px; color: #38bdf8; font-weight: 500; opacity: 0.8;
+  padding: 1px 6px; background: rgba(56,189,248,0.1);
+  border-radius: 4px; border: 1px solid rgba(56,189,248,0.2);
 }
 
 .message-time {
@@ -2178,67 +2188,90 @@ body {
   }
 }
 
-/* ── Audio Control Bar ─────────────────────────────────────────────── */
-.audio-control-bar {
+/* ── Audio Mini Console (floating vertical) ──────────────────────── */
+.audio-mini-console {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
-  background: rgba(20, 10, 40, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
-  min-height: 40px;
-  z-index: 50;
+  gap: 6px;
+  padding: 10px 8px;
+  background: rgba(20, 10, 40, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 16px;
+  z-index: 200;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 12px rgba(168, 85, 247, 0.15);
+  animation: audioSlideIn 0.3s ease-out;
 }
 
-.audio-ctrl-btn {
+.audio-mini-agent {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.audio-mini-btn {
   background: rgba(168, 85, 247, 0.15);
   border: 1px solid rgba(168, 85, 247, 0.3);
-  border-radius: 8px;
+  border-radius: 10px;
   color: #e2e8f0;
   cursor: pointer;
-  padding: 6px 10px;
-  font-size: 16px;
+  padding: 6px;
+  font-size: 18px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
+  width: 38px;
+  height: 38px;
 }
 
-.audio-ctrl-btn:hover {
+.audio-mini-btn:hover {
   background: rgba(168, 85, 247, 0.3);
   border-color: rgba(168, 85, 247, 0.5);
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
-.audio-ctrl-btn.active {
-  background: rgba(168, 85, 247, 0.4);
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
-}
-
-.audio-ctrl-btn.stop {
+.audio-mini-btn.stop {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.3);
 }
 
-.audio-ctrl-btn.stop:hover {
+.audio-mini-btn.stop:hover {
   background: rgba(239, 68, 68, 0.3);
   border-color: rgba(239, 68, 68, 0.5);
 }
 
-.audio-now-playing {
-  font-size: 14px;
-  font-weight: 600;
-  padding: 0 8px;
-  animation: audioPulse 2s ease-in-out infinite;
+.audio-mini-btn.mute {
+  background: rgba(100, 100, 100, 0.15);
+  border-color: rgba(100, 100, 100, 0.3);
+  font-size: 16px;
 }
 
-@keyframes audioPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+.audio-mini-btn.mute:hover {
+  background: rgba(100, 100, 100, 0.3);
+  border-color: rgba(100, 100, 100, 0.5);
+}
+
+@keyframes audioSlideIn {
+  from { opacity: 0; transform: translateY(-50%) translateX(20px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+@media (max-width: 768px) {
+  .audio-mini-console {
+    right: 8px;
+    padding: 8px 6px;
+    gap: 4px;
+  }
+  .audio-mini-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
 }
 
 /* ── Language Grid ─────────────────────────────────────────────── */

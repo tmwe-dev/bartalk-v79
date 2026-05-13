@@ -9,6 +9,7 @@ export interface AgentConfig {
   glowColor: string;
   defaultModel: string;
   defaultVoiceId: string;
+  defaultVoiceName: string;
   staticImage: string;
   talkGif: string;
   demoResponse: string;

@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useUIContext } from '../../context/UIContext';
 import { useAuthContext } from '../../context/AuthContext';
 import { useConversationContext } from '../../context/ConversationContext';
-import { useSettingsContext } from '../../context/SettingsContext';
 import { useTTS } from '../../hooks/useTTS';
 import { useThemeContext } from '../../context/ThemeContext';
 import { UI } from '../../lib/constants';
@@ -50,7 +49,6 @@ export function Navbar({
   const { toggleSettings } = useUIContext();
   const { user, authState, isSkipMode, signOut, resumeAuth } = useAuthContext();
   const { newConversation, conversationTitle } = useConversationContext();
-  const { ttsEnabled, setTtsEnabled } = useSettingsContext();
   const { stop: stopTTS } = useTTS();
   const { theme, toggleTheme } = useThemeContext();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -140,15 +138,6 @@ export function Navbar({
       <div className="navbar-right" role="toolbar" aria-label="Azioni rapide">
         <button className="nav-btn" onClick={handleNewChat} title="Nuova conversazione" aria-label="Nuova conversazione">
           ➕
-        </button>
-        <button
-          className={`nav-btn ${ttsEnabled ? 'active' : ''}`}
-          onClick={() => setTtsEnabled(!ttsEnabled)}
-          title={ttsEnabled ? UI.ttsOn : UI.ttsOff}
-          aria-label={ttsEnabled ? 'Disattiva voci' : 'Attiva voci'}
-          aria-pressed={ttsEnabled}
-        >
-          {ttsEnabled ? '🔊' : '🔇'}
         </button>
         <button className="nav-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Tema chiaro' : 'Tema scuro'} aria-label={theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'}>
           {theme === 'dark' ? '☀️' : '🌙'}

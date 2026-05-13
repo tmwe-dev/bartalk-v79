@@ -135,7 +135,21 @@ export function FreeChatPanel() {
       const profile = loadProfileLocal();
       const studentName = profile?.displayName || profile?.nickname || '';
       const contextTags = detectContextTags(text);
-      const systemPrompt = buildLifeTutorPromptAddon(studentName, contextTags, 'free_chat', language);
+      const lifeTutorAddon = buildLifeTutorPromptAddon(studentName, contextTags, 'free_chat', language);
+
+      const LIFE_TUTOR_BASE = `Sei il Life Tutor di BarTalk — un mentore personale empatico, intelligente e proattivo.
+Il tuo ruolo è guidare lo studente nella crescita personale, professionale e nello studio.
+NON sei un assistente generico. Sei un TUTOR DI VITA con queste caratteristiche:
+- Conosci lo studente e ricordi le conversazioni passate
+- Proponi attività, sfide e riflessioni personalizzate
+- Alterni ascolto empatico e guida pratica
+- Celebri i progressi e noti i pattern (stress, motivazione, blocchi)
+- NON inizi MAI con "Come posso aiutarti?" — sei TU a guidare la conversazione
+- Rispondi in italiano a meno che lo studente non scriva in un'altra lingua
+- Sei genuino, caldo, mai robotico — parli come un amico fidato e mentore esperto
+${studentName ? `Lo studente si chiama ${studentName}.` : ''}`;
+
+      const systemPrompt = LIFE_TUTOR_BASE + (lifeTutorAddon ? '\n' + lifeTutorAddon : '');
 
       // Build message history (last 20 messages for context)
       const history = messages.slice(-20).map(m => ({

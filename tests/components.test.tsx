@@ -474,10 +474,10 @@ describe('Navbar', () => {
     expect(screen.getByTitle('Nuova conversazione')).toBeInTheDocument()
   })
 
-  it('renders TTS toggle button', () => {
+  it('does not render TTS toggle in navbar (moved to mini console)', () => {
     render(withRouter(<Navbar />))
-    const ttsBtn = screen.getByTitle('Voci attive')
-    expect(ttsBtn).toBeInTheDocument()
+    const ttsBtn = screen.queryByTitle('Voci attive')
+    expect(ttsBtn).not.toBeInTheDocument()
   })
 
   it('renders settings button', () => {
