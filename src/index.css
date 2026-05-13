@@ -19,11 +19,21 @@
   --radius-sm: 8px;
   --transition: 0.2s ease;
   --shadow: 0 4px 20px rgba(0,0,0,0.3);
-  --glass-bg: rgba(30, 30, 48, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: 20px;
+  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --glass-blur: blur(20px);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   --glow-accent: rgba(99, 102, 241, 0.3);
+  --glow-purple: 0 0 30px rgba(139, 92, 246, 0.3);
+  --glow-blue: 0 0 30px rgba(59, 130, 246, 0.3);
+  --glow-pink: 0 0 30px rgba(236, 72, 153, 0.3);
+  --glow-green: 0 0 30px rgba(34, 197, 94, 0.3);
+  --glow-amber: 0 0 30px rgba(245, 158, 11, 0.3);
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --transition-smooth: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes fadeInUp {
@@ -49,6 +59,30 @@
 @keyframes pulseGlow {
   0%, 100% { box-shadow: 0 0 5px var(--glow-accent); }
   50% { box-shadow: 0 0 20px var(--glow-accent), 0 0 40px rgba(99, 102, 241, 0.1); }
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+@keyframes floatAvatar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes speakPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px 8px rgba(139, 92, 246, 0.15); }
+}
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(99, 102, 241, 0.4); }
+  50% { box-shadow: 0 0 16px rgba(99, 102, 241, 0.7), 0 0 30px rgba(99, 102, 241, 0.3); }
+}
+@keyframes progressShine {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes ringRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

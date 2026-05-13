@@ -47,21 +47,22 @@ export function MaestroSelector({
           <h3>Scegli il tuo maestro</h3>
         </div>
 
-        <p className="maestro-selector-desc">Ogni maestro ha un approccio diverso. Scegli quello che preferisci.</p>
+        <p className="maestro-selector-desc">Ogni maestro ha un approccio unico. Scegli chi ti guiderà in questa lezione.</p>
 
         {availableMaestri.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px', color: '#718096' }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🎓</div>
+          <div className="course-empty">
+            <div className="course-empty-icon">🎓</div>
             <p>Nessun maestro disponibile al momento.</p>
           </div>
         ) : (
           <div className="maestro-grid">
-            {availableMaestri.map(m => (
+            {availableMaestri.map((m, idx) => (
               <MaestroCard
                 key={m.id}
                 maestro={m}
                 isRecommended={m.id === recommended.id}
                 onSelect={() => onSelect(m.id)}
+                index={idx}
               />
             ))}
           </div>
@@ -75,19 +76,27 @@ function MaestroCard({
   maestro,
   isRecommended,
   onSelect,
+  index,
 }: {
   maestro: MaestroDefinition;
   isRecommended: boolean;
   onSelect: () => void;
+  index: number;
 }) {
   return (
     <div
       className={`maestro-card ${isRecommended ? 'recommended' : ''}`}
-      style={{ '--maestro-color': maestro.color } as React.CSSProperties}
+      style={{
+        '--maestro-color': maestro.color,
+        animationDelay: `${index * 0.08}s`,
+      } as React.CSSProperties}
       onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
     >
       {isRecommended && (
-        <span className="maestro-recommended-badge">Consigliato</span>
+        <span className="maestro-recommended-badge">CONSIGLIATO</span>
       )}
       <div className="maestro-card-avatar">{maestro.avatar}</div>
       <div className="maestro-card-name">{maestro.name}</div>
@@ -96,7 +105,7 @@ function MaestroCard({
         {maestro.personality.tone.split('.')[0]}
       </div>
       <div className="maestro-card-catchphrase">
-        "{maestro.personality.catchphrases[0]}"
+        &ldquo;{maestro.personality.catchphrases[0]}&rdquo;
       </div>
     </div>
   );
