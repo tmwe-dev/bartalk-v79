@@ -2157,7 +2157,7 @@ body {
 }
 
 .conv-item:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
 }
 
 .conv-item.active {
@@ -3752,7 +3752,7 @@ body {
 }
 
 .memory-field {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -3858,7 +3858,7 @@ body {
 }
 
 .psections-card {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 10px 12px;
@@ -4299,7 +4299,7 @@ body {
 
 .tool-api-key-input input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border: 1px solid rgba(99, 102, 241, 0.2);
   border-radius: 8px;
   padding: 6px 10px;
@@ -4503,7 +4503,7 @@ body {
 }
 
 .course-list-item {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 14px 16px;
@@ -4705,7 +4705,7 @@ body {
 }
 
 .course-level-option {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border: 2px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 12px;
@@ -4745,7 +4745,7 @@ body {
 }
 
 .course-category-chip {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 6px 14px;
@@ -4775,7 +4775,7 @@ body {
 /* ── Wizard Summary ── */
 
 .course-wizard-summary {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 16px;
@@ -5010,7 +5010,7 @@ body {
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   cursor: pointer;
@@ -8896,7 +8896,7 @@ body {
   padding: 10px 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   color: #fff;
   font-size: 0.9rem;
   resize: none;
@@ -9079,7 +9079,7 @@ body {
   gap: 12px;
   padding: 14px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border: 1px solid rgba(255, 255, 255, 0.06);
   transition: all 0.3s ease;
   animation: ltMsgIn 0.3s ease-out;
@@ -9192,7 +9192,7 @@ body {
   color: rgba(255, 255, 255, 0.4);
   padding: 3px 10px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
 }
 
 .lt-objectives-filters {
@@ -9222,7 +9222,7 @@ body {
 /* New objective form */
 .lt-objectives-form {
   padding: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border-radius: 12px;
   margin-bottom: 12px;
   border: 1px solid rgba(255, 215, 0, 0.15);
@@ -9306,7 +9306,7 @@ body {
 .lt-objective-card {
   padding: 14px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   border: 1px solid rgba(255, 255, 255, 0.06);
   transition: all 0.2s ease;
 }
@@ -9845,7 +9845,7 @@ body {
   height: 46px;
   border-radius: 50%;
   border: 2px solid transparent;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(30, 30, 60, 0.7), rgba(20, 20, 45, 0.5));
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
