@@ -1,7 +1,7 @@
 // ── Testi UI (italiano) ──────────────────────────────────────────────
 export const UI = {
   appName: 'BarTalk',
-  appVersion: '8.2.5',
+  appVersion: '8.2.6',
   send: 'Invia',
   placeholder: 'Scrivi un messaggio...',
   settings: 'Impostazioni',
