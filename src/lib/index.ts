@@ -32,7 +32,7 @@ export type {
 } from './apiService';
 
 // ── Agents ─────────────────────────────────────────────────────────────
-export { AGENTS } from './agents';
+export { AGENTS, getAgent } from './agents';
 
 // ── Constants ──────────────────────────────────────────────────────────
 export { UI, DEFAULT_MODELS, TTS, ORCHESTRATOR, PROXY_URL } from './constants';
@@ -61,3 +61,16 @@ export { generateTeachingResponse, generateWelcomeMessage } from './maestroEngin
 
 // ── Assessment Engine ─────────────────────────────────────────────────
 export { evaluateAnswers, getScoreInfo, shouldUnlockNext, PASS_THRESHOLD } from './assessmentEngine';
+
+// ── i18n ──────────────────────────────────────────────────────────────
+export { useT } from './i18n';
+
+// ── Utilities (extra) ─────────────────────────────────────────────────
+export { formatTime, truncate } from './utils';
+
+// ── Memory ────────────────────────────────────────────────────────────
+export { buildMemoryBlock, exportConversationAsMarkdown, generateFullConversationSummary } from './memory';
+
+// ── TTS ───────────────────────────────────────────────────────────────
+export { enqueueTTS, resetTTS, stopTTS } from './tts';
+export type { EnqueueTTSOptions, EnqueueResult } from './tts';

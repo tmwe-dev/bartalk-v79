@@ -185,7 +185,7 @@ ${studentName ? `Lo studente si chiama ${studentName}.` : ''}`;
       if (ttsEnabled && !response.error) {
         const processed = preprocessForTTS(assistantContent, language);
         const voiceId = getVoiceForMaestro(MAESTRI[0], language);
-        enqueueTTS(processed, voiceId, 'Life Tutor');
+        enqueueTTS({ text: processed, voiceId, agentName: 'Life Tutor' });
       }
     } catch (err) {
       setMessages(prev => [...prev, {

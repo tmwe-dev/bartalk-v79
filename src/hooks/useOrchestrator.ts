@@ -106,7 +106,7 @@ export function useOrchestrator() {
             const agent = enabledAgents.find(a => a.name === response.agentName);
             if (agent) {
               const voiceId = getVoiceId(agent.id);
-              enqueueTTS(response.content, voiceId, response.agentName);
+              enqueueTTS({ text: response.content, voiceId, agentName: response.agentName });
             }
           }
         },

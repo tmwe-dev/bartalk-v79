@@ -34,6 +34,10 @@ interface SettingsContextValue {
   setTemperature: (temp: number) => void;
   setMaxTokens: (tokens: number) => void;
   setWordRange: (range: [number, number]) => void;
+  lifeTutorEnabled: boolean;
+  setLifeTutorEnabled: (enabled: boolean) => void;
+  webResourcesEnabled: boolean;
+  setWebResourcesEnabled: (enabled: boolean) => void;
   saveAll: () => void;
 }
 
@@ -52,6 +56,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [maxTokens, setMaxTokens] = useState<number>(ORCHESTRATOR.maxTokens as number);
   const [wordRange, setWordRange] = useState<[number, number]>([...ORCHESTRATOR.wordRange]);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [lifeTutorEnabled, setLifeTutorEnabled] = useState(true);
+  const [webResourcesEnabled, setWebResourcesEnabled] = useState(true);
   const isInitRef = useRef(false);
   const dbLoadedRef = useRef(false);
 
@@ -226,6 +232,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     <ConText.Provider value={{
       apiKeys, conversationMode, turnStrategy, ttsEnabled, autoRun,
       language, temperature, maxTokens, wordRange, workspaceId,
+      lifeTutorEnabled, setLifeTutorEnabled, webResourcesEnabled, setWebResourcesEnabled,
       setAPIKey, removeAPIKey, getAPIKey: getAPIKeyValue,
       setConversationMode, setTurnStrategy, setTtsEnabled, setAutoRun,
       setLanguage, setTemperature, setMaxTokens, setWordRange, saveAll,

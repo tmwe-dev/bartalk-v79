@@ -312,3 +312,48 @@ export async function logAudit(
 
   if (error) console.warn('[supabaseAPI] logAudit error:', error.message);
 }
+
+// ── Search messages in DB ─────────────────────────────────────────────
+export interface DBSearchResult {
+  conversationId: string;
+  matchCount: number;
+  snippet: string;
+}
+
+export async function searchMessages(workspaceId: string, query: string): Promise<DBSearchResult[]> {
+  if (!supabase || !query || query.trim().length < 2) return [];
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('conversation_id, content')
+      .eq('workspace_id', workspaceId)
+      .ilike('content', `%${query}%`)
+      .limit(200);
+
+    if (error || !data) return [];
+
+    const grouped = new Map<string, { count: number; snippet: string }>();
+    for (const row of data) {
+      const existing = grouped.get(row.conversation_id);
+      if (existing) {
+        existing.count++;
+      } else {
+        const idx = (row.content as string).toLowerCase().indexOf(query.toLowerCase());
+        const start = Math.max(0, idx - 30);
+        grouped.set(row.conversation_id, {
+          count: 1,
+          snippet: (row.content as string).substring(start, start + 80),
+        });
+      }
+    }
+
+    return Array.from(grouped.entries()).map(([conversationId, v]) => ({
+      conversationId,
+      matchCount: v.count,
+      snippet: v.snippet,
+    }));
+  } catch (err) {
+    console.error('[supabaseAPI] searchMessages error:', err);
+    return [];
+  }
+}

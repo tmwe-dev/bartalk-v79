@@ -145,3 +145,38 @@ export function deleteConversationData(id: string): void {
   const list = loadConversationList();
   saveConversationList(list.filter(c => c.id !== id));
 }
+
+// ── Search (localStorage) ───────────────────────────────────────────
+export interface SearchResult {
+  convId: string;
+  matchCount: number;
+  snippet: string;
+}
+
+export function searchAllConversations(query: string): SearchResult[] {
+  if (!query || query.trim().length < 2) return [];
+  const lowerQuery = query.toLowerCase();
+  const results: SearchResult[] = [];
+  const list = loadConversationList();
+  for (const conv of list) {
+    const raw = localStorage.getItem(`bartalk_messages_${conv.id}`);
+    if (!raw) continue;
+    try {
+      const messages: { content?: string }[] = JSON.parse(raw);
+      let matchCount = 0;
+      let snippet = '';
+      for (const m of messages) {
+        if (m.content && m.content.toLowerCase().includes(lowerQuery)) {
+          matchCount++;
+          if (!snippet) {
+            const idx = m.content.toLowerCase().indexOf(lowerQuery);
+            const start = Math.max(0, idx - 30);
+            snippet = m.content.substring(start, start + 80);
+          }
+        }
+      }
+      if (matchCount > 0) results.push({ convId: conv.id, matchCount, snippet });
+    } catch { /* skip corrupted */ }
+  }
+  return results;
+}

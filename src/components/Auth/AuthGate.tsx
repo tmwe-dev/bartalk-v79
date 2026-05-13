@@ -167,7 +167,7 @@ export function AuthGate({ children }: AuthGateProps) {
                 </p>
                 <button
                   className="welcome-cta welcome-cta--google"
-                  onClick={() => { signInWithGoogle(); }}
+                  onClick={() => { signInWithGoogle?.(); }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" style={{ marginRight: 8, verticalAlign: 'middle' }}>
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -285,7 +285,7 @@ export function AuthGate({ children }: AuthGateProps) {
     setLoading(true);
     clearError();
     try {
-      await signInWithGoogle();
+      await signInWithGoogle?.();
     } finally {
       setLoading(false);
     }
@@ -296,7 +296,7 @@ export function AuthGate({ children }: AuthGateProps) {
     setLoading(true);
     clearError();
     try {
-      await signInWithApple();
+      await signInWithApple?.();
     } finally {
       setLoading(false);
     }

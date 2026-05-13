@@ -51,7 +51,7 @@ export function useTTS() {
   const speak = useCallback((text: string, agentId: string) => {
     if (!ttsEnabled) return;
     const voiceId = getVoiceId(agentId);
-    enqueueTTS(text, voiceId, agentId);
+    enqueueTTS({ text, voiceId, agentName: agentId });
   }, [ttsEnabled, getVoiceId]);
 
   const stop = useCallback(() => { stopTTS(); }, []);

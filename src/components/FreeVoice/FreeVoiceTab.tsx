@@ -99,7 +99,7 @@ export default function FreeVoiceTab() {
 
   const speakText = useCallback((text: string) => {
     if (!ttsEnabled) return;
-    enqueueTTS(text, sofiaVoiceId, 'Sofia');
+    enqueueTTS({ text, voiceId: sofiaVoiceId, agentName: 'Sofia' });
   }, [ttsEnabled, sofiaVoiceId]);
 
   // Track TTS state

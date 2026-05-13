@@ -194,9 +194,9 @@ export function MaestroProvider({ children }: { children: ReactNode }) {
         const _l2VoiceId = getL2Voice(studyLang, maestro.gender === 'female' ? 'male' : 'female');
         const _l2BCP47 = getLangConfig(studyLang as AppLanguage).bcp47;
         void _l2VoiceId; void _l2BCP47; // reserved for future dual-voice support
-        enqueueTTS(session.messages[0].content, voiceId, maestro.name);
+        enqueueTTS({ text: session.messages[0].content, voiceId, agentName: maestro.name });
       } else {
-        enqueueTTS(session.messages[0].content, voiceId, maestro.name);
+        enqueueTTS({ text: session.messages[0].content, voiceId, agentName: maestro.name });
       }
     }
   }, [studentProfile, activeCourse, ttsEnabled, language]);
@@ -293,9 +293,9 @@ export function MaestroProvider({ children }: { children: ReactNode }) {
         if (studyLang && response.textWithL2Tags) {
           // Future: dual-voice TTS con L2 voice
           // Per ora usa voce singola L1
-          enqueueTTS(response.message.content, voiceId, currentMaestro.name);
+          enqueueTTS({ text: response.message.content, voiceId, agentName: currentMaestro.name });
         } else {
-          enqueueTTS(response.message.content, voiceId, currentMaestro.name);
+          enqueueTTS({ text: response.message.content, voiceId, agentName: currentMaestro.name });
         }
       }
     } catch (err) {

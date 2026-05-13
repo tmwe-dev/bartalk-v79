@@ -294,7 +294,7 @@ async function callAgent(
   // Se non c'è chiave client-side, il proxy userà le chiavi server-side (env vars).
   // Non restituire più demo response — lascia che il proxy gestisca il fallback.
 
-  const systemPrompt = buildRichSystemPrompt(agent, previousResponses, convergenceInstruction, plan, taskContext, userMessage);
+  const systemPrompt = buildRichSystemPrompt(agent, previousResponses, convergenceInstruction, plan, { taskContext, userMessage });
 
   // ── Memoria a 3 livelli ───────────────────────────────────────────
   const apiMessages = conversationId
