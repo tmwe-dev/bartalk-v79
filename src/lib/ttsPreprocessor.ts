@@ -283,3 +283,25 @@ function getLangDisplayName(code: string): string {
   };
   return names[code] || code.toUpperCase();
 }
+
+// ── TTS Light Section (restored from backup2) ────────────────────────
+
+/**
+ * Genera la sezione TTS-MODE per i prompt strutturati.
+ */
+export function buildTTSLightSection(lang: string = 'it'): string {
+  const l = lang.toLowerCase().slice(0, 2);
+  const langName = getLangDisplayName(l);
+
+  return `
+[TTS-MODE] Il testo verrà letto ad alta voce da un sintetizzatore vocale in ${langName}.
+Scrivi come se stessi parlando a un pubblico dal vivo: testo piano, discorsivo, senza formattazione visiva.
+- Niente markdown, elenchi puntati, tabelle, emoji, simboli (→ ← • | & @ # ²).
+- Numeri piccoli in lettere, grandi in forma parlata ("due milioni" non "2.000.000").
+- Sigle: espandile alla prima occorrenza, poi usa la sigla.
+- Formule e codici: leggili come un professore che spiega a voce.
+- Frasi di lunghezza variabile per creare ritmo naturale.
+Ogni ascoltatore deve capire TUTTO perfettamente solo ascoltando.`.trim();
+}
+
+

@@ -34,6 +34,12 @@ function setJSON(key: string, value: unknown): void {
   }
 }
 
+// ── Skip mode ───────────────────────────────────────────────────────
+function isInSkipMode(): boolean {
+  return localStorage.getItem('bartalk_auth_skipped') === 'true';
+}
+export { isInSkipMode };
+
 // ── API Keys ─────────────────────────────────────────────────────────
 export function loadAPIKeys(): APIKeyEntry[] {
   return getJSON<APIKeyEntry[]>(KEYS.apiKeys, []);
@@ -42,6 +48,11 @@ export function loadAPIKeys(): APIKeyEntry[] {
 export function saveAPIKeys(keys: APIKeyEntry[]): void {
   setJSON(KEYS.apiKeys, keys);
   localStorage.setItem(KEYS.keysConfigured, 'true');
+}
+
+export function clearSensitiveLocalData(): void {
+  localStorage.removeItem(KEYS.apiKeys);
+  localStorage.removeItem(KEYS.keysConfigured);
 }
 
 export function getAPIKey(provider: string): string | null {

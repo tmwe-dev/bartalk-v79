@@ -7,10 +7,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { AuthState, AuthUser, AuthContextValue } from '../types/auth';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { pullAllFromDB } from '../lib/dbSync';
+import { initSkipQuota, hasExpired, getRemainingQuota, getRemainingDays } from '../lib/skipModeQuota';
+import { clearSensitiveLocalData } from '../lib/storage';
 
 // ── Chiave localStorage per skip mode ────────────────────────────────
 const SKIP_KEY = 'bartalk_auth_skipped';
+const GUEST_KEY = 'bartalk_guest_mode';
 
 // ── Context ──────────────────────────────────────────────────────────
 const AuthCtx = createContext<AuthContextValue | null>(null);
@@ -36,6 +38,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSkipMode, setIsSkipMode] = useState<boolean>(() => {
     return localStorage.getItem(SKIP_KEY) === 'true';
   });
+  const [isGuestMode, setIsGuestMode] = useState<boolean>(() => {
+    return localStorage.getItem(GUEST_KEY) === 'true';
+  });
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   // ── Init: controlla sessione esistente o skip ──
   useEffect(() => {
@@ -49,8 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Se skip mode attivo → non controllare sessione
+      // Se guest mode attivo → accesso completo senza auth
+      if (isGuestMode) {
+        setUser({ id: 'guest', email: 'guest@bartalk.app', displayName: 'Guest' });
+        setAuthState('authenticated');
+        return;
+      }
+
+      // Se skip mode attivo → controlla scadenza
       if (isSkipMode) {
+        if (hasExpired()) {
+          // Sessione skip scaduta: torna al login
+          localStorage.removeItem(SKIP_KEY);
+          setIsSkipMode(false);
+          setAuthState('unauthenticated');
+          return;
+        }
         setAuthState('skipped');
         return;
       }
@@ -67,8 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             displayName: session.user.user_metadata?.display_name,
           });
           setAuthState('authenticated');
-          // Sync DB → localStorage al login
-          pullAllFromDB().catch(err => console.warn('[auth] DB sync fallito:', err));
         } else {
           setAuthState('unauthenticated');
         }
@@ -86,8 +104,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let subscription: { unsubscribe: () => void } | null = null;
 
     if (supabase && isSupabaseConfigured) {
-      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
         if (!mountedRef.current) return;
+
+        // Intercetta PASSWORD_RECOVERY → mostra form nuova password
+        if (event === 'PASSWORD_RECOVERY') {
+          setIsPasswordRecovery(true);
+          if (session?.user) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              displayName: session.user.user_metadata?.display_name,
+            });
+            setAuthState('authenticated');
+          }
+          return;
+        }
 
         if (session?.user) {
           setUser({
@@ -98,8 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAuthState('authenticated');
           setIsSkipMode(false);
           localStorage.removeItem(SKIP_KEY);
-          // Sync DB → localStorage quando auth cambia
-          pullAllFromDB().catch(err => console.warn('[auth] DB sync fallito:', err));
+          // Pulisci chiavi API dal localStorage — ora si usa il vault
+          clearSensitiveLocalData();
         } else if (!isSkipMode) {
           setUser(null);
           setAuthState('unauthenticated');
@@ -150,11 +182,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {};
   }, []);
 
+  // ── Sign In with Google OAuth ──────────────────────────────────────
+  const signInWithGoogle = useCallback(async (): Promise<{ error?: string }> => {
+    if (!supabase) return { error: 'Supabase non configurato' };
+    setError(null);
+
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (err) {
+      const msg = translateError(err.message);
+      setError(msg);
+      return { error: msg };
+    }
+
+    return {};
+  }, []);
+
+  // ── Sign In with Apple OAuth ────────────────────────────────────────
+  const signInWithApple = useCallback(async (): Promise<{ error?: string }> => {
+    if (!supabase) return { error: 'Supabase non configurato' };
+    setError(null);
+
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (err) {
+      const msg = translateError(err.message);
+      setError(msg);
+      return { error: msg };
+    }
+
+    return {};
+  }, []);
+
   // ── Sign Out ───────────────────────────────────────────────────────
   const signOut = useCallback(async () => {
     if (supabase) {
       await supabase.auth.signOut();
     }
+    localStorage.removeItem(GUEST_KEY);
+    setIsGuestMode(false);
     setUser(null);
     setAuthState('unauthenticated');
     setError(null);
@@ -163,15 +239,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Skip Auth ──────────────────────────────────────────────────────
   const skipAuth = useCallback(() => {
     localStorage.setItem(SKIP_KEY, 'true');
+    initSkipQuota(); // Inizializza quota se non esiste
     setIsSkipMode(true);
     setAuthState('skipped');
+    setError(null);
+  }, []);
+
+  // ── Guest Auth (accesso completo, nessuna quota) ──────────────────
+  const guestAuth = useCallback(() => {
+    localStorage.setItem(GUEST_KEY, 'true');
+    setIsGuestMode(true);
+    setUser({ id: 'guest', email: 'guest@bartalk.app', displayName: 'Guest' });
+    setAuthState('authenticated');
     setError(null);
   }, []);
 
   // ── Resume Auth (torna al login dalla skip mode) ───────────────────
   const resumeAuth = useCallback(() => {
     localStorage.removeItem(SKIP_KEY);
+    localStorage.removeItem(GUEST_KEY);
     setIsSkipMode(false);
+    setIsGuestMode(false);
+    setUser(null);
     setAuthState('unauthenticated');
     setError(null);
   }, []);
@@ -179,16 +268,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Clear Error ────────────────────────────────────────────────────
   const clearError = useCallback(() => setError(null), []);
 
+  // ── Clear Password Recovery ──────────────────────────────────────
+  const clearPasswordRecovery = useCallback(() => setIsPasswordRecovery(false), []);
+
+  // ── Skip Quota Info ─────────────────────────────────────────────
+  const skipQuotaInfo = isSkipMode ? {
+    remaining: getRemainingQuota(),
+    daysRemaining: getRemainingDays(),
+    expired: hasExpired(),
+  } : null;
+
   return (
     <AuthCtx.Provider value={{
       user,
       authState,
       isSkipMode,
+      isGuestMode,
+      isPasswordRecovery,
+      skipQuotaInfo,
       signUp,
       signIn,
+      signInWithGoogle,
+      signInWithApple,
       signOut,
       skipAuth,
+      guestAuth,
       resumeAuth,
+      clearPasswordRecovery,
       error,
       clearError,
     }}>
