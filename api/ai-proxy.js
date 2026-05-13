@@ -57,6 +57,7 @@ const ALLOWED_ORIGINS_EXACT = (process.env.ALLOWED_ORIGINS || '')
 // Fallback: domini noti se env var non configurata
 if (ALLOWED_ORIGINS_EXACT.length === 0) {
   ALLOWED_ORIGINS_EXACT.push(
+    'https://bartalk-v79-app.vercel.app',
     'https://bartalk-v79-tmweapps-projects.vercel.app',
     'https://bartalk-v79-git-main-tmweapps-projects.vercel.app',
   );
@@ -211,14 +212,6 @@ export default async function handler(req, res) {
   // Rate limit (pre-validation, senza provider)
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
 
-  // Per-user rate limit (authenticated users: stricter, by userId instead of IP)
-  if (userId) {
-    const userRate = checkRate(`user:${userId}`, null);
-    if (!userRate.ok) {
-      return res.status(429).json({ error: 'Rate limit exceeded (user)', retryAfter: 60 });
-    }
-  }
-
   // --- Body size check ---
   const bodySize = JSON.stringify(req.body || {}).length;
   if (bodySize > MAX_BODY_SIZE) {
@@ -238,6 +231,14 @@ export default async function handler(req, res) {
   } else if (!skipAuth) {
     if (SUPABASE_JWT_SECRET) {
       return res.status(401).json({ error: 'Authentication required. Use login or skip mode.' });
+    }
+  }
+
+  // Per-user rate limit (authenticated users: stricter, by userId instead of IP)
+  if (userId) {
+    const userRate = checkRate(`user:${userId}`, null);
+    if (!userRate.ok) {
+      return res.status(429).json({ error: 'Rate limit exceeded (user)', retryAfter: 60 });
     }
   }
 

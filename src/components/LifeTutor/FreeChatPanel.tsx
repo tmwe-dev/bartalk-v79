@@ -5,6 +5,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { ErrorBoundary } from '../Common/ErrorBoundary';
 import { useSettingsContext } from '../../context/SettingsContext';
 import { callProxy } from '../../lib/proxy';
 import { resolveApiKey, PRIORITY_ORDERS } from '../../lib/apiKeyResolver';
@@ -218,6 +219,15 @@ export function FreeChatPanel() {
   };
 
   return (
+    <ErrorBoundary
+      fallback={
+        <div className="lt-freechat" style={{ textAlign: 'center', padding: '48px 20px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+          <h3 style={{ color: '#e53e3e', marginBottom: '8px' }}>Errore nella chat</h3>
+          <p style={{ color: '#718096' }}>Impossibile caricare la chat. Verifica la connessione e riprova.</p>
+        </div>
+      }
+    >
     <div className="lt-freechat">
       <div className="lt-freechat-header">
         <span className="lt-freechat-title">Life Tutor</span>
@@ -318,5 +328,6 @@ export function FreeChatPanel() {
         </button>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

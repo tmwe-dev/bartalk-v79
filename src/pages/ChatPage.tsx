@@ -405,7 +405,15 @@ export function ChatPage() {
 
       {/* Main Content */}
       <div className="app-main">
-        <Navbar onToggleSidebar={toggleSidebar} sidebarCollapsed={sidebarCollapsed} />
+        <Navbar
+          onToggleSidebar={toggleSidebar}
+          sidebarCollapsed={sidebarCollapsed}
+          activeTab={activeTab}
+          onTabChange={(t) => setActiveTab(t as MainTab)}
+          autoRun={autoRun}
+          onAutoRunToggle={() => setAutoRun(!autoRun)}
+          hasActiveTask={activeTask?.isActive}
+        />
 
         {ttsEnabled && <AudioControlBar />}
 
@@ -417,54 +425,6 @@ export function ChatPage() {
             onTabClick={onAgentTabClick}
           />
         )}
-
-        {/* Tab Bar */}
-        <div className="main-tab-bar">
-          <button
-            className={`main-tab ${activeTab === 'chat' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chat')}
-          >
-            <span className="main-tab-icon">💬</span>
-            <span className="main-tab-label">Chat</span>
-          </button>
-          <button
-            className={`main-tab ${activeTab === 'carousel' ? 'active' : ''}`}
-            onClick={() => setActiveTab('carousel')}
-          >
-            <span className="main-tab-icon">🎠</span>
-            <span className="main-tab-label">Carousel</span>
-          </button>
-          <button
-            className={`main-tab ${activeTab === 'podcast' ? 'active' : ''}`}
-            onClick={() => setActiveTab('podcast')}
-          >
-            <span className="main-tab-icon">🎙️</span>
-            <span className="main-tab-label">Podcast</span>
-          </button>
-          <button
-            className={`main-tab ${activeTab === 'tasks' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tasks')}
-          >
-            <span className="main-tab-icon">🎯</span>
-            <span className="main-tab-label">Task</span>
-            {activeTask?.isActive && <span className="task-tab-badge" />}
-          </button>
-          <button
-            className={`main-tab ${activeTab === 'studio' ? 'active' : ''}`}
-            onClick={() => setActiveTab('studio')}
-          >
-            <span className="main-tab-icon">🔧</span>
-            <span className="main-tab-label">Studio</span>
-          </button>
-          <button
-            className={`main-tab ${autoRun ? 'active' : ''}`}
-            onClick={() => setAutoRun(!autoRun)}
-            title={autoRun ? 'AutoRun ON' : 'AutoRun OFF'}
-          >
-            <span className="main-tab-icon">{autoRun ? '🔄' : '⏸'}</span>
-            <span className="main-tab-label">Auto</span>
-          </button>
-        </div>
 
         {/* Content */}
         <div className="main-content-area">

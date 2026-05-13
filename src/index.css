@@ -755,6 +755,7 @@ body {
 /* ── Navbar (glass morphism v7.x) ────────────────────────────────────── */
 
 .navbar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -764,6 +765,7 @@ body {
   border-bottom: 1px solid rgba(42, 42, 64, 0.4);
   flex-shrink: 0;
   height: 52px;
+  z-index: 100;
 }
 
 .navbar-left {
@@ -789,6 +791,122 @@ body {
 .navbar-right {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Navbar tabs (Chat page: Chat/Carousel/Podcast/Task/Studio/Auto) ── */
+.navbar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.navbar-tabs::-webkit-scrollbar { display: none; }
+.navbar-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  position: relative;
+}
+.navbar-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.05);
+}
+.navbar-tab-active {
+  color: var(--accent);
+  background: rgba(99,102,241,0.12);
+}
+.navbar-tab-icon { font-size: 14px; }
+.navbar-tab-label { font-weight: 500; }
+.navbar-task-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background: var(--danger);
+  border-radius: 50%;
+}
+
+/* ── Navigation dropdown menu ─────────────────────────────────────── */
+.navbar-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+.navbar-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  padding: 6px;
+  animation: menuFadeIn 0.15s ease-out;
+}
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.navbar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background var(--transition);
+  text-align: left;
+  width: 100%;
+}
+.navbar-menu-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+.navbar-menu-item.active {
+  background: var(--accent);
+  color: #fff;
+}
+.navbar-menu-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+/* ── PageShell (V2 pages layout) ─────────────────────────────────── */
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+.page-shell-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 .nav-btn {

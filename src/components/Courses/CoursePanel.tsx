@@ -5,6 +5,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { ErrorBoundary } from '../Common/ErrorBoundary';
 import { useCourseContext } from '../../context/CourseContext';
 import { useMaestroContext } from '../../context/MaestroContext';
 import type { CourseLevelType, CourseCategoryId, CourseLesson } from '../../types/courses';
@@ -165,116 +166,146 @@ export function CoursePanel() {
 
   // ── RENDER ──────────────────────────────────────────────────────────
 
-  // Browse
-  if (view === 'browse') {
-    return (
-      <CourseBrowse
-        onOpenCourse={handleOpenCourse}
-        onOpenCatalog={() => { setView('catalog'); setSelectedTemplate(null); }}
-        onOpenWizard={() => { setView('wizard'); setWizStep(0); setWizTopic(''); }}
-      />
-    );
-  }
+  const renderContent = () => {
+    // Loading skeleton while generating
+    if (isGenerating) {
+      return (
+        <div className="course-panel">
+          <div className="course-loading-skeleton">
+            <div className="course-loading-spinner" />
+            <p>Generazione del corso in corso...</p>
+          </div>
+        </div>
+      );
+    }
 
-  // Catalog
-  if (view === 'catalog') {
-    return (
-      <CourseCatalog
-        selectedTemplate={selectedTemplate}
-        selectedFocus={selectedFocus}
-        selectedLevel={selectedLevel}
-        selectedDirection={selectedDirection}
-        customText={customText}
-        isGenerating={isGenerating}
-        error={error}
-        onSelectTemplate={handleSelectTemplate}
-        onSetSelectedTemplate={setSelectedTemplate}
-        onSetSelectedFocus={setSelectedFocus}
-        onSetSelectedLevel={setSelectedLevel}
-        onSetSelectedDirection={setSelectedDirection}
-        onSetCustomText={setCustomText}
-        onGenerateFromTemplate={handleGenerateFromTemplate}
-        onBack={() => setView('browse')}
-      />
-    );
-  }
+    // Browse
+    if (view === 'browse') {
+      return (
+        <CourseBrowse
+          onOpenCourse={handleOpenCourse}
+          onOpenCatalog={() => { setView('catalog'); setSelectedTemplate(null); }}
+          onOpenWizard={() => { setView('wizard'); setWizStep(0); setWizTopic(''); }}
+        />
+      );
+    }
 
-  // Wizard
-  if (view === 'wizard') {
-    return (
-      <CourseWizard
-        topic={wizTopic}
-        level={wizLevel}
-        category={wizCategory}
-        step={wizStep}
-        isGenerating={isGenerating}
-        error={error}
-        onSetTopic={setWizTopic}
-        onSetLevel={setWizLevel}
-        onSetCategory={setWizCategory}
-        onSetStep={setWizStep}
-        onGenerate={handleGenerate}
-        onQuickSuggestion={handleQuickSuggestion}
-        onBack={() => setView('browse')}
-      />
-    );
-  }
+    // Catalog
+    if (view === 'catalog') {
+      return (
+        <CourseCatalog
+          selectedTemplate={selectedTemplate}
+          selectedFocus={selectedFocus}
+          selectedLevel={selectedLevel}
+          selectedDirection={selectedDirection}
+          customText={customText}
+          isGenerating={isGenerating}
+          error={error}
+          onSelectTemplate={handleSelectTemplate}
+          onSetSelectedTemplate={setSelectedTemplate}
+          onSetSelectedFocus={setSelectedFocus}
+          onSetSelectedLevel={setSelectedLevel}
+          onSetSelectedDirection={setSelectedDirection}
+          onSetCustomText={setCustomText}
+          onGenerateFromTemplate={handleGenerateFromTemplate}
+          onBack={() => setView('browse')}
+        />
+      );
+    }
 
-  // Assessment
-  if (view === 'assessment' && assessLesson?.assessment) {
-    return (
-      <CourseAssessment
-        lesson={assessLesson}
-        answers={assessAnswers}
-        submitted={assessSubmitted}
-        score={assessScore}
-        onSetAnswers={setAssessAnswers}
-        onSubmit={handleSubmitAssessment}
-        onRetry={() => {
-          setAssessAnswers(new Array(assessLesson.assessment!.length).fill(-1));
-          setAssessSubmitted(false);
-        }}
-        onBack={() => setView('active')}
-      />
-    );
-  }
+    // Wizard
+    if (view === 'wizard') {
+      return (
+        <CourseWizard
+          topic={wizTopic}
+          level={wizLevel}
+          category={wizCategory}
+          step={wizStep}
+          isGenerating={isGenerating}
+          error={error}
+          onSetTopic={setWizTopic}
+          onSetLevel={setWizLevel}
+          onSetCategory={setWizCategory}
+          onSetStep={setWizStep}
+          onGenerate={handleGenerate}
+          onQuickSuggestion={handleQuickSuggestion}
+          onBack={() => setView('browse')}
+        />
+      );
+    }
 
-  // Active
-  if (view === 'active' && activeCourse) {
-    return (
-      <CourseActive
-        activeCourse={activeCourse}
-        onOpenAssessment={handleOpenAssessment}
-        onStartMaestroLesson={handleStartMaestroLesson}
-        onBack={handleBackToBrowse}
-      />
-    );
-  }
+    // Assessment
+    if (view === 'assessment' && assessLesson?.assessment) {
+      return (
+        <CourseAssessment
+          lesson={assessLesson}
+          answers={assessAnswers}
+          submitted={assessSubmitted}
+          score={assessScore}
+          onSetAnswers={setAssessAnswers}
+          onSubmit={handleSubmitAssessment}
+          onRetry={() => {
+            setAssessAnswers(new Array(assessLesson.assessment!.length).fill(-1));
+            setAssessSubmitted(false);
+          }}
+          onBack={() => setView('active')}
+        />
+      );
+    }
 
-  // Maestro (select, chat, onboarding)
-  if (['maestro-select', 'maestro-chat', 'onboarding'].includes(view)) {
-    return (
-      <CourseMaestro
-        activeCourse={activeCourse}
-        maestroLessonIndex={maestroLessonIndex}
-        view={view as 'maestro-select' | 'maestro-chat' | 'onboarding'}
-        onMaestroSelected={handleMaestroSelected}
-        onOnboardingComplete={() => setView('maestro-select')}
-        onBack={() => setView('active')}
-      />
-    );
-  }
+    // Active
+    if (view === 'active' && activeCourse) {
+      return (
+        <CourseActive
+          activeCourse={activeCourse}
+          onOpenAssessment={handleOpenAssessment}
+          onStartMaestroLesson={handleStartMaestroLesson}
+          onBack={handleBackToBrowse}
+        />
+      );
+    }
 
-  // Fallback
-  return (
-    <div className="course-panel">
-      <div className="course-empty">
-        <div className="course-empty-icon">🎓</div>
-        <p>Nessun percorso attivo</p>
-        <button className="course-btn-primary" onClick={() => setView('browse')}>
-          Vai ai Percorsi
-        </button>
+    // Maestro (select, chat, onboarding)
+    if (['maestro-select', 'maestro-chat', 'onboarding'].includes(view)) {
+      return (
+        <CourseMaestro
+          activeCourse={activeCourse}
+          maestroLessonIndex={maestroLessonIndex}
+          view={view as 'maestro-select' | 'maestro-chat' | 'onboarding'}
+          onMaestroSelected={handleMaestroSelected}
+          onOnboardingComplete={() => setView('maestro-select')}
+          onBack={() => setView('active')}
+        />
+      );
+    }
+
+    // Fallback
+    return (
+      <div className="course-panel">
+        <div className="course-empty">
+          <div className="course-empty-icon">🎓</div>
+          <p>Nessun percorso attivo</p>
+          <button className="course-btn-primary" onClick={() => setView('browse')}>
+            Vai ai Percorsi
+          </button>
+        </div>
       </div>
-    </div>
+    );
+  };
+
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="course-panel">
+          <div className="course-empty">
+            <div className="course-empty-icon">⚠️</div>
+            <p>Si è verificato un errore nel pannello corsi.</p>
+            <p style={{ fontSize: '14px', color: '#718096' }}>Prova a ricaricare la pagina.</p>
+          </div>
+        </div>
+      }
+    >
+      {renderContent()}
+    </ErrorBoundary>
   );
 }

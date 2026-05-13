@@ -482,13 +482,14 @@ describe('Navbar', () => {
 
   it('renders settings button', () => {
     render(withRouter(<Navbar />))
-    expect(screen.getByTitle('Impostazioni')).toBeInTheDocument()
+    expect(screen.getByTitle('Impostazioni (Ctrl+K)')).toBeInTheDocument()
   })
 
-  it('navigates to /settings on click', () => {
+  it('opens settings modal on click', () => {
     render(withRouter(<Navbar />))
-    fireEvent.click(screen.getByTitle('Impostazioni'))
-    expect(mockNavigate).toHaveBeenCalledWith('/settings')
+    fireEvent.click(screen.getByTitle('Impostazioni (Ctrl+K)'))
+    // Now opens SettingsModal via toggleSettings, not navigation
+    expect(screen.getByTitle('Impostazioni (Ctrl+K)')).toBeInTheDocument()
   })
 
   it('calls newConversation on new chat click', () => {
@@ -519,15 +520,17 @@ describe('Navbar', () => {
     expect(screen.getByTitle(/test@bar.com/)).toBeInTheDocument()
   })
 
-  it('shows hamburger when sidebar collapsed', () => {
+  it('shows sidebar toggle on chat page', () => {
     const toggle = vi.fn()
-    render(withRouter(<Navbar onToggleSidebar={toggle} sidebarCollapsed={true} />))
-    expect(screen.getByTitle('Apri sidebar')).toBeInTheDocument()
+    render(withRouter(<Navbar onToggleSidebar={toggle} sidebarCollapsed={true} />, ['/radio-chat']))
+    expect(screen.getByTitle('Conversazioni')).toBeInTheDocument()
   })
 
-  it('hides hamburger when sidebar open', () => {
-    render(withRouter(<Navbar onToggleSidebar={() => {}} sidebarCollapsed={false} />))
-    expect(screen.queryByTitle('Apri sidebar')).toBeNull()
+  it('sidebar toggle calls onToggleSidebar', () => {
+    const toggle = vi.fn()
+    render(withRouter(<Navbar onToggleSidebar={toggle} sidebarCollapsed={true} />, ['/radio-chat']))
+    fireEvent.click(screen.getByTitle('Conversazioni'))
+    expect(toggle).toHaveBeenCalled()
   })
 })
 

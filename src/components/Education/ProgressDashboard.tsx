@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
+import { ErrorBoundary } from '../Common/ErrorBoundary';
 import { useCourseContext } from '../../context/CourseContext';
 import type { CourseDefinition, CourseProgress } from '../../types/courses';
 import { COURSE_CATEGORIES, COURSE_LEVEL_META } from '../../types/courses';
@@ -117,17 +118,30 @@ export function ProgressDashboard() {
 
   if (courses.length === 0) {
     return (
-      <div style={styles.empty}>
-        <div style={styles.emptyIcon}>📊</div>
-        <h3 style={styles.emptyTitle}>Nessun dato ancora</h3>
-        <p style={styles.emptyText}>
-          Crea il tuo primo corso per iniziare a tracciare i progressi di apprendimento.
-        </p>
-      </div>
+      <ErrorBoundary>
+        <div style={styles.empty}>
+          <div style={styles.emptyIcon}>📊</div>
+          <h3 style={styles.emptyTitle}>Nessun dato ancora</h3>
+          <p style={styles.emptyText}>
+            Crea il tuo primo corso per iniziare a tracciare i progressi di apprendimento.
+          </p>
+        </div>
+      </ErrorBoundary>
     );
   }
 
   return (
+    <ErrorBoundary
+      fallback={
+        <div style={styles.empty}>
+          <div style={styles.emptyIcon}>⚠️</div>
+          <h3 style={styles.emptyTitle}>Errore nel caricamento</h3>
+          <p style={styles.emptyText}>
+            Impossibile visualizzare i progressi. Prova a ricaricare la pagina.
+          </p>
+        </div>
+      }
+    >
     <div style={styles.container}>
       <h2 style={styles.title}>📊 Progressi di Apprendimento</h2>
 
@@ -216,6 +230,7 @@ export function ProgressDashboard() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
 

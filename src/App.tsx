@@ -21,7 +21,6 @@ import { MaestroProvider } from './context/MaestroContext';
 import { SettingsModal } from './components/Settings/SettingsModal';
 import { ToastContainer } from './components/Common/Toast';
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
-import { CookieBanner } from './components/Legal/CookieBanner';
 import { AppRoutes } from './router';
 
 function KeyboardShortcuts() {
@@ -63,7 +62,6 @@ export default function App() {
                               <SettingsModal />
                               <ToastContainer />
                               <KeyboardShortcuts />
-                              <CookieBanner />
                             </UIProvider>
                           </MaestroProvider>
                         </CourseProvider>

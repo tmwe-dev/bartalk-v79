@@ -3,6 +3,7 @@
  * Scelta del maestro per una sessione di studio.
  */
 
+import { ErrorBoundary } from '../Common/ErrorBoundary';
 import { useMaestroContext } from '../../context/MaestroContext';
 import type { MaestroDefinition } from '../../types/maestro';
 import type { CourseCategoryId } from '../../types/courses';
@@ -27,25 +28,46 @@ export function MaestroSelector({
   const recommended = getMaestroForCategory(category);
 
   return (
-    <div className="maestro-selector">
-      <div className="maestro-selector-header">
-        <button className="maestro-back-btn" onClick={onBack}>←</button>
-        <h3>Scegli il tuo maestro</h3>
-      </div>
+    <ErrorBoundary
+      fallback={
+        <div className="maestro-selector">
+          <div className="maestro-selector-header">
+            <button className="maestro-back-btn" onClick={onBack}>←</button>
+            <h3>Scegli il tuo maestro</h3>
+          </div>
+          <p style={{ textAlign: 'center', padding: '32px', color: '#e53e3e' }}>
+            Errore nel caricamento dei maestri. Prova a tornare indietro e riprovare.
+          </p>
+        </div>
+      }
+    >
+      <div className="maestro-selector">
+        <div className="maestro-selector-header">
+          <button className="maestro-back-btn" onClick={onBack}>←</button>
+          <h3>Scegli il tuo maestro</h3>
+        </div>
 
-      <p className="maestro-selector-desc">Ogni maestro ha un approccio diverso. Scegli quello che preferisci.</p>
+        <p className="maestro-selector-desc">Ogni maestro ha un approccio diverso. Scegli quello che preferisci.</p>
 
-      <div className="maestro-grid">
-        {availableMaestri.map(m => (
-          <MaestroCard
-            key={m.id}
-            maestro={m}
-            isRecommended={m.id === recommended.id}
-            onSelect={() => onSelect(m.id)}
-          />
-        ))}
+        {availableMaestri.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px', color: '#718096' }}>
+            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🎓</div>
+            <p>Nessun maestro disponibile al momento.</p>
+          </div>
+        ) : (
+          <div className="maestro-grid">
+            {availableMaestri.map(m => (
+              <MaestroCard
+                key={m.id}
+                maestro={m}
+                isRecommended={m.id === recommended.id}
+                onSelect={() => onSelect(m.id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 

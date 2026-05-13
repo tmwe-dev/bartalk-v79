@@ -5,6 +5,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { ErrorBoundary } from '../Common/ErrorBoundary';
 import { useMaestroContext } from '../../context/MaestroContext';
 import { useCourseContext } from '../../context/CourseContext';
 import { useSettingsContext } from '../../context/SettingsContext';
@@ -96,7 +97,16 @@ export function MaestroChat({ onBack }: MaestroChatProps) {
     }
   }, [isListening, interimTranscript]);
 
-  if (!currentSession || !currentMaestro || !activeCourse) return null;
+  if (!currentSession || !currentMaestro || !activeCourse) {
+    return (
+      <div className="maestro-chat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+        <div style={{ textAlign: 'center', color: '#718096' }}>
+          <div style={{ fontSize: '36px', marginBottom: '12px' }}>⏳</div>
+          <p>Caricamento sessione in corso...</p>
+        </div>
+      </div>
+    );
+  }
 
   const lesson = activeCourse.lessons[currentSession.lessonIndex];
   if (!lesson) return null;
@@ -210,6 +220,23 @@ export function MaestroChat({ onBack }: MaestroChatProps) {
   const otherLanguages = LANGUAGES.filter(l => l.group !== 'primary' && l.group !== 'major');
 
   return (
+    <ErrorBoundary
+      fallback={
+        <div className="maestro-chat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h3 style={{ color: '#e53e3e', marginBottom: '8px' }}>Errore nella sessione</h3>
+            <p style={{ color: '#718096', marginBottom: '16px' }}>Si è verificato un errore durante la sessione con il maestro.</p>
+            <button
+              onClick={onBack}
+              style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: '#3182ce', color: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}
+            >
+              Torna indietro
+            </button>
+          </div>
+        </div>
+      }
+    >
     <div className="maestro-chat" style={{ '--maestro-color': currentMaestro.color } as React.CSSProperties}>
       {/* Header */}
       <div className="maestro-chat-header">
@@ -389,6 +416,7 @@ export function MaestroChat({ onBack }: MaestroChatProps) {
         )}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
 

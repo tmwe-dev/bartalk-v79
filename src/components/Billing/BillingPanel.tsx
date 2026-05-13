@@ -3,6 +3,7 @@
  * Pannello abbonamento per le Settings: piano attuale, usage, azioni.
  */
 
+import { ErrorBoundary } from '../Common/ErrorBoundary';
 import { useBillingContext } from '../../context/BillingContext';
 
 export function BillingPanel() {
@@ -10,7 +11,14 @@ export function BillingPanel() {
     useBillingContext();
 
   if (isLoading) {
-    return <div className="billing-panel billing-panel--loading">Caricamento…</div>;
+    return (
+      <div className="billing-panel billing-panel--loading">
+        <div style={{ textAlign: 'center', padding: '32px' }}>
+          <div style={{ fontSize: '24px', marginBottom: '8px' }}>⏳</div>
+          Caricamento...
+        </div>
+      </div>
+    );
   }
 
   const usage = status?.usage;
@@ -21,6 +29,15 @@ export function BillingPanel() {
   const isHigh = usagePercent >= 80;
 
   return (
+    <ErrorBoundary
+      fallback={
+        <div className="billing-panel" style={{ textAlign: 'center', padding: '48px 20px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+          <h3 style={{ color: '#e53e3e', marginBottom: '8px' }}>Errore nel pannello fatturazione</h3>
+          <p style={{ color: '#718096' }}>Impossibile caricare i dati di fatturazione. Riprova più tardi.</p>
+        </div>
+      }
+    >
     <div className="billing-panel">
       {/* Tier attuale */}
       <div className="billing-tier">
@@ -121,5 +138,6 @@ export function BillingPanel() {
 
       {error && <div className="billing-error">{error}</div>}
     </div>
+    </ErrorBoundary>
   );
 }

@@ -17,8 +17,9 @@ const ALLOWED_ORIGINS_EXACT = (process.env.ALLOWED_ORIGINS || '')
 
 if (ALLOWED_ORIGINS_EXACT.length === 0) {
   ALLOWED_ORIGINS_EXACT.push(
-    'https://bartalk-v79.vercel.app',
-    'https://bartalk-v79-git-main-tmwe-devs-projects.vercel.app',
+    'https://bartalk-v79-app.vercel.app',
+    'https://bartalk-v79-tmweapps-projects.vercel.app',
+    'https://bartalk-v79-git-main-tmweapps-projects.vercel.app',
   );
 }
 

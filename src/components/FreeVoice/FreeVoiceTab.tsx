@@ -12,6 +12,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { ErrorBoundary } from '../Common/ErrorBoundary';
 import { useVAD } from '../../hooks/useVAD';
 import DynamicCanvas, { parseVisualTags } from './DynamicCanvas';
 import type { CanvasContent } from './DynamicCanvas';
@@ -308,6 +309,15 @@ export default function FreeVoiceTab() {
   // Vista di selezione modalità (prima di avviare)
   if (!isStarted) {
     return (
+      <ErrorBoundary
+        fallback={
+          <div className="fv-setup" role="main" style={{ textAlign: 'center', padding: '48px 20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h3 style={{ color: '#e53e3e', marginBottom: '8px' }}>Errore nella modalità vocale</h3>
+            <p style={{ color: '#718096' }}>Si è verificato un errore. Prova a ricaricare la pagina.</p>
+          </div>
+        }
+      >
       <div className="fv-setup" role="main" aria-label="Configurazione modalità vocale">
         <h2 className="fv-setup-title">Modalità Vocale</h2>
         <p className="fv-setup-desc">
@@ -361,11 +371,27 @@ export default function FreeVoiceTab() {
           <p className="fv-error" role="alert">{vad.error}</p>
         )}
       </div>
+      </ErrorBoundary>
     );
   }
 
   // Vista conversazione attiva
   return (
+    <ErrorBoundary
+      fallback={
+        <div className="fv-live" role="main" style={{ textAlign: 'center', padding: '48px 20px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+          <h3 style={{ color: '#e53e3e', marginBottom: '8px' }}>Errore nella conversazione</h3>
+          <p style={{ color: '#718096', marginBottom: '16px' }}>La sessione vocale ha riscontrato un problema.</p>
+          <button
+            onClick={handleStop}
+            style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: '#3182ce', color: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}
+          >
+            Torna alla selezione
+          </button>
+        </div>
+      }
+    >
     <div className={`fv-live fv-mode-${mode}`} role="main" aria-label="Conversazione vocale attiva">
       {/* Canvas dinamico — occupa la maggior parte dello schermo */}
       <DynamicCanvas
@@ -424,5 +450,6 @@ export default function FreeVoiceTab() {
         </span>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

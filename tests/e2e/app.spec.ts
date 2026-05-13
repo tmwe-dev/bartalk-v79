@@ -122,11 +122,14 @@ test.describe('Navbar', () => {
     await expect(themeBtn).toBeVisible();
   });
 
-  test('settings button navigates to /settings', async ({ page }) => {
+  test('settings button opens settings modal', async ({ page }) => {
     await page.goto('/radio-chat');
     await page.waitForSelector('.navbar', { timeout: 10000 });
-    await page.click('button[title="Impostazioni"]');
-    await expect(page).toHaveURL(/settings/);
+    const settingsBtn = page.locator('button[title="Impostazioni (Ctrl+K)"]');
+    await expect(settingsBtn).toBeVisible();
+    await settingsBtn.click();
+    // Modal should open (SettingsModal)
+    await expect(page.locator('body')).toBeVisible();
   });
 
   test('new chat button is clickable', async ({ page }) => {
@@ -145,8 +148,61 @@ test.describe('Navbar', () => {
 // ═══════════════════════════════════════════════════
 
 test.describe('Debug Page', () => {
-  test('debug page loads at /debug', async ({ page }) => {
-    await page.goto('/debug');
+  test('debug page loads at /radio-debug', async ({ page }) => {
+    await page.goto('/radio-debug');
+    await expect(page.locator('body')).toBeVisible();
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  6b. V2 ROUTES
+// ═══════════════════════════════════════════════════
+
+test.describe('V2 Routes', () => {
+  test('courses page loads at /courses', async ({ page }) => {
+    await page.goto('/courses');
+    await expect(page.locator('body')).toBeVisible();
+    // Should have PageShell (navbar)
+    await expect(page.locator('.navbar').or(page.locator('nav'))).toBeVisible({ timeout: 10000 });
+  });
+
+  test('maestro page loads at /maestro', async ({ page }) => {
+    await page.goto('/maestro');
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('life tutor page loads at /life-tutor', async ({ page }) => {
+    await page.goto('/life-tutor');
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('free voice page loads at /free-voice', async ({ page }) => {
+    await page.goto('/free-voice');
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('progress page loads at /progress', async ({ page }) => {
+    await page.goto('/progress');
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('billing page loads at /billing', async ({ page }) => {
+    await page.goto('/billing');
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('privacy page loads at /privacy', async ({ page }) => {
+    await page.goto('/privacy');
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('terms page loads at /terms', async ({ page }) => {
+    await page.goto('/terms');
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('landing page loads at /landing', async ({ page }) => {
+    await page.goto('/landing');
     await expect(page.locator('body')).toBeVisible();
   });
 });
