@@ -52,15 +52,30 @@ export class RateLimiter {
   }
 }
 
-// Singleton instances
-/** aiLimiter constant. */
-export const aiLimiter = new RateLimiter({
-  maxRequests: RATE_LIMITS.aiRequestsPerMinute,
-  windowMs: 60_000,
-});
+// Singleton instances — lazy initialization to avoid TDZ errors
+// from cross-chunk circular dependencies (index ↔ audio chunks).
+// RATE_LIMITS is accessed at first call time, not module evaluation time.
 
-/** ttsLimiter constant. */
-export const ttsLimiter = new RateLimiter({
-  maxRequests: RATE_LIMITS.ttsRequestsPerMinute,
-  windowMs: 60_000,
-});
+let _aiLimiter: RateLimiter | null = null;
+/** Returns the AI rate limiter singleton (lazy-initialized). */
+export function getAiLimiter(): RateLimiter {
+  if (!_aiLimiter) {
+    _aiLimiter = new RateLimiter({
+      maxRequests: RATE_LIMITS.aiRequestsPerMinute,
+      windowMs: 60_000,
+    });
+  }
+  return _aiLimiter;
+}
+
+let _ttsLimiter: RateLimiter | null = null;
+/** Returns the TTS rate limiter singleton (lazy-initialized). */
+export function getTtsLimiter(): RateLimiter {
+  if (!_ttsLimiter) {
+    _ttsLimiter = new RateLimiter({
+      maxRequests: RATE_LIMITS.ttsRequestsPerMinute,
+      windowMs: 60_000,
+    });
+  }
+  return _ttsLimiter;
+}

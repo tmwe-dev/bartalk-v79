@@ -12,7 +12,7 @@ import { getAuthToken } from './authToken';
 import { getLangConfig } from '../types/settings';
 import type { AppSettings } from '../types/settings';
 import { preprocessForTTS } from './ttsPreprocessor';
-import { ttsLimiter } from './rateLimiter';
+import { getTtsLimiter } from './rateLimiter';
 import { recordTTSUsage } from './usageTracker';
 import { incrementTTSUsage, isQuotaExceeded } from './skipModeQuota';
 
@@ -113,7 +113,7 @@ export function enqueueTTS(opts: EnqueueTTSOptions): EnqueueResult {
   console.log(`[tts] enqueueTTS chiamato — agent=${agentName}, voiceId=${voiceId}, textLen=${text.length}`);
 
   // ── Rate Limiting (soft: solo log, non blocca) ──
-  if (!ttsLimiter.canProceed()) {
+  if (!getTtsLimiter().canProceed()) {
     console.warn('[tts] Rate limit raggiunto, ma procedo comunque');
   }
 
@@ -176,7 +176,7 @@ export function enqueueTTS(opts: EnqueueTTSOptions): EnqueueResult {
   }
 
   // Record rate limit + usage
-  ttsLimiter.recordRequest();
+  getTtsLimiter().recordRequest();
   recordTTSUsage(limitedText.length);
 
   // Skip-mode: incrementa quota
@@ -255,7 +255,7 @@ export function enqueueDualVoiceTTS(opts: EnqueueDualVoiceTTSOptions): EnqueueRe
   console.log(`[tts] enqueueDualVoiceTTS: ${segments.length} segmenti (L2=${segments.filter(s => s.isL2).length})`);
 
   // Rate limiting e quota check (una volta per tutto il blocco)
-  if (!ttsLimiter.canProceed()) {
+  if (!getTtsLimiter().canProceed()) {
     console.warn('[tts] Rate limit raggiunto, ma procedo comunque');
   }
   if (queue.length >= 20) {
@@ -313,7 +313,7 @@ export function enqueueDualVoiceTTS(opts: EnqueueDualVoiceTTSOptions): EnqueueRe
     }
   }
 
-  ttsLimiter.recordRequest();
+  getTtsLimiter().recordRequest();
   recordTTSUsage(text.length);
   if (isInSkipMode()) incrementTTSUsage();
 
