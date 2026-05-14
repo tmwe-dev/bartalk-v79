@@ -16,8 +16,17 @@ import { ErrorBoundary } from '../Common/ErrorBoundary';
 import { useVAD } from '../../hooks/useVAD';
 
 // Web Speech API type declarations (not provided by standard TS libs)
+interface SpeechRecognitionResult {
+  [index: number]: { transcript: string; confidence: number };
+  isFinal: boolean;
+  length: number;
+}
+interface SpeechRecognitionResultList {
+  [index: number]: SpeechRecognitionResult;
+  length: number;
+}
 interface SpeechRecognitionEvent extends Event {
-  results: { [index: number]: { [index: number]: { transcript: string; confidence: number } }; length: number };
+  results: SpeechRecognitionResultList;
   resultIndex: number;
 }
 interface SpeechRecognitionErrorEvent extends Event {
