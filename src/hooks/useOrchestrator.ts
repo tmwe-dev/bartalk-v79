@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { useConversationContext } from '../context/ConversationContext';
 import { useSettingsContext } from '../context/SettingsContext';
 import { useAgentContext } from '../context/AgentContext';
-import { useUIContext } from '../context/UIContext';
 import { useTaskContext } from '../context/TaskContext';
 import { orchestrate } from '../lib/orchestrator';
 import { enqueueTTS } from '../lib/tts';
@@ -16,7 +15,6 @@ export function useOrchestrator() {
   const { conversationMode, turnStrategy, ttsEnabled, language, temperature, maxTokens, wordRange } =
     useSettingsContext();
   const { enabledAgents, getVoiceId } = useAgentContext();
-  const { openSettings } = useUIContext();
   const { getTaskPromptContext } = useTaskContext();
 
   const sendMessage = useCallback(async (text: string) => {
@@ -51,7 +49,7 @@ export function useOrchestrator() {
           });
         }
         if (text.trim().toLowerCase() === '/keys') {
-          openSettings();
+          window.location.href = '/settings';
         }
         return;
       }
@@ -127,7 +125,7 @@ export function useOrchestrator() {
     enabledAgents, messages, turnIndex, conversationMode, turnStrategy,
     ttsEnabled, language, temperature, maxTokens, wordRange,
     conversationId, addMessage, setWaiting, startTurn,
-    incrementTurn, getVoiceId, openSettings, getTaskPromptContext,
+    incrementTurn, getVoiceId, getTaskPromptContext,
   ]);
 
   return { sendMessage };

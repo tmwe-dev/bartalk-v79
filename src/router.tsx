@@ -1,11 +1,11 @@
 /**
- * BarTalk v8.2.5 — AppRoutes
+ * BarTalk v8.2.6 — AppRoutes
  * Sistema di routing con React Router v7.
  * Usa Routes/Route dentro BrowserRouter (non createBrowserRouter)
  * per compatibilita con i context providers nel tree.
  */
 
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
 import { PageShell } from './components/Layout/PageShell';
@@ -58,22 +58,44 @@ function V2({ children }: { children: React.ReactNode }) {
 
 /**
  * Maestro standalone page wrapper.
- * When accessed directly (not from a course), shows all maestri
- * with category "altro" and navigates to chat on selection.
+ * Uses React Router navigation (no full page reload).
  */
 function MaestroPage() {
+  const navigate = useNavigate();
   return (
     <MaestroSelector
       category={"altro" as CourseCategoryId}
       courseId=""
       lessonIndex={0}
       onSelect={(maestroId: string) => {
-        // Navigate to chat with selected maestro context
-        window.location.href = `/radio-chat?maestro=${encodeURIComponent(maestroId)}`;
+        navigate(`/radio-chat?maestro=${encodeURIComponent(maestroId)}`);
       }}
-      onBack={() => window.history.back()}
+      onBack={() => navigate(-1)}
     />
   );
+}
+
+/** Landing page wrapper with proper React Router navigation */
+function LandingPageWrapper() {
+  const navigate = useNavigate();
+  return (
+    <LandingPage
+      onLogin={() => navigate('/login')}
+      onRegister={() => navigate('/login')}
+      onGuest={() => navigate('/radio-chat')}
+    />
+  );
+}
+
+/** Privacy/Terms close handler with fallback */
+function PrivacyPageWrapper() {
+  const navigate = useNavigate();
+  return <PrivacyPolicy onClose={() => navigate(-1)} />;
+}
+
+function TermsPageWrapper() {
+  const navigate = useNavigate();
+  return <TermsOfService onClose={() => navigate(-1)} />;
 }
 
 // ── Route definitions ───────────────────────────────────────────────
@@ -95,9 +117,9 @@ export function AppRoutes() {
       <Route path="/free-voice" element={<V2><FreeVoiceTab /></V2>} />
       <Route path="/progress" element={<V2><ProgressDashboard /></V2>} />
       <Route path="/billing" element={<V2><BillingPanel /></V2>} />
-      <Route path="/landing" element={<Wrap><LandingPage onLogin={() => { window.location.href = '/login'; }} onRegister={() => { window.location.href = '/login'; }} onGuest={() => { window.location.href = '/radio-chat'; }} /></Wrap>} />
-      <Route path="/privacy" element={<V2><PrivacyPolicy onClose={() => window.history.back()} /></V2>} />
-      <Route path="/terms" element={<V2><TermsOfService onClose={() => window.history.back()} /></V2>} />
+      <Route path="/landing" element={<Wrap><LandingPageWrapper /></Wrap>} />
+      <Route path="/privacy" element={<V2><PrivacyPageWrapper /></V2>} />
+      <Route path="/terms" element={<V2><TermsPageWrapper /></V2>} />
 
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/radio-chat" replace />} />

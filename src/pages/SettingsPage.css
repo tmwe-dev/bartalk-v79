@@ -1,9 +1,9 @@
-/* BarTalk v8.2 — Settings Page */
+/* BarTalk v8.2.6 — Settings Page (theme-aware) */
 
 .settings-page {
   min-height: 100vh;
-  background: #0a0a0f;
-  color: #fff;
+  background: var(--bg-primary, #0a0a0f);
+  color: var(--text-primary, #fff);
   padding: 20px;
 }
 
@@ -13,22 +13,6 @@
   display: flex;
   align-items: center;
   gap: 16px;
-}
-
-.settings-back-btn {
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.7);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.settings-back-btn:hover {
-  background: rgba(255,255,255,0.12);
-  color: #fff;
 }
 
 .settings-page-title {
@@ -61,7 +45,7 @@
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: rgba(255,255,255,0.6);
+  color: var(--text-secondary, rgba(255,255,255,0.6));
   cursor: pointer;
   font-size: 14px;
   text-align: left;
@@ -69,8 +53,8 @@
 }
 
 .settings-sidebar-btn:hover {
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.9);
+  background: var(--bg-hover, rgba(255,255,255,0.06));
+  color: var(--text-primary, rgba(255,255,255,0.9));
 }
 
 .settings-sidebar-btn.active {
@@ -84,8 +68,8 @@
 
 /* Content */
 .settings-content {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--bg-secondary, rgba(255,255,255,0.02));
+  border: 1px solid var(--border, rgba(255,255,255,0.06));
   border-radius: 12px;
   padding: 28px;
 }
@@ -99,7 +83,7 @@
 .settings-group {
   margin-bottom: 28px;
   padding-bottom: 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--border, rgba(255,255,255,0.06));
 }
 
 .settings-group:last-child {
@@ -112,11 +96,11 @@
   font-size: 15px;
   font-weight: 600;
   margin: 0 0 12px;
-  color: rgba(255,255,255,0.8);
+  color: var(--text-secondary, rgba(255,255,255,0.8));
 }
 
 .settings-muted {
-  color: rgba(255,255,255,0.4);
+  color: var(--text-muted, rgba(255,255,255,0.4));
   font-size: 13px;
   margin: 0 0 12px;
 }
@@ -129,13 +113,13 @@
   padding: 10px 0;
   cursor: pointer;
   font-size: 14px;
-  color: rgba(255,255,255,0.7);
+  color: var(--text-secondary, rgba(255,255,255,0.7));
 }
 
 .toggle-slider {
   width: 36px;
   height: 20px;
-  background: rgba(255,255,255,0.15);
+  background: var(--bg-hover, rgba(255,255,255,0.15));
   border-radius: 10px;
   position: relative;
   transition: background 0.2s;
@@ -146,7 +130,7 @@
   position: absolute;
   width: 16px;
   height: 16px;
-  background: #fff;
+  background: var(--text-primary, #fff);
   border-radius: 50%;
   top: 2px;
   left: 2px;
@@ -172,15 +156,15 @@
   justify-content: space-between;
   padding: 10px 0;
   font-size: 14px;
-  color: rgba(255,255,255,0.7);
+  color: var(--text-secondary, rgba(255,255,255,0.7));
 }
 
 .settings-field select,
 .settings-field input[type="range"] {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-tertiary, rgba(255,255,255,0.08));
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
   border-radius: 6px;
-  color: #fff;
+  color: var(--text-primary, #fff);
   padding: 6px 10px;
   font-size: 13px;
 }
@@ -198,8 +182,8 @@
 }
 
 .settings-agent-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--bg-secondary, rgba(255,255,255,0.03));
+  border: 1px solid var(--border, rgba(255,255,255,0.06));
   border-radius: 10px;
   padding: 16px;
 }
@@ -222,7 +206,7 @@
 
 .settings-agent-model {
   font-size: 12px;
-  color: rgba(255,255,255,0.4);
+  color: var(--text-muted, rgba(255,255,255,0.4));
   margin-bottom: 10px;
 }
 
@@ -242,7 +226,7 @@
 
 .settings-info-box p {
   margin: 0;
-  color: rgba(255,255,255,0.6);
+  color: var(--text-secondary, rgba(255,255,255,0.6));
 }
 
 /* Account */
@@ -260,7 +244,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.06);
+  background: var(--bg-hover, rgba(255,255,255,0.06));
   border-radius: 50%;
 }
 
@@ -271,7 +255,7 @@
 
 .settings-account-name {
   font-size: 13px;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-muted, rgba(255,255,255,0.5));
 }
 
 .settings-account-plan {
@@ -280,7 +264,7 @@
   gap: 8px;
   font-size: 14px;
   margin-bottom: 16px;
-  color: rgba(255,255,255,0.6);
+  color: var(--text-secondary, rgba(255,255,255,0.6));
 }
 
 .settings-account-plan strong {
@@ -293,7 +277,7 @@
   grid-template-columns: 100px 1fr;
   gap: 8px;
   font-size: 13px;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-muted, rgba(255,255,255,0.5));
 }
 
 /* Buttons */
@@ -317,12 +301,12 @@
 }
 
 .settings-btn.secondary {
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.7);
+  background: var(--bg-hover, rgba(255,255,255,0.08));
+  color: var(--text-secondary, rgba(255,255,255,0.7));
 }
 
 .settings-btn.secondary:hover {
-  background: rgba(255,255,255,0.14);
+  background: var(--bg-tertiary, rgba(255,255,255,0.14));
 }
 
 .settings-btn.danger {

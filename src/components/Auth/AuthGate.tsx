@@ -8,6 +8,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback, type ReactNode, type FormEvent, type TouchEvent as ReactTouchEvent } from 'react';
+import { UI } from '../../lib/constants';
 import { useAuthContext } from '../../context/AuthContext';
 import { useT } from '../../lib/i18n';
 import type { AuthTab } from '../../types/auth';
@@ -81,7 +82,7 @@ export function AuthGate({ children }: AuthGateProps) {
       <div className="auth-gate">
         <div className="auth-card">
           <div className="auth-logo">🔑</div>
-          <h1 className="auth-title">RadioChat</h1>
+          <h1 className="auth-title">{UI.appName}</h1>
           <UpdatePassword onComplete={clearPasswordRecovery} />
         </div>
       </div>
@@ -100,7 +101,7 @@ export function AuthGate({ children }: AuthGateProps) {
         <div className="welcome-container">
           {/* Brand header */}
           <div className="welcome-header">
-            <h1 className="welcome-brand">📻 RadioChat</h1>
+            <h1 className="welcome-brand">📻 {UI.appName}</h1>
             <p className="welcome-tagline">Il tuo ambiente di apprendimento AI</p>
           </div>
 
@@ -226,7 +227,7 @@ export function AuthGate({ children }: AuthGateProps) {
       <div className="auth-gate">
         <div className="auth-card">
           <div className="auth-logo">🎙️</div>
-          <h1 className="auth-title">RadioChat</h1>
+          <h1 className="auth-title">{UI.appName}</h1>
           <div className="auth-loading">{t('loading')}</div>
         </div>
       </div>
@@ -315,7 +316,7 @@ export function AuthGate({ children }: AuthGateProps) {
       <div className="auth-card">
         {/* Logo e titolo */}
         <div className="auth-logo">🎙️</div>
-        <h1 className="auth-title">RadioChat</h1>
+        <h1 className="auth-title">{UI.appName}</h1>
         <p className="auth-subtitle">{t('authSubtitle')}</p>
 
         {/* Tab Login / Registrati */}

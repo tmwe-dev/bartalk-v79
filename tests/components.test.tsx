@@ -561,20 +561,20 @@ describe('SettingsPage', () => {
   it('shows general tab content by default after loading', async () => {
     render(withRouter(<SettingsPage />))
     await waitFor(() => {
-      expect(screen.getByText('Text-to-Speech')).toBeInTheDocument()
+      expect(screen.getByText('Tema')).toBeInTheDocument()
     })
   })
 
   it('switches to Agents tab', async () => {
     render(withRouter(<SettingsPage />))
-    await waitFor(() => expect(screen.getByText('Text-to-Speech')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tema')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Agenti'))
     expect(screen.getByText('Agenti AI')).toBeInTheDocument()
   })
 
   it('shows all 4 agents in agents tab', async () => {
     render(withRouter(<SettingsPage />))
-    await waitFor(() => expect(screen.getByText('Text-to-Speech')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tema')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Agenti'))
     expect(screen.getByText('Albert')).toBeInTheDocument()
     expect(screen.getByText('Archimede')).toBeInTheDocument()
@@ -584,14 +584,14 @@ describe('SettingsPage', () => {
 
   it('renders API keys info box', async () => {
     render(withRouter(<SettingsPage />))
-    await waitFor(() => expect(screen.getByText('Text-to-Speech')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tema')).toBeInTheDocument())
     fireEvent.click(screen.getByText('API Keys'))
     expect(screen.getByText(/Sicurezza/)).toBeInTheDocument()
   })
 
   it('shows skip mode message in account tab', async () => {
     render(withRouter(<SettingsPage />))
-    await waitFor(() => expect(screen.getByText('Text-to-Speech')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tema')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Account'))
     expect(screen.getByText(/senza account/)).toBeInTheDocument()
   })
@@ -692,21 +692,21 @@ describe('SettingsPage — authenticated user', () => {
 
   it('shows user email in account tab', async () => {
     render(withRouter(<SettingsPage />))
-    await waitFor(() => expect(screen.getByText('Text-to-Speech')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tema')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Account'))
     expect(screen.getByText('luca@bartalk.ai')).toBeInTheDocument()
   })
 
   it('shows sign out button', async () => {
     render(withRouter(<SettingsPage />))
-    await waitFor(() => expect(screen.getByText('Text-to-Speech')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tema')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Account'))
     expect(screen.getByText("Esci dall'account")).toBeInTheDocument()
   })
 
   it('calls signOut on button click', async () => {
     render(withRouter(<SettingsPage />))
-    await waitFor(() => expect(screen.getByText('Text-to-Speech')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tema')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Account'))
     fireEvent.click(screen.getByText("Esci dall'account"))
     expect(mockAuthContext.signOut).toHaveBeenCalled()
@@ -769,13 +769,13 @@ describe('SettingsPage theme toggle', () => {
 
   it('shows theme toggle in general tab', async () => {
     render(withRouter(<SettingsPage />))
-    await waitFor(() => expect(screen.getByText('Text-to-Speech')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tema')).toBeInTheDocument())
     expect(screen.getByLabelText('Attiva/disattiva tema chiaro')).toBeInTheDocument()
   })
 
   it('calls toggleTheme on change', async () => {
     render(withRouter(<SettingsPage />))
-    await waitFor(() => expect(screen.getByText('Text-to-Speech')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tema')).toBeInTheDocument())
     fireEvent.click(screen.getByLabelText('Attiva/disattiva tema chiaro'))
     expect(mockThemeContext.toggleTheme).toHaveBeenCalled()
   })

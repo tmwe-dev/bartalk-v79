@@ -54,20 +54,7 @@ describe('Page Module Exports', () => {
     expect(mod.AuthCallback || mod.default).toBeDefined();
   });
 
-  it('MenuPage exports correctly', async () => {
-    const mod = await import('../../src/pages/MenuPage');
-    expect(mod.MenuPage || mod.default).toBeDefined();
-  });
-
-  it('SectionPage exports correctly', async () => {
-    const mod = await import('../../src/pages/SectionPage');
-    expect(mod.SectionPage || mod.default).toBeDefined();
-  });
-
-  it('AdminPage exports correctly', async () => {
-    const mod = await import('../../src/pages/AdminPage');
-    expect(mod.AdminPage || mod.default).toBeDefined();
-  });
+  // MenuPage, SectionPage, AdminPage removed in v8.2.6 cleanup (dead code)
 });
 
 describe('Router Module', () => {

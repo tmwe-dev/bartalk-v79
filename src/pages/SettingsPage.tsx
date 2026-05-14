@@ -1,20 +1,20 @@
 /**
- * BarTalk v8.2 — Settings Page (full page)
+ * BarTalk v8.2.6 — Settings Page (unified, full page)
  * Rotta: /settings
- * Versione full-page delle impostazioni con tutte le sezioni.
+ * Unica interfaccia settings — SettingsModal rimossa.
+ * Tutte le impostazioni passano da qui: generali, agenti, prompt/AI, account, avanzate.
  */
 
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSettingsContext } from '../context/SettingsContext';
 import { useAgentContext } from '../context/AgentContext';
 import { useAuthContext } from '../context/AuthContext';
 import { useThemeContext } from '../context/ThemeContext';
 import { UI } from '../lib/constants';
-import { LANGUAGES } from '../types/settings';
 import './SettingsPage.css';
 
 // Lazy-loaded settings sub-tabs
+const PreferencesTab = lazy(() => import('../components/Settings/PreferencesTab').then(m => ({ default: m.PreferencesTab })));
 const PromptTab = lazy(() => import('../components/Settings/PromptTab').then(m => ({ default: m.PromptTab })));
 const PromptSectionsTab = lazy(() => import('../components/Settings/PromptSectionsTab').then(m => ({ default: m.PromptSectionsTab })));
 const MemoryTab = lazy(() => import('../components/Settings/MemoryTab').then(m => ({ default: m.MemoryTab })));
@@ -24,7 +24,6 @@ type SettingsTab = 'general' | 'agents' | 'prompts' | 'api' | 'account' | 'advan
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { ttsEnabled, setTtsEnabled, language, setLanguage } = useSettingsContext();
   const { agents, toggleAgent, isAgentEnabled } = useAgentContext();
   const { user, authState, signOut, isSkipMode, resumeAuth } = useAuthContext();
   const { theme, toggleTheme } = useThemeContext();
@@ -81,35 +80,10 @@ export function SettingsPage() {
             </div>
           ) : (<>
 
-          {/* ── General ── */}
+          {/* ── General (unified: PreferencesTab + theme) ── */}
           {activeTab === 'general' && (
             <div className="settings-section" role="tabpanel" id="settings-panel-general" aria-labelledby="settings-tab-general">
               <h2>Generale</h2>
-
-              <div className="settings-group">
-                <h3>Text-to-Speech</h3>
-                <label className="settings-toggle">
-                  <span>TTS Attivo</span>
-                  <input
-                    type="checkbox"
-                    checked={ttsEnabled}
-                    onChange={e => setTtsEnabled(e.target.checked)}
-                  />
-                  <span className="toggle-slider" />
-                </label>
-              </div>
-
-              <div className="settings-group">
-                <h3>Lingua</h3>
-                <label className="settings-field">
-                  <span>Lingua interfaccia</span>
-                  <select value={language} onChange={e => setLanguage(e.target.value as typeof language)}>
-                    {LANGUAGES.filter(l => l.group === 'primary').map(l => (
-                      <option key={l.value} value={l.value}>{l.flag} {l.label}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
 
               <div className="settings-group">
                 <h3>Tema</h3>
@@ -124,6 +98,10 @@ export function SettingsPage() {
                   <span className="toggle-slider" />
                 </label>
               </div>
+
+              <Suspense fallback={<div className="settings-loading"><div className="settings-spinner" /></div>}>
+                <PreferencesTab />
+              </Suspense>
             </div>
           )}
 

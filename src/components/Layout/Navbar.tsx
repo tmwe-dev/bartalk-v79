@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useUIContext } from '../../context/UIContext';
 import { useAuthContext } from '../../context/AuthContext';
 import { useConversationContext } from '../../context/ConversationContext';
 import { useTTS } from '../../hooks/useTTS';
@@ -55,7 +54,7 @@ export function Navbar({
 }: NavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toggleSettings } = useUIContext();
+  // Settings gear now navigates to /settings page (SettingsModal removed in v8.2.6)
   const { user, authState, isSkipMode, signOut, resumeAuth } = useAuthContext();
   const { newConversation, conversationTitle } = useConversationContext();
   const { stop: stopTTS } = useTTS();
@@ -187,7 +186,7 @@ export function Navbar({
         <button className="nav-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Tema chiaro' : 'Tema scuro'} aria-label={theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'}>
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
-        <button className="nav-btn" onClick={toggleSettings} title="Impostazioni (Ctrl+K)" aria-label="Apri impostazioni">
+        <button className="nav-btn" onClick={() => navigate('/settings')} title="Impostazioni (Ctrl+K)" aria-label="Apri impostazioni">
           ⚙️
         </button>
 

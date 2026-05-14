@@ -12,11 +12,11 @@ interface PageShellProps {
 
 export function PageShell({ children }: PageShellProps) {
   return (
-    <div className="page-shell">
+    <div className="page-shell" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <div className="page-shell-content">
+      <main className="page-shell-content" role="main" aria-label="Contenuto pagina">
         {children}
-      </div>
+      </main>
     </div>
   );
 }
