@@ -64,21 +64,23 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // ── Caricamento iniziale: localStorage (sempre, per velocità) ──
   useEffect(() => {
     const saved = storage.loadSettings<Partial<AppSettings>>({});
-    if (saved.conversationMode) setConversationMode(saved.conversationMode);
-    if (saved.turnStrategy) setTurnStrategy(saved.turnStrategy);
-    if (saved.ttsEnabled !== undefined) setTtsEnabled(saved.ttsEnabled);
-    if (saved.autoRun !== undefined) setAutoRun(saved.autoRun);
-    if (saved.language) setLanguage(saved.language);
-    if (saved.temperature !== undefined) setTemperature(saved.temperature);
-    if (saved.maxTokens !== undefined) setMaxTokens(saved.maxTokens);
-    if (saved.wordRange) setWordRange(saved.wordRange);
+    queueMicrotask(() => {
+      if (saved.conversationMode) setConversationMode(saved.conversationMode);
+      if (saved.turnStrategy) setTurnStrategy(saved.turnStrategy);
+      if (saved.ttsEnabled !== undefined) setTtsEnabled(saved.ttsEnabled);
+      if (saved.autoRun !== undefined) setAutoRun(saved.autoRun);
+      if (saved.language) setLanguage(saved.language);
+      if (saved.temperature !== undefined) setTemperature(saved.temperature);
+      if (saved.maxTokens !== undefined) setMaxTokens(saved.maxTokens);
+      if (saved.wordRange) setWordRange(saved.wordRange);
+    });
     setTimeout(() => { isInitRef.current = true; }, 0);
   }, []);
 
   // ── Se autenticato: carica da DB e sovrascrive localStorage ──
   useEffect(() => {
     if (authState !== 'authenticated' || !user) {
-      setWorkspaceId(null);
+      queueMicrotask(() => setWorkspaceId(null));
       dbLoadedRef.current = false;
       return;
     }
@@ -242,6 +244,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSettingsContext() {
   const ctx = useContext(ConText);
   if (!ctx) throw new Error('useSettingsContext deve essere usato dentro SettingsProvider');

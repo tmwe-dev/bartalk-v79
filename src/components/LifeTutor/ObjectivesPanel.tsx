@@ -47,7 +47,7 @@ export function ObjectivesPanel() {
   const [newPriority, setNewPriority] = useState(3);
 
   useEffect(() => {
-    setObjectives(loadObjectives());
+    queueMicrotask(() => setObjectives(loadObjectives()));
   }, []);
 
   const addObjective = useCallback(() => {

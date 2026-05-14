@@ -1,3 +1,11 @@
+/**
+ * @module agents
+ * AI agent definitions for BarTalk's 4-agent panel.
+ * Each agent (Albert/OpenAI, Archimede/Anthropic, Pitagora/Gemini, Newton/xAI)
+ * has a provider, default model, TTS voice, color identity, and demo response.
+ * Provides lookup functions by ID, provider, and sender type.
+ */
+
 import type { AgentConfig, ProviderType } from '../types/agents';
 
 /**
@@ -64,6 +72,11 @@ export const AGENTS: AgentConfig[] = [
   },
 ];
 
+/**
+ * Looks up an agent by its unique ID.
+ * @param id - Agent identifier (e.g., 'albert', 'archimede')
+ * @returns The matching AgentConfig, or undefined if not found
+ */
 export function getAgent(nameOrId: string): AgentConfig | undefined {
   const key = nameOrId.toLowerCase();
   return AGENTS.find(a => a.id === key || a.name.toLowerCase() === key);

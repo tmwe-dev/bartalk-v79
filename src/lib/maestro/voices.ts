@@ -1,6 +1,8 @@
 /**
- * Voice Management
- * ElevenLabs voice selection by language and gender, L2 support
+ * @module maestro/voices
+ * ElevenLabs voice selection for maestro tutors.
+ * Maps languages and genders to ElevenLabs voice IDs,
+ * with fallbacks for unmapped languages.
  */
 
 import type { MaestroDefinition } from '../../types/maestro';

@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — Student Profile & Memory System
- * Gestione persistente del profilo studente e della memoria del maestro.
+ * @module studentProfile
+ * Student profile and context builder for the maestro education system.
+ * Manages student profiles (name, interests, learning style, mastery scores)
+ * and builds context sections for maestro system prompts.
  */
 
 import type {
@@ -20,6 +22,10 @@ const LS_SESSIONS_INDEX = 'bt_study_sessions';
 
 // ── Student Profile ─────────────────────────────────────────────────
 
+/**
+ * Loads student profile from storage.
+ * @returns StudentProfile | null
+ */
 export function loadStudentProfile(): StudentProfile | null {
   try {
     const raw = localStorage.getItem(LS_STUDENT);
@@ -27,10 +33,19 @@ export function loadStudentProfile(): StudentProfile | null {
   } catch { return null; }
 }
 
+/**
+ * Saves student profile to storage.
+ * @param profile - The profile parameter
+ */
 export function saveStudentProfile(profile: StudentProfile): void {
   localStorage.setItem(LS_STUDENT, JSON.stringify(profile));
 }
 
+/**
+ * Creates default profile.
+ * @param name - The name parameter
+ * @returns StudentProfile
+ */
 export function createDefaultProfile(name: string): StudentProfile {
   return {
     id: generateId(),
@@ -47,6 +62,11 @@ export function createDefaultProfile(name: string): StudentProfile {
   };
 }
 
+/**
+ * Updates student profile.
+ * @param updates - The updates parameter
+ * @returns StudentProfile
+ */
 export function updateStudentProfile(updates: Partial<StudentProfile>): StudentProfile {
   const current = loadStudentProfile();
   if (!current) {
@@ -66,6 +86,12 @@ function memoryKey(courseId: string, maestroId: string): string {
   return `${LS_MEMORY_PREFIX}${courseId}_${maestroId}`;
 }
 
+/**
+ * Loads maestro memory from storage.
+ * @param courseId - The courseId parameter
+ * @param maestroId - The maestroId parameter
+ * @returns MaestroMemory | null
+ */
 export function loadMaestroMemory(courseId: string, maestroId: string): MaestroMemory | null {
   try {
     const raw = localStorage.getItem(memoryKey(courseId, maestroId));
@@ -73,10 +99,20 @@ export function loadMaestroMemory(courseId: string, maestroId: string): MaestroM
   } catch { return null; }
 }
 
+/**
+ * Saves maestro memory to storage.
+ * @param memory - The memory parameter
+ */
 export function saveMaestroMemory(memory: MaestroMemory): void {
   localStorage.setItem(memoryKey(memory.courseId, memory.maestroId), JSON.stringify(memory));
 }
 
+/**
+ * Creates default memory.
+ * @param courseId - The courseId parameter
+ * @param maestroId - The maestroId parameter
+ * @returns MaestroMemory
+ */
 export function createDefaultMemory(courseId: string, maestroId: string): MaestroMemory {
   return {
     id: generateId(),
@@ -142,6 +178,11 @@ export function updateMemoryFromInteraction(
 
 // ── Study Sessions ──────────────────────────────────────────────────
 
+/**
+ * Loads study session from storage.
+ * @param sessionId - The sessionId parameter
+ * @returns StudySession | null
+ */
 export function loadStudySession(sessionId: string): StudySession | null {
   try {
     const raw = localStorage.getItem(`${LS_SESSION_PREFIX}${sessionId}`);
@@ -149,6 +190,10 @@ export function loadStudySession(sessionId: string): StudySession | null {
   } catch { return null; }
 }
 
+/**
+ * Saves study session to storage.
+ * @param session - The session parameter
+ */
 export function saveStudySession(session: StudySession): void {
   localStorage.setItem(`${LS_SESSION_PREFIX}${session.id}`, JSON.stringify(session));
 
@@ -167,6 +212,11 @@ function loadSessionIndex(): string[] {
   } catch { return []; }
 }
 
+/**
+ * Gets sessions for course.
+ * @param courseId - The courseId parameter
+ * @returns StudySession[]
+ */
 export function getSessionsForCourse(courseId: string): StudySession[] {
   const index = loadSessionIndex();
   return index
@@ -175,6 +225,9 @@ export function getSessionsForCourse(courseId: string): StudySession[] {
     .sort((a, b) => new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime());
 }
 
+/**
+ * Creates study session.
+ */
 export function createStudySession(
   courseId: string,
   lessonIndex: number,
@@ -196,6 +249,9 @@ export function createStudySession(
 
 // ── Costruzione contesto studente per prompt ────────────────────────
 
+/**
+ * Builds student context.
+ */
 export function buildStudentContext(
   profile: StudentProfile,
   memory: MaestroMemory | null,

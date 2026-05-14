@@ -9,6 +9,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
 import { PageShell } from './components/Layout/PageShell';
+import type { CourseCategoryId } from './types/courses';
 
 // ── Lazy-loaded pages ───────────────────────────────────────────────
 const ChatPage = lazy(() => import('./pages/ChatPage').then(m => ({ default: m.ChatPage })));
@@ -55,14 +56,21 @@ function V2({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ── Maestro page wrapper (MaestroSelector requires props) ───────────
+/**
+ * Maestro standalone page wrapper.
+ * When accessed directly (not from a course), shows all maestri
+ * with category "altro" and navigates to chat on selection.
+ */
 function MaestroPage() {
   return (
     <MaestroSelector
-      category={"altro" as any}
+      category={"altro" as CourseCategoryId}
       courseId=""
       lessonIndex={0}
-      onSelect={() => {}}
+      onSelect={(maestroId: string) => {
+        // Navigate to chat with selected maestro context
+        window.location.href = `/radio-chat?maestro=${encodeURIComponent(maestroId)}`;
+      }}
       onBack={() => window.history.back()}
     />
   );
@@ -77,8 +85,8 @@ export function AppRoutes() {
       <Route path="/login" element={<Wrap><LoginPage /></Wrap>} />
       <Route path="/auth/callback" element={<Wrap><AuthCallback /></Wrap>} />
       <Route path="/radio-chat" element={<Wrap><ChatPage /></Wrap>} />
-      <Route path="/settings" element={<Wrap><SettingsPage /></Wrap>} />
-      <Route path="/radio-debug" element={<Wrap><DebugPage /></Wrap>} />
+      <Route path="/settings" element={<V2><SettingsPage /></V2>} />
+      <Route path="/radio-debug" element={<V2><DebugPage /></V2>} />
 
       {/* V2 Routes — wrapped with PageShell (Navbar + full layout) */}
       <Route path="/courses" element={<V2><CoursePanel /></V2>} />
@@ -87,7 +95,7 @@ export function AppRoutes() {
       <Route path="/free-voice" element={<V2><FreeVoiceTab /></V2>} />
       <Route path="/progress" element={<V2><ProgressDashboard /></V2>} />
       <Route path="/billing" element={<V2><BillingPanel /></V2>} />
-      <Route path="/landing" element={<Wrap><LandingPage onLogin={() => {}} onRegister={() => {}} onGuest={() => {}} /></Wrap>} />
+      <Route path="/landing" element={<Wrap><LandingPage onLogin={() => { window.location.href = '/login'; }} onRegister={() => { window.location.href = '/login'; }} onGuest={() => { window.location.href = '/radio-chat'; }} /></Wrap>} />
       <Route path="/privacy" element={<V2><PrivacyPolicy onClose={() => window.history.back()} /></V2>} />
       <Route path="/terms" element={<V2><TermsOfService onClose={() => window.history.back()} /></V2>} />
 

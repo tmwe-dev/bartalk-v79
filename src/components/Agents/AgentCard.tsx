@@ -13,6 +13,11 @@ export function AgentCard({ agent }: AgentCardProps) {
     <div
       className={`agent-card ${enabled ? 'agent-enabled' : 'agent-disabled'}`}
       onClick={() => toggleAgent(agent.id)}
+      tabIndex={0}
+      role="button"
+      aria-label={`${enabled ? 'Disattiva' : 'Attiva'} agente ${agent.name}`}
+      aria-pressed={enabled}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleAgent(agent.id); } }}
       style={{
         borderColor: enabled ? agent.color : 'transparent',
         '--agent-color': agent.color,

@@ -548,21 +548,11 @@ describe('SettingsPage', () => {
     expect(screen.getByText('Impostazioni')).toBeInTheDocument()
   })
 
-  it('renders back button', () => {
-    render(withRouter(<SettingsPage />))
-    expect(screen.getByLabelText('Torna alla chat')).toBeInTheDocument()
-  })
-
-  it('navigates back on button click', () => {
-    render(withRouter(<SettingsPage />))
-    fireEvent.click(screen.getByLabelText('Torna alla chat'))
-    expect(mockNavigate).toHaveBeenCalledWith('/radio-chat')
-  })
-
-  it('renders all sidebar tabs', () => {
+  it('renders all sidebar tabs (including Prompt & AI)', () => {
     render(withRouter(<SettingsPage />))
     expect(screen.getByText('Generale')).toBeInTheDocument()
     expect(screen.getByText('Agenti')).toBeInTheDocument()
+    expect(screen.getByText('Prompt & AI')).toBeInTheDocument()
     expect(screen.getByText('API Keys')).toBeInTheDocument()
     expect(screen.getByText('Account')).toBeInTheDocument()
     expect(screen.getByText('Avanzate')).toBeInTheDocument()

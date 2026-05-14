@@ -31,7 +31,7 @@ export function useEffectiveTier(): EffectiveTierResult {
   // Fetch user_credits from Supabase for authenticated users
   useEffect(() => {
     if (!supabase || !user || user.id === 'guest' || authState !== 'authenticated') {
-      setCreditsTier(null);
+      queueMicrotask(() => setCreditsTier(null));
       return;
     }
 

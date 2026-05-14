@@ -107,7 +107,7 @@ function createTextTexture(msg: Message, renderer?: THREE.WebGLRenderer): THREE.
   const lineHeight = 32;
   const maxWidth = W - 80;
   const words = msg.content.split(' ');
-  let x = 40;
+  const x = 40;
   let y = 140;
   let line = '';
 
@@ -214,7 +214,7 @@ export function RadioCarousel3D({ messages, currentIndex, onIndexChange, zoom = 
     scene.add(group);
     groupRef.current = group;
 
-    setIsReady(true);
+    queueMicrotask(() => setIsReady(true));
 
     // Animation loop
     const animate = () => {

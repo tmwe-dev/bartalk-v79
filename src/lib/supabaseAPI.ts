@@ -1,7 +1,11 @@
 /**
- * BarTalk v8 — Supabase API Helpers
- * CRUD per tutte le tabelle. Usati dai Context quando l'utente è autenticato.
- * In skip mode questi helper non vengono chiamati.
+ * @module supabaseAPI
+ * Supabase API helpers providing CRUD operations for all database tables.
+ * Used by Context providers when the user is authenticated.
+ * In skip mode these helpers are not called (localStorage is used instead).
+ *
+ * Tables managed: workspaces, user_settings, api_keys_vault, conversations,
+ * messages, audit_logs. Includes full-text search across messages.
  */
 
 import { supabase } from './supabase';
@@ -10,6 +14,7 @@ import type { AppLanguage } from '../types/settings';
 
 // ── Tipi DB ──────────────────────────────────────────────────────────
 
+/** Database row type for the workspaces table. */
 export interface DBWorkspace {
   id: string;
   user_id: string;
@@ -18,6 +23,7 @@ export interface DBWorkspace {
   updated_at: string;
 }
 
+/** Database row type for the user_settings table. */
 export interface DBSettings {
   id: string;
   workspace_id: string;
@@ -35,6 +41,7 @@ export interface DBSettings {
   prompt_sections: unknown[];
 }
 
+/** Database row type for the api_keys_vault table. */
 export interface DBAPIKey {
   id: string;
   workspace_id: string;
@@ -43,6 +50,7 @@ export interface DBAPIKey {
   model: string | null;
 }
 
+/** Database row type for the conversations table. */
 export interface DBConversation {
   id: string;
   workspace_id: string;
@@ -52,6 +60,7 @@ export interface DBConversation {
   updated_at: string;
 }
 
+/** Database row type for the messages table. */
 export interface DBMessage {
   id: string;
   conversation_id: string;
@@ -100,6 +109,11 @@ export async function getWorkspace(userId: string): Promise<DBWorkspace | null> 
 // SETTINGS
 // ══════════════════════════════════════════════════════════════════════
 
+/**
+ * Loads user settings for a workspace from the user_settings table.
+ * @param workspaceId - The workspace to load settings for
+ * @returns Settings object or null if not found
+ */
 export async function loadSettings(workspaceId: string): Promise<DBSettings | null> {
   const sb = requireSupabase();
   const { data, error } = await sb
@@ -114,6 +128,11 @@ export async function loadSettings(workspaceId: string): Promise<DBSettings | nu
   return data || null;
 }
 
+/**
+ * Upserts user settings for a workspace.
+ * @param workspaceId - Target workspace ID
+ * @param settings - Partial settings to merge/update
+ */
 export async function saveSettings(workspaceId: string, settings: Partial<Omit<DBSettings, 'id' | 'workspace_id'>>): Promise<void> {
   const sb = requireSupabase();
   const { error } = await sb
@@ -131,6 +150,11 @@ export async function saveSettings(workspaceId: string, settings: Partial<Omit<D
 // API KEYS VAULT
 // ══════════════════════════════════════════════════════════════════════
 
+/**
+ * Loads all encrypted API keys for a workspace from the vault.
+ * @param workspaceId - The workspace to load keys for
+ * @returns Array of API key entries
+ */
 export async function loadAPIKeys(workspaceId: string): Promise<DBAPIKey[]> {
   const sb = requireSupabase();
   const { data, error } = await sb
@@ -145,6 +169,13 @@ export async function loadAPIKeys(workspaceId: string): Promise<DBAPIKey[]> {
   return data || [];
 }
 
+/**
+ * Upserts an encrypted API key in the vault for a workspace/provider pair.
+ * @param workspaceId - Target workspace ID
+ * @param provider - AI provider name (e.g., 'openai', 'anthropic')
+ * @param encryptedKey - The encrypted API key string
+ * @param model - Optional model override
+ */
 export async function saveAPIKey(
   workspaceId: string,
   provider: string,
@@ -165,6 +196,11 @@ export async function saveAPIKey(
   if (error) console.error('[supabaseAPI] saveAPIKey error:', error.message);
 }
 
+/**
+ * Deletes an API key from the vault for a specific workspace and provider.
+ * @param workspaceId - Target workspace ID
+ * @param provider - AI provider whose key should be removed
+ */
 export async function deleteAPIKey(workspaceId: string, provider: string): Promise<void> {
   const sb = requireSupabase();
   const { error } = await sb
@@ -180,6 +216,11 @@ export async function deleteAPIKey(workspaceId: string, provider: string): Promi
 // CONVERSATIONS
 // ══════════════════════════════════════════════════════════════════════
 
+/**
+ * Loads all conversations for a workspace, ordered by most recently updated.
+ * @param workspaceId - The workspace to load conversations for
+ * @returns Array of conversation records
+ */
 export async function loadConversations(workspaceId: string): Promise<DBConversation[]> {
   const sb = requireSupabase();
   const { data, error } = await sb
@@ -195,6 +236,11 @@ export async function loadConversations(workspaceId: string): Promise<DBConversa
   return data || [];
 }
 
+/**
+ * Upserts a conversation record in the database.
+ * @param workspaceId - Target workspace ID
+ * @param conversation - Conversation data to save (id, title, turn_index)
+ */
 export async function saveConversation(
   workspaceId: string,
   conversation: { id: string; title: string; turn_index: number },
@@ -213,6 +259,10 @@ export async function saveConversation(
   if (error) console.error('[supabaseAPI] saveConversation error:', error.message);
 }
 
+/**
+ * Deletes conversation.
+ * @param conversationId - The conversationId parameter
+ */
 export async function deleteConversation(conversationId: string): Promise<void> {
   const sb = requireSupabase();
   // Messages are cascaded
@@ -228,6 +278,11 @@ export async function deleteConversation(conversationId: string): Promise<void> 
 // MESSAGES
 // ══════════════════════════════════════════════════════════════════════
 
+/**
+ * Loads messages from storage.
+ * @param conversationId - The conversationId parameter
+ * @returns Promise<DBMessage[]>
+ */
 export async function loadMessages(conversationId: string): Promise<DBMessage[]> {
   const sb = requireSupabase();
   const { data, error } = await sb
@@ -243,6 +298,9 @@ export async function loadMessages(conversationId: string): Promise<DBMessage[]>
   return data || [];
 }
 
+/**
+ * Saves message to storage.
+ */
 export async function saveMessage(
   conversationId: string,
   message: Omit<DBMessage, 'id' | 'created_at'>,
@@ -296,6 +354,9 @@ export async function saveMessagesBatch(
 // AUDIT LOG
 // ══════════════════════════════════════════════════════════════════════
 
+/**
+ * LogAudit.
+ */
 export async function logAudit(
   workspaceId: string,
   action: string,
@@ -314,12 +375,21 @@ export async function logAudit(
 }
 
 // ── Search messages in DB ─────────────────────────────────────────────
+/** Result of a database message search, grouped by conversation. */
 export interface DBSearchResult {
   conversationId: string;
   matchCount: number;
   snippet: string;
 }
 
+/**
+ * Searches message content across a workspace using case-insensitive matching.
+ * Groups results by conversation with match counts and text snippets.
+ *
+ * @param workspaceId - Workspace to search in
+ * @param query - Search query (min 2 characters)
+ * @returns Array of search results grouped by conversation
+ */
 export async function searchMessages(workspaceId: string, query: string): Promise<DBSearchResult[]> {
   if (!supabase || !query || query.trim().length < 2) return [];
   try {

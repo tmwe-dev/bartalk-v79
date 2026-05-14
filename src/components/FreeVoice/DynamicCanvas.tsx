@@ -31,6 +31,7 @@ interface DynamicCanvasProps {
 }
 
 /** Parsa i tag [VISUAL:...] dalla risposta del maestro */
+// eslint-disable-next-line react-refresh/only-export-components
 export function parseVisualTags(response: string): { cleanText: string; visuals: CanvasContent[] } {
   const visuals: CanvasContent[] = [];
   let cleanText = response;
@@ -69,8 +70,10 @@ export default function DynamicCanvas({ content, isLoading, volume = 0, classNam
   useEffect(() => {
     const key = JSON.stringify(content);
     if (key !== prevContentRef.current) {
-      setFadeIn(false);
-      setImgLoaded(false);
+      queueMicrotask(() => {
+        setFadeIn(false);
+        setImgLoaded(false);
+      });
       prevContentRef.current = key;
       const t = setTimeout(() => setFadeIn(true), 50);
       return () => clearTimeout(t);
@@ -78,7 +81,17 @@ export default function DynamicCanvas({ content, isLoading, volume = 0, classNam
   }, [content]);
 
   // Pulse scale basato sul volume (per animazione durante ascolto)
-  const pulseScale = isLoading ? 1 + Math.sin(Date.now() / 300) * 0.02 : 1;
+  const [pulseScale, setPulseScale] = useState(1);
+  useEffect(() => {
+    if (!isLoading) { queueMicrotask(() => setPulseScale(1)); return; }
+    let raf: number;
+    const animate = () => {
+      setPulseScale(1 + Math.sin(Date.now() / 300) * 0.02);
+      raf = requestAnimationFrame(animate);
+    };
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [isLoading]);
 
   const getFontSize = (): string => {
     switch (content.fontSize) {
@@ -92,6 +105,7 @@ export default function DynamicCanvas({ content, isLoading, volume = 0, classNam
     <div
       className={`fv-canvas ${className}`}
       role="img"
+      aria-hidden="true"
       aria-live="polite"
       aria-label={content.text || 'Area visiva della lezione'}
       style={{

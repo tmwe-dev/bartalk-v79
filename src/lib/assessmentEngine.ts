@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — Assessment Engine
- * Sistema leggero di valutazione per lezioni dei percorsi.
+ * @module assessmentEngine
+ * Assessment and quiz evaluation engine for the education system.
+ * Evaluates student answers against expected responses using AI,
+ * calculates scores, determines pass/fail status, and unlock eligibility.
  */
 
 import type { AssessmentQuestion } from '../types/courses';

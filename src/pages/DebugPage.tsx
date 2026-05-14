@@ -127,8 +127,8 @@ export function DebugPage() {
     plan: localStorage.getItem('bartalk_selected_plan') || 'free',
     onboarded: localStorage.getItem('bartalk_onboarding_completed') || 'no',
     userAgent: navigator.userAgent.slice(0, 80),
-    memory: (performance as any).memory
-      ? `${Math.round((performance as any).memory.usedJSHeapSize / 1048576)}MB / ${Math.round((performance as any).memory.jsHeapSizeLimit / 1048576)}MB`
+    memory: (performance as unknown as Record<string, { usedJSHeapSize: number; jsHeapSizeLimit: number }>).memory
+      ? `${Math.round((performance as unknown as Record<string, { usedJSHeapSize: number; jsHeapSizeLimit: number }>).memory.usedJSHeapSize / 1048576)}MB / ${Math.round((performance as unknown as Record<string, { usedJSHeapSize: number; jsHeapSizeLimit: number }>).memory.jsHeapSizeLimit / 1048576)}MB`
       : 'N/A',
   };
 

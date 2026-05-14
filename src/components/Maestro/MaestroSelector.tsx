@@ -18,8 +18,6 @@ interface MaestroSelectorProps {
 
 export function MaestroSelector({
   category,
-  courseId: _courseId,
-  lessonIndex: _lessonIndex,
   onSelect,
   onBack,
 }: MaestroSelectorProps) {
@@ -32,7 +30,7 @@ export function MaestroSelector({
       fallback={
         <div className="maestro-selector">
           <div className="maestro-selector-header">
-            <button className="maestro-back-btn" onClick={onBack}>←</button>
+            <button className="maestro-back-btn" onClick={onBack} aria-label="Torna indietro">←</button>
             <h3>Scegli il tuo maestro</h3>
           </div>
           <p style={{ textAlign: 'center', padding: '32px', color: '#e53e3e' }}>
@@ -41,9 +39,9 @@ export function MaestroSelector({
         </div>
       }
     >
-      <div className="maestro-selector">
+      <div className="maestro-selector" aria-label="Seleziona corso">
         <div className="maestro-selector-header">
-          <button className="maestro-back-btn" onClick={onBack}>←</button>
+          <button className="maestro-back-btn" onClick={onBack} aria-label="Torna indietro">←</button>
           <h3>Scegli il tuo maestro</h3>
         </div>
 
@@ -93,6 +91,7 @@ function MaestroCard({
       onClick={onSelect}
       role="button"
       tabIndex={0}
+      aria-label={`Seleziona maestro ${maestro.name}${isRecommended ? ' (consigliato)' : ''}`}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
     >
       {isRecommended && (

@@ -1,5 +1,8 @@
 /**
- * Life Tutor — Configuration Module
+ * @module lifeTutor/config
+ * Life Tutor configuration management.
+ * Loads, saves, and queries the Life Tutor feature toggle and settings
+ * from localStorage with default fallbacks.
  */
 
 import type { LifeTutorConfig } from '../../types/lifeTutor';

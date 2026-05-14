@@ -61,6 +61,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useUIContext() {
   const ctx = useContext(UIContext);
   if (!ctx) throw new Error('useUIContext deve essere usato dentro UIProvider');

@@ -1,14 +1,9 @@
 /**
- * Life Tutor — KB Processor (Pre-Routing Engine)
- *
- * Analizza il messaggio dello studente + contesto PRIMA della generazione AI.
- * Determina quali KB sono rilevanti e produce un "context injection" leggero e mirato.
- *
- * Flusso:
- *   messaggio studente → PROCESSOR → seleziona KB pertinenti → inietta solo quelle nel prompt
- *
- * Il processore è VELOCE: lavora in locale (nessuna chiamata AI), usa pattern matching,
- * tag detection, e scoring per decidere cosa caricare.
+ * @module lifeTutor/processor
+ * Life Tutor KB Processor (Pre-Routing Engine).
+ * Analyzes student messages before AI generation to determine which
+ * Knowledge Base entries are relevant. Uses pattern matching, tag detection,
+ * and scoring to produce lightweight, targeted context injections.
  */
 
 import type { KBType } from '../../types/lifeTutor';
@@ -67,7 +62,7 @@ const DETECTION_RULES: DetectionRule[] = [
       /\d{3,}/,                                  // Numbers with 3+ digits
       /\d+[.,]\d+/,                              // Decimals
       /\d+%/,                                    // Percentages
-      /\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}/,   // Dates
+      /\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}/,   // Dates
       /\d{1,2}:\d{2}/,                           // Times
       /€|\$|£|¥/,                                // Currency symbols
       /\d+\s*(km|m|cm|mm|kg|g|mg|l|ml|°C|°F)/i, // Measurements
@@ -155,6 +150,7 @@ const DETECTION_RULES: DetectionRule[] = [
 // ── Processing Result ────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════
 
+/** ProcessorResult interface. */
 export interface ProcessorResult {
   /** KB types that should be injected, sorted by relevance (highest first) */
   selectedKBs: KBType[];
@@ -473,6 +469,10 @@ export function buildIdentityInjection(): string {
 // ── Utility: Get all KB types with entry counts ──────────────────────
 // ══════════════════════════════════════════════════════════════════════
 
+/**
+ * Gets k b inventory.
+ * @returns { type: KBType; count: number; system: number; user: number }[]
+ */
 export function getKBInventory(): { type: KBType; count: number; system: number; user: number }[] {
   const all = loadKBEntries();
   const types = new Set(all.map(e => e.kbType));

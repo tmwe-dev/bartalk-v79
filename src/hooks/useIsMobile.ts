@@ -16,7 +16,7 @@ export function useIsMobile(): boolean {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mql.addEventListener('change', handler);
-    setIsMobile(mql.matches);
+    queueMicrotask(() => setIsMobile(mql.matches));
     return () => mql.removeEventListener('change', handler);
   }, []);
 

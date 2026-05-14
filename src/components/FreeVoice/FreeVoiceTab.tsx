@@ -14,6 +14,27 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ErrorBoundary } from '../Common/ErrorBoundary';
 import { useVAD } from '../../hooks/useVAD';
+
+// Web Speech API type declarations (not provided by standard TS libs)
+interface SpeechRecognitionEvent extends Event {
+  results: { [index: number]: { [index: number]: { transcript: string; confidence: number } }; length: number };
+  resultIndex: number;
+}
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message?: string;
+}
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
 import DynamicCanvas, { parseVisualTags } from './DynamicCanvas';
 import type { CanvasContent } from './DynamicCanvas';
 import { callProxy } from '../../lib/proxy';
@@ -127,14 +148,12 @@ export default function FreeVoiceTab() {
   const [lastTranscript, setLastTranscript] = useState('');
   const [canvasContent, setCanvasContent] = useState<CanvasContent>({ type: 'empty' });
 
-  // Web Speech API for STT (typed as any for browser compat)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
+  // Web Speech API for STT
+  const recognitionRef = useRef<SpeechRecognitionInstance>(null);
   const accumulatedRef = useRef('');
 
   // VAD
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleUserMessageRef = useRef<(text: string) => void>(null as any);
+  const handleUserMessageRef = useRef<(text: string) => void>(null!);
 
   const handleSpeechEnd = useCallback(() => {
     // Quando il silenzio supera il timeout, invia il transcript accumulato
@@ -223,8 +242,8 @@ export default function FreeVoiceTab() {
   useEffect(() => {
     if (!isStarted) return;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionInstance; webkitSpeechRecognition?: new () => SpeechRecognitionInstance };
+    const SpeechRecognitionClass = w.SpeechRecognition || w.webkitSpeechRecognition;
     if (!SpeechRecognitionClass) return;
 
     const recognition = new SpeechRecognitionClass();
@@ -232,8 +251,7 @@ export default function FreeVoiceTab() {
     recognition.interimResults = true;
     recognition.lang = lang === 'it' ? 'it-IT' : lang === 'en' ? 'en-US' : `${lang}-${lang.toUpperCase()}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = '';
       let interimTranscript = '';
 
@@ -252,8 +270,7 @@ export default function FreeVoiceTab() {
       setLastTranscript((accumulatedRef.current + ' ' + interimTranscript).trim());
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
         console.error('Speech recognition error:', event.error);
       }

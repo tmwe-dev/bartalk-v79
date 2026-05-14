@@ -94,16 +94,16 @@ export function ConversationSidebar() {
 
   return (
     <>
-      <div className="conv-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      <div className="conv-sidebar-overlay" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
 
-      <div className="conv-sidebar">
+      <div className="conv-sidebar" role="complementary" aria-label="Cronologia conversazioni">
         <div className="conv-sidebar-header">
           <h3>{t('conversationsTitle')}</h3>
           <div className="conv-sidebar-actions">
-            <button className="conv-new-btn" onClick={() => { newConversation(); setSidebarOpen(false); }}>
+            <button className="conv-new-btn" onClick={() => { newConversation(); setSidebarOpen(false); }} aria-label="Nuova conversazione">
               {t('newBtn')}
             </button>
-            <button className="conv-close-btn" onClick={() => setSidebarOpen(false)}>✕</button>
+            <button className="conv-close-btn" onClick={() => setSidebarOpen(false)} aria-label="Chiudi sidebar">✕</button>
           </div>
         </div>
 
@@ -139,6 +139,10 @@ export function ConversationSidebar() {
                 key={conv.id}
                 className={`conv-item ${conv.id === conversationId ? 'active' : ''}`}
                 onClick={() => { loadConversation(conv.id); if (isSearchActive) clearSearch(); }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Conversazione: ${conv.title}`}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); loadConversation(conv.id); if (isSearchActive) clearSearch(); } }}
               >
                 <div className="conv-item-header">
                   <span className="conv-item-title">{conv.title}</span>
@@ -150,6 +154,7 @@ export function ConversationSidebar() {
                       className="conv-item-delete"
                       onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id); }}
                       title={t('deleteConv')}
+                      aria-label={`Elimina conversazione: ${conv.title}`}
                     >
                       🗑
                     </button>

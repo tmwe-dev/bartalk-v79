@@ -1,6 +1,8 @@
 /**
- * Life Tutor — Memory Module
- * Gestione memoria a 3 livelli con doppio storage (Supabase + localStorage fallback).
+ * @module lifeTutor/memory
+ * Life Tutor 3-layer memory system with dual storage (Supabase + localStorage).
+ * Manages memory entries across recent/consolidated/deep layers with
+ * importance scoring, tag-based retrieval, full-text search, and consolidation.
  */
 
 import type {
@@ -229,6 +231,9 @@ export function getMemoryStats(memories: MemoryEntry[]): MemoryStats {
 
 // ── Build Memory Summary ─────────────────────────────────────────────
 
+/**
+ * Builds memory summary.
+ */
 export function buildMemorySummary(
   contextTags: MemoryTag[] = [],
   config?: LifeTutorConfig,
@@ -295,6 +300,9 @@ export function buildMemorySummary(
 
 // ── Consolidation ────────────────────────────────────────────────────
 
+/**
+ * ConsolidateMemories.
+ */
 export function consolidateMemories(): void {
   const lastConsolidation = localStorage.getItem(CONSOLIDATION_KEY);
   const now = new Date();
@@ -332,6 +340,11 @@ export function consolidateMemories(): void {
 
 // ── Tag Detection ────────────────────────────────────────────────────
 
+/**
+ * Detects context tags.
+ * @param text - The text parameter
+ * @returns MemoryTag[]
+ */
 export function detectContextTags(text: string): MemoryTag[] {
   const lower = text.toLowerCase();
   const tags: MemoryTag[] = [];

@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — Client per /api/keys (gestione chiavi server-side)
- * Usato solo quando l'utente è autenticato. In skip mode le chiavi restano in localStorage.
+ * @module keysAPI
+ * Client for the /api/keys server-side API key management endpoint.
+ * Handles loading, saving, and deleting encrypted API keys stored
+ * in the Supabase vault, with JWT authentication.
  */
 
 import { supabase } from './supabase';
@@ -41,6 +43,9 @@ export async function listVaultKeys(): Promise<VaultKeyInfo[]> {
 }
 
 // ── POST: salva una chiave nel vault (criptata server-side) ──────────
+/**
+ * Saves vault key to storage.
+ */
 export async function saveVaultKey(
   provider: string,
   apiKey: string,
@@ -61,6 +66,11 @@ export async function saveVaultKey(
 }
 
 // ── DELETE: rimuovi una chiave dal vault ──────────────────────────────
+/**
+ * Deletes vault key.
+ * @param provider - The provider parameter
+ * @returns Promise<
+ */
 export async function deleteVaultKey(provider: string): Promise<{ success: boolean; error?: string }> {
   try {
     const res = await fetch(KEYS_URL, {

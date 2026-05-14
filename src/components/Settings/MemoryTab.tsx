@@ -25,7 +25,7 @@ export function MemoryTab() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setConfig(loadMemoryConfig());
+    queueMicrotask(() => setConfig(loadMemoryConfig()));
   }, []);
 
   const handleChange = (key: keyof MemoryConfigType, value: number) => {

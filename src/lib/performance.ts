@@ -1,6 +1,8 @@
 /**
- * BarTalk v8.2.5 — Performance utilities
- * Debounce, throttle, memoization, and lazy loading helpers.
+ * @module performance
+ * Performance optimization utilities.
+ * Provides debounce, throttle, memoize, and resource preload functions
+ * for reducing unnecessary computation and improving UI responsiveness.
  */
 
 /**

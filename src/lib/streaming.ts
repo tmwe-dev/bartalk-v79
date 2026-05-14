@@ -1,7 +1,8 @@
 /**
- * BarTalk v8.2.5 — Streaming Support
- * SSE/streaming response handling for real-time AI text output.
- * Foundation module — integrates with proxy when streaming is enabled.
+ * @module streaming
+ * SSE (Server-Sent Events) streaming response handler.
+ * Provides utilities for reading SSE streams from AI providers,
+ * with callbacks for tokens, completion, and errors.
  */
 
 import type { ProviderType } from '../types/agents';

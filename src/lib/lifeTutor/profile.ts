@@ -1,6 +1,8 @@
 /**
- * Life Tutor — User Profile Module
- * Profilo utente ricco e evolutivo che cresce con l'utente.
+ * @module lifeTutor/profile
+ * Life Tutor user profile management.
+ * Rich, evolving user profiles with life context, preferences, growth metrics,
+ * and education history. Dual persistence with Supabase and localStorage.
  */
 
 import type {
@@ -41,6 +43,10 @@ function createDefaultProfile(workspaceId: string): LTUserProfile {
 
 // ── Load / Save ──────────────────────────────────────────────────────
 
+/**
+ * Loads profile local from storage.
+ * @returns LTUserProfile | null
+ */
 export function loadProfileLocal(): LTUserProfile | null {
   try {
     const saved = localStorage.getItem(PROFILE_KEY);
@@ -53,6 +59,10 @@ function saveProfileLocal(profile: LTUserProfile): void {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
 }
 
+/**
+ * Loads profile from storage.
+ * @returns Promise<LTUserProfile | null>
+ */
 export async function loadProfile(): Promise<LTUserProfile | null> {
   if (supabase && isSupabaseConfigured) {
     try {
@@ -81,6 +91,10 @@ export async function loadProfile(): Promise<LTUserProfile | null> {
   return loadProfileLocal();
 }
 
+/**
+ * Saves profile to storage.
+ * @param profile - The profile parameter
+ */
 export async function saveProfile(profile: LTUserProfile): Promise<void> {
   profile.lastInteractionAt = new Date().toISOString();
   saveProfileLocal(profile);
@@ -92,6 +106,11 @@ export async function saveProfile(profile: LTUserProfile): Promise<void> {
   }
 }
 
+/**
+ * Gets or create profile.
+ * @param workspaceId - The workspaceId parameter
+ * @returns Promise<LTUserProfile>
+ */
 export async function getOrCreateProfile(workspaceId: string): Promise<LTUserProfile> {
   const existing = await loadProfile();
   if (existing) return existing;
@@ -103,6 +122,9 @@ export async function getOrCreateProfile(workspaceId: string): Promise<LTUserPro
 
 // ── Profile Updates (from AI extraction) ─────────────────────────────
 
+/**
+ * Merges profile updates.
+ */
 export async function mergeProfileUpdates(
   updates: Partial<LTUserProfile>
 ): Promise<LTUserProfile | null> {
@@ -196,6 +218,9 @@ function mergePreferences(existing: UserPreferences, updates: Partial<UserPrefer
 
 // ── Growth Metrics Update ────────────────────────────────────────────
 
+/**
+ * Increments growth metrics counter.
+ */
 export async function incrementGrowthMetrics(
   updates: Partial<GrowthMetrics>
 ): Promise<void> {
@@ -214,6 +239,11 @@ export async function incrementGrowthMetrics(
 
 // ── Build Profile Prompt Section ─────────────────────────────────────
 
+/**
+ * Builds profile prompt section.
+ * @param profile - The profile parameter
+ * @returns string
+ */
 export function buildProfilePromptSection(profile: LTUserProfile | null): string {
   if (!profile) return '';
 

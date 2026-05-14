@@ -111,4 +111,30 @@ export const MENU_ITEMS: MenuItem[] = [
     },
     accentColor: '#818cf8',
   },
+  {
+    id: 'maestro',
+    title: 'Maestro',
+    description: 'Orchestrazione avanzata multi-agente con voce personalizzata',
+    icon: '🎓',
+    featureKey: 'maestro',
+    gradient: {
+      from: 'rgba(251, 146, 60, 0.18)',
+      to: 'rgba(234, 88, 12, 0.06)',
+      border: 'rgba(251, 146, 60, 0.4)',
+    },
+    accentColor: '#fb923c',
+  },
+  {
+    id: 'progress',
+    title: 'Progressi',
+    description: 'Dashboard dei tuoi progressi di apprendimento',
+    icon: '📊',
+    featureKey: 'progress',
+    gradient: {
+      from: 'rgba(16, 185, 129, 0.18)',
+      to: 'rgba(5, 150, 105, 0.06)',
+      border: 'rgba(16, 185, 129, 0.4)',
+    },
+    accentColor: '#34d399',
+  },
 ];

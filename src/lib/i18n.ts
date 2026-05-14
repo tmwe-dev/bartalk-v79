@@ -1,8 +1,8 @@
 /**
- * RadioChat v8 — Sistema di internazionalizzazione (i18n)
- *
- * 30+ lingue con traduzione completa UI
- * Fallback chain: lingua corrente → 'en' → 'it'
+ * @module i18n
+ * Internationalization system supporting 30+ languages.
+ * Provides translation lookup with fallback chain: current language -> 'en' -> 'it'.
+ * Integrates with React via the useT hook for component-level translations.
  */
 
 import { useSettingsContext } from '../context/SettingsContext';

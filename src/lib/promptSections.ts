@@ -1,15 +1,8 @@
 /**
- * BarTalk v8 — Prompt Sections System
- *
- * Sistema modulare per gestire sezioni di prompt personalizzate.
- * Ispirato a TMwEngine chat_laboratory_prompt_sections.
- *
- * Tipi di sezione:
- * - RULES: regole aggiuntive sempre attive
- * - TOPIC: regole attive solo quando l'argomento matcha i tag
- * - CONTEXT: contesto aggiuntivo (background info)
- *
- * Le sezioni vengono iniettate nel system prompt in ordine di priorità.
+ * @module promptSections
+ * Modular prompt section system.
+ * Manages reusable, composable prompt sections that can be enabled/disabled
+ * and combined to build complex system prompts.
  */
 
 export type PromptSectionType = 'rules' | 'topic' | 'context';
@@ -38,16 +31,29 @@ export function loadPromptSections(): PromptSection[] {
   } catch { return []; }
 }
 
+/**
+ * Saves prompt sections to storage.
+ * @param sections - The sections parameter
+ */
 export function savePromptSections(sections: PromptSection[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(sections));
 }
 
+/**
+ * Adds prompt section.
+ * @param section - The section parameter
+ */
 export function addPromptSection(section: PromptSection): void {
   const sections = loadPromptSections();
   sections.push(section);
   savePromptSections(sections);
 }
 
+/**
+ * Updates prompt section.
+ * @param id - The id parameter
+ * @param updates - The updates parameter
+ */
 export function updatePromptSection(id: string, updates: Partial<PromptSection>): void {
   const sections = loadPromptSections();
   const idx = sections.findIndex(s => s.id === id);
@@ -57,6 +63,10 @@ export function updatePromptSection(id: string, updates: Partial<PromptSection>)
   }
 }
 
+/**
+ * Deletes prompt section.
+ * @param id - The id parameter
+ */
 export function deletePromptSection(id: string): void {
   const sections = loadPromptSections().filter(s => s.id !== id);
   savePromptSections(sections);
@@ -64,6 +74,11 @@ export function deletePromptSection(id: string): void {
 
 // ── Resolver: data un messaggio utente, restituisci le sezioni attive ─
 
+/**
+ * Resolves active sections.
+ * @param userMessage - The userMessage parameter
+ * @returns PromptSection[]
+ */
 export function resolveActiveSections(userMessage: string): PromptSection[] {
   const sections = loadPromptSections().filter(s => s.enabled);
   const lowerMsg = userMessage.toLowerCase();
@@ -84,6 +99,11 @@ export function resolveActiveSections(userMessage: string): PromptSection[] {
 
 // ── Formatta sezioni attive per iniezione nel system prompt ──────────
 
+/**
+ * Builds sections block.
+ * @param userMessage - The userMessage parameter
+ * @returns string
+ */
 export function buildSectionsBlock(userMessage: string): string {
   const active = resolveActiveSections(userMessage);
   if (active.length === 0) return '';
@@ -101,6 +121,7 @@ export function buildSectionsBlock(userMessage: string): string {
 
 // ── Sezioni di esempio (per primo avvio) ─────────────────────────────
 
+/** EXAMPLE_SECTIONS constant. */
 export const EXAMPLE_SECTIONS: Omit<PromptSection, 'id' | 'createdAt'>[] = [
   {
     type: 'rules',

@@ -273,15 +273,15 @@ export function ChatPage() {
 
   // ── Refs: stato sempre fresco per event listener (no stale closures) ──
   const validAgentMsgsRef = useRef(validAgentMsgs);
-  validAgentMsgsRef.current = validAgentMsgs;
   const messagesRef = useRef(messages);
-  messagesRef.current = messages;
   const autoRunRef = useRef(autoRun);
-  autoRunRef.current = autoRun;
   const agentTabIndexRef = useRef(agentTabIndex);
-  agentTabIndexRef.current = agentTabIndex;
   const carouselIndexRef = useRef(carouselIndex);
-  carouselIndexRef.current = carouselIndex;
+  useEffect(() => { validAgentMsgsRef.current = validAgentMsgs; }, [validAgentMsgs]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { autoRunRef.current = autoRun; }, [autoRun]);
+  useEffect(() => { agentTabIndexRef.current = agentTabIndex; }, [agentTabIndex]);
+  useEffect(() => { carouselIndexRef.current = carouselIndex; }, [carouselIndex]);
 
   // Persist carousel settings
   useEffect(() => {
@@ -308,9 +308,11 @@ export function ChatPage() {
       if (prevMsgCountRef.current === 0) {
         // Primo messaggio della conversazione → reset TTS counter, mostra index 0
         ttsPlayingIndexRef.current = -1;
-        setAgentTabIndex(0);
-        const slice = getVisibleSlice(messages);
-        if (slice.length > 0) setCarouselIndex(0);
+        queueMicrotask(() => {
+          setAgentTabIndex(0);
+          const slice = getVisibleSlice(messages);
+          if (slice.length > 0) setCarouselIndex(0);
+        });
       }
       // Nuovi messaggi successivi: NON saltare. L'avanzamento è solo via:
       // - TTS audio-start (sync automatico al messaggio in lettura)

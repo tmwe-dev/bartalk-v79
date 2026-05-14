@@ -1,6 +1,9 @@
 /**
- * System Prompt Building
- * Constructs detailed system prompts for maestros based on context
+ * @module maestro/prompts
+ * Maestro system prompt construction.
+ * Builds comprehensive, multi-section system prompts for maestro tutors including
+ * identity, personality, student context, lesson objectives, emotional adaptation,
+ * level-specific behavior, learning style adaptation, and L2 language support.
  */
 
 import type {

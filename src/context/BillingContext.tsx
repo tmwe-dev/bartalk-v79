@@ -112,6 +112,7 @@ export function BillingProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useBillingContext(): BillingContextValue {
   const ctx = useContext(BillingContext);
   if (!ctx) throw new Error('useBillingContext must be used within BillingProvider');

@@ -1,7 +1,8 @@
 /**
- * BarTalk v8 — Tool Executor
- * Esegue tool calls e gestisce il loop tool_use.
- * Chiama i serverless endpoints in /api/tools/*.
+ * @module toolExecutor
+ * Tool call executor for AI agent tool use.
+ * Executes tool calls (web_search, web_fetch, save_finding) dispatched by AI agents,
+ * returning structured results for integration into agent responses.
  */
 
 import type { ToolCall, ToolResult, ExplorationCard } from '../types/tools';

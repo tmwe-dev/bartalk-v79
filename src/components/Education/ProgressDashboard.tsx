@@ -38,8 +38,10 @@ export function ProgressDashboard() {
   const [sessions, setSessions] = useState<{ courseId: string; duration: number; date: string }[]>([]);
 
   useEffect(() => {
-    setProgressMap(loadAllProgress(courses));
-    setSessions(loadStudySessions());
+    queueMicrotask(() => {
+      setProgressMap(loadAllProgress(courses));
+      setSessions(loadStudySessions());
+    });
   }, [courses]);
 
   // ── Statistiche aggregate ──────────────────────────────────────────

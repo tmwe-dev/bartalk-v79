@@ -1,6 +1,8 @@
 /**
- * Response Parsing & Language Detection
- * Extracts metadata from responses, detects study languages, and handles L2 tagging
+ * @module maestro/parsing
+ * Maestro response parsing and language detection.
+ * Extracts metadata, pronunciation exercises, and L2 tags from maestro responses.
+ * Detects study languages from course topics using multilingual pattern matching.
  */
 
 import type { EmotionalState } from '../../types/maestro';

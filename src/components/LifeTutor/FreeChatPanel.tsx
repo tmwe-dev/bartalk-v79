@@ -187,7 +187,7 @@ ${studentName ? `Lo studente si chiama ${studentName}.` : ''}`;
         const voiceId = getVoiceForMaestro(MAESTRI[0], language);
         enqueueTTS({ text: processed, voiceId, agentName: 'Life Tutor' });
       }
-    } catch (err) {
+    } catch (_err) {
       setMessages(prev => [...prev, {
         id: `err_${Date.now()}`,
         role: 'assistant',

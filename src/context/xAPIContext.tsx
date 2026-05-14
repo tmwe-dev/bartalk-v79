@@ -132,11 +132,10 @@ export function XAPIProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <XAPICtx.Provider value={{
-      enqueue,
-      flush,
-      queueSize: queueRef.current.length,
-    }}>
+    <XAPICtx.Provider value={
+      // eslint-disable-next-line react-hooks/refs
+      { enqueue, flush, queueSize: queueRef.current.length }
+    }>
       {children}
     </XAPICtx.Provider>
   );
@@ -144,6 +143,7 @@ export function XAPIProvider({ children }: { children: ReactNode }) {
 
 // ── Hook ────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useXAPI(): XAPIContextValue {
   const ctx = useContext(XAPICtx);
   if (!ctx) throw new Error('useXAPI must be used within XAPIProvider');

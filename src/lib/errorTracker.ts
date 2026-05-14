@@ -1,8 +1,8 @@
 /**
- * BarTalk v8 — Error Tracker
- * Sistema di cattura errori centralizzato.
- * Cattura: errori JS globali, promise rejection, errori di rete, errori React.
- * Pronto per integrazione Sentry (basta aggiungere DSN e import).
+ * @module errorTracker
+ * Centralized error capture and tracking system.
+ * Collects API errors, UI errors, and unhandled exceptions with metadata,
+ * stores them in localStorage, and provides retrieval and export utilities.
  */
 
 export interface ErrorEvent {

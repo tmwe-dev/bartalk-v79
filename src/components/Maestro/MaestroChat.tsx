@@ -53,7 +53,7 @@ export function MaestroChat({ onBack }: MaestroChatProps) {
   const bcp47 = langConfig?.bcp47 || 'it-IT';
 
   // Speech-to-Text — onResult receives (text, confidence) in v8.2.5
-  const handleSttResult = useCallback((text: string, _confidence: number) => {
+  const handleSttResult = useCallback((text: string) => {
     setInput(prev => prev ? `${prev} ${text}` : text);
   }, []);
 
@@ -96,6 +96,23 @@ export function MaestroChat({ onBack }: MaestroChatProps) {
       setInput(interimTranscript);
     }
   }, [isListening, interimTranscript]);
+
+  // Gestisci risultato esercizio pronuncia → invia feedback automatico al maestro
+  const handlePronunciationComplete = useCallback((phrase: string, score: number) => {
+    const isGood = score >= 80;
+    const isMedium = score >= 50;
+
+    let feedbackMsg: string;
+    if (isGood) {
+      feedbackMsg = `[SISTEMA: Lo studente ha completato l'esercizio di pronuncia per "${phrase}" con punteggio ${score}%. Ottimo risultato! Complimentati brevemente e prosegui con la lezione. Se ci sono altri argomenti da coprire, avanza. Non riproporre lo stesso esercizio.]`;
+    } else if (isMedium) {
+      feedbackMsg = `[SISTEMA: Lo studente ha completato l'esercizio di pronuncia per "${phrase}" con punteggio ${score}%. Risultato discreto ma migliorabile. Incoraggialo, dai un suggerimento specifico sulla pronuncia, e prosegui. Ricorda questa difficoltà per proporla di nuovo più avanti nella lezione come ripasso.]`;
+    } else {
+      feedbackMsg = `[SISTEMA: Lo studente ha completato l'esercizio di pronuncia per "${phrase}" con punteggio ${score}%. Ha avuto difficoltà. Non scoraggiarlo — semplifica, proponi la parola più lentamente o scomponila in sillabe. Annota mentalmente questa difficoltà per riproporla come ripasso più avanti.]`;
+    }
+
+    sendMessage(feedbackMsg, sessionLang);
+  }, [sendMessage, sessionLang]);
 
   if (!currentSession || !currentMaestro || !activeCourse) {
     return (
@@ -188,23 +205,6 @@ export function MaestroChat({ onBack }: MaestroChatProps) {
     endSession();
     onBack();
   };
-
-  // Gestisci risultato esercizio pronuncia → invia feedback automatico al maestro
-  const handlePronunciationComplete = useCallback((phrase: string, score: number) => {
-    const isGood = score >= 80;
-    const isMedium = score >= 50;
-
-    let feedbackMsg: string;
-    if (isGood) {
-      feedbackMsg = `[SISTEMA: Lo studente ha completato l'esercizio di pronuncia per "${phrase}" con punteggio ${score}%. Ottimo risultato! Complimentati brevemente e prosegui con la lezione. Se ci sono altri argomenti da coprire, avanza. Non riproporre lo stesso esercizio.]`;
-    } else if (isMedium) {
-      feedbackMsg = `[SISTEMA: Lo studente ha completato l'esercizio di pronuncia per "${phrase}" con punteggio ${score}%. Risultato discreto ma migliorabile. Incoraggialo, dai un suggerimento specifico sulla pronuncia, e prosegui. Ricorda questa difficoltà per proporla di nuovo più avanti nella lezione come ripasso.]`;
-    } else {
-      feedbackMsg = `[SISTEMA: Lo studente ha completato l'esercizio di pronuncia per "${phrase}" con punteggio ${score}%. Ha avuto difficoltà. Non scoraggiarlo — semplifica, proponi la parola più lentamente o scomponila in sillabe. Annota mentalmente questa difficoltà per riproporla come ripasso più avanti.]`;
-    }
-
-    sendMessage(feedbackMsg, sessionLang);
-  }, [sendMessage, sessionLang]);
 
   const handleLanguageChange = (newLang: string) => {
     setSessionLang(newLang as typeof language);
@@ -402,7 +402,7 @@ export function MaestroChat({ onBack }: MaestroChatProps) {
         {/* Risposte rapide contestuali */}
         {!isTeaching && !isListening && (
           <div className="maestro-quick-responses">
-            {getQuickResponses(currentSession.messages, lesson.title).map((text, i) => (
+            {getQuickResponses(currentSession.messages).map((text, i) => (
               <button
                 key={i}
                 className="maestro-quick-btn"
@@ -498,7 +498,7 @@ function formatMessage(text: string): React.ReactNode {
 
   // First, handle links by replacing them with placeholders
   const linkMap: { placeholder: string; label: string; url: string }[] = [];
-  let processedText = text.replace(linkRegex, (_, label, url) => {
+  const processedText = text.replace(linkRegex, (_, label, url) => {
     const placeholder = `__LINK_${linkMap.length}__`;
     linkMap.push({ placeholder, label, url });
     return placeholder;
@@ -537,7 +537,7 @@ function formatMessage(text: string): React.ReactNode {
   );
 }
 
-function getQuickResponses(messages: MaestroMessage[], _lessonTitle: string): string[] {
+function getQuickResponses(messages: MaestroMessage[]): string[] {
   const msgCount = messages.length;
   const lastMsg = messages[msgCount - 1];
   const lastContent = lastMsg?.content?.toLowerCase() || '';

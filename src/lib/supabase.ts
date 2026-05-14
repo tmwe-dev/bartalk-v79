@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — Client Supabase (singleton)
- * Se le variabili ambiente mancano, l'app funziona in modalità Skip.
+ * @module supabase
+ * Supabase client singleton.
+ * Creates and exports the Supabase client instance using environment variables,
+ * with a configuration check flag for conditional feature enablement.
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';

@@ -304,6 +304,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuthContext(): AuthContextValue {
   const ctx = useContext(AuthCtx);
   if (!ctx) throw new Error('useAuthContext deve essere usato dentro AuthProvider');

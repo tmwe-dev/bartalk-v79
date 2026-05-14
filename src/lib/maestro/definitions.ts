@@ -1,6 +1,8 @@
 /**
- * Maestro Definitions
- * Contains MAESTRI array and related lookup functions
+ * @module maestro/definitions
+ * Maestro (tutor) definitions for the education system.
+ * Contains the MAESTRI array with 4 tutors (Sofia, Marco, Elena, Luca),
+ * each with unique personality, teaching style, specialties, and AI provider.
  */
 
 import type { MaestroDefinition } from '../../types/maestro';

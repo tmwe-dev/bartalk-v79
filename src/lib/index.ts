@@ -1,6 +1,7 @@
 /**
- * BarTalk v8.2.5 — Library barrel exports
- * Centralizza tutte le esportazioni dei moduli lib.
+ * @module lib
+ * Library barrel exports for BarTalk v8.
+ * Centralizes all public exports from lib modules for convenient importing.
  */
 
 // ── Error types ────────────────────────────────────────────────────────

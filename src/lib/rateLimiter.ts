@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — Client-Side Rate Limiter
- * Sliding window per limitare richieste AI e TTS.
+ * @module rateLimiter
+ * Client-side sliding window rate limiter.
+ * Tracks request timestamps per category and enforces per-minute limits
+ * to prevent API abuse from the client side.
  */
 
 import { RATE_LIMITS } from './constants';
@@ -51,11 +53,13 @@ export class RateLimiter {
 }
 
 // Singleton instances
+/** aiLimiter constant. */
 export const aiLimiter = new RateLimiter({
   maxRequests: RATE_LIMITS.aiRequestsPerMinute,
   windowMs: 60_000,
 });
 
+/** ttsLimiter constant. */
 export const ttsLimiter = new RateLimiter({
   maxRequests: RATE_LIMITS.ttsRequestsPerMinute,
   windowMs: 60_000,

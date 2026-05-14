@@ -1,6 +1,8 @@
 /**
- * BarTalk v8.2.5 — ARIA Live Region Announcements
- * Utility per annunci accessibili via screen reader.
+ * @module announce
+ * ARIA live region screen reader announcement utility.
+ * Creates and manages a visually hidden live region for accessibility,
+ * allowing screen readers to announce dynamic content changes.
  */
 
 /**

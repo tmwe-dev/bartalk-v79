@@ -1,19 +1,9 @@
 /**
- * Life Tutor — Knowledge Base Module
- * Librerie consultabili separate per dominio, crescono con l'utente.
- *
- * KB Types:
- * - tone_management:       Gestione tono comunicativo
- * - voice_control:         Controllo voce TTS (ritmo, pause, enfasi)
- * - number_reading:        Lettura numeri, date, misure
- * - acronym_nomenclature:  Sigle, acronimi, nomenclature
- * - language_management:   Gestione multilingua
- * - emotional_scenarios:   Scenari emotivi e risposte
- * - conversation_templates: Template conversazioni tipo
- * - learning_protocols:    Protocolli didattici
- * - personality_traits:    Tratti personalità Life Tutor
- * - user_specific:         KB personalizzata per utente
- * - topic_expertise:       Competenze su argomenti specifici
+ * @module lifeTutor/kb
+ * Life Tutor Knowledge Base system.
+ * Manages domain-specific knowledge libraries (tone, voice control, numbers,
+ * acronyms, emotions, learning protocols, personality) with system and user entries.
+ * Provides CRUD operations and prompt section building from KB entries.
  */
 
 import type { KBType, KBEntry } from '../../types/lifeTutor';

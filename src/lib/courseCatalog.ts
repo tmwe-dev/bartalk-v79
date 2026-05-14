@@ -1,9 +1,8 @@
 /**
- * BarTalk v8 — Catalogo Corsi Prefabbricati
- *
- * Template di corsi pronti, organizzati per area tematica.
- * Ogni template ha specializzazioni (focus) selezionabili
- * e supporta customizzazione libera dall'utente.
+ * @module courseCatalog
+ * Prefabricated course catalog with template definitions.
+ * Contains ready-to-use course templates across categories (languages, science,
+ * humanities, etc.) with pre-defined lessons, objectives, and metadata.
  */
 
 import type { CourseLevelType, CourseCategoryId } from '../types/courses';
@@ -34,8 +33,10 @@ export interface CourseTemplate {
 
 // ── Direzioni di customizzazione ────────────────────────────────────
 
+/** CustomDirection type alias. */
 export type CustomDirection = 'broader' | 'narrower' | 'practical' | 'theoretical';
 
+/** CUSTOM_DIRECTIONS constant. */
 export const CUSTOM_DIRECTIONS: { id: CustomDirection; label: string; icon: string; hint: string }[] = [
   { id: 'broader',     label: 'Più ampio',     icon: '🔭', hint: 'Copri più argomenti, panoramica generale' },
   { id: 'narrower',    label: 'Più specifico',  icon: '🔬', hint: 'Approfondisci un singolo aspetto nel dettaglio' },
@@ -47,6 +48,7 @@ export const CUSTOM_DIRECTIONS: { id: CustomDirection; label: string; icon: stri
 //  CATALOGO CORSI
 // ══════════════════════════════════════════════════════════════════════
 
+/** COURSE_CATALOG constant. */
 export const COURSE_CATALOG: CourseTemplate[] = [
 
   // ── LINGUE ────────────────────────────────────────────────────────

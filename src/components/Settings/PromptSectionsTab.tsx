@@ -33,7 +33,7 @@ export function PromptSectionsTab() {
   const [newPriority, setNewPriority] = useState(5);
 
   useEffect(() => {
-    setSections(loadPromptSections());
+    queueMicrotask(() => setSections(loadPromptSections()));
   }, []);
 
   const refresh = useCallback(() => {
@@ -170,12 +170,14 @@ export function PromptSectionsTab() {
                       value={s.title}
                       onChange={e => handleUpdateField(s.id, 'title', e.target.value)}
                       placeholder="Titolo"
+                      aria-label="Titolo sezione"
                     />
                     <textarea
                       className="psections-textarea"
                       value={s.content}
                       onChange={e => handleUpdateField(s.id, 'content', e.target.value)}
                       rows={3}
+                      aria-label="Contenuto sezione"
                     />
                     {s.type === 'topic' && (
                       <input
@@ -183,6 +185,7 @@ export function PromptSectionsTab() {
                         value={s.tags.join(', ')}
                         onChange={e => handleUpdateField(s.id, 'tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
                         placeholder="Tag separati da virgola"
+                        aria-label="Tag argomento"
                       />
                     )}
                     <div className="psections-priority-row">
@@ -193,6 +196,7 @@ export function PromptSectionsTab() {
                         max={10}
                         value={s.priority}
                         onChange={e => handleUpdateField(s.id, 'priority', Number(e.target.value))}
+                        aria-label={`Priorità sezione: ${s.priority}`}
                       />
                     </div>
                   </div>
@@ -227,6 +231,7 @@ export function PromptSectionsTab() {
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
             placeholder="Titolo sezione"
+            aria-label="Titolo nuova sezione"
           />
           <textarea
             className="psections-textarea"
@@ -234,6 +239,7 @@ export function PromptSectionsTab() {
             onChange={e => setNewContent(e.target.value)}
             placeholder="Contenuto della regola / contesto..."
             rows={4}
+            aria-label="Contenuto nuova sezione"
           />
           {newType === 'topic' && (
             <input
@@ -241,6 +247,7 @@ export function PromptSectionsTab() {
               value={newTags}
               onChange={e => setNewTags(e.target.value)}
               placeholder="Tag separati da virgola (es: economia, finanza, mercato)"
+              aria-label="Tag nuova sezione"
             />
           )}
           <div className="psections-priority-row">
@@ -251,6 +258,7 @@ export function PromptSectionsTab() {
               max={10}
               value={newPriority}
               onChange={e => setNewPriority(Number(e.target.value))}
+              aria-label={`Priorità nuova sezione: ${newPriority}`}
             />
           </div>
           <div className="psections-creator-actions">

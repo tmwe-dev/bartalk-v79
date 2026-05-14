@@ -85,6 +85,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAgentContext() {
   const ctx = useContext(AgentContext);
   if (!ctx) throw new Error('useAgentContext deve essere usato dentro AgentProvider');

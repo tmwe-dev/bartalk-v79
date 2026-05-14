@@ -1,14 +1,8 @@
 /**
- * BarTalk v8 — File Manager
- * Gestione file avanzata con dual persistence:
- * - Supabase Storage (utenti autenticati): fino a 10MB per file
- * - localStorage (skip mode): solo testo, max 500KB
- *
- * Supporta: PDF, immagini, CSV, Excel, JSON, testo, codice
- *
- * @deprecated Modulo attualmente non integrato nel codebase.
- * Mantenuto per futura integrazione upload file nelle conversazioni.
- * Nessun file importa da questo modulo (verificato 2026-03-07).
+ * @module fileManager
+ * File management with dual persistence (Supabase Storage + localStorage).
+ * Handles file uploads, downloads, listing, and deletion with
+ * automatic fallback to localStorage when Supabase is unavailable.
  */
 
 import { supabase, isSupabaseConfigured } from './supabase';
@@ -62,11 +56,18 @@ function generateFileId(): string {
 
 // ── File Validation ──────────────────────────────────────────────────
 
+/** FileValidationResult interface. */
 export interface FileValidationResult {
   valid: boolean;
   error?: string;
 }
 
+/**
+ * Validates file.
+ * @param file - The file parameter
+ * @param isDBMode - The isDBMode parameter
+ * @returns FileValidationResult
+ */
 export function validateFile(file: File, isDBMode: boolean): FileValidationResult {
   const ext = getFileExtension(file.name);
   const maxSize = isDBMode ? MAX_FILE_SIZE_SUPABASE : MAX_FILE_SIZE_LOCAL;
@@ -86,6 +87,11 @@ export function validateFile(file: File, isDBMode: boolean): FileValidationResul
   return { valid: true };
 }
 
+/**
+ * Validates file count.
+ * @param currentCount - The currentCount parameter
+ * @returns FileValidationResult
+ */
 export function validateFileCount(currentCount: number): FileValidationResult {
   if (currentCount >= MAX_FILES_PER_TASK) {
     return { valid: false, error: `Massimo ${MAX_FILES_PER_TASK} file per task raggiunto.` };

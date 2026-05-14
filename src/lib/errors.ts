@@ -1,6 +1,9 @@
 /**
- * BarTalk v8.2.5 — Custom Error Types
- * Errori tipizzati per gestione strutturata degli errori.
+ * @module errors
+ * Custom error type hierarchy for structured error handling.
+ * Defines AppError base class and specialized subtypes: NetworkError,
+ * ProviderError, ValidationError, AuthError, StorageError.
+ * Includes type guard and user-friendly message extraction.
  */
 
 /** Errore base BarTalk con codice e contesto */

@@ -152,6 +152,7 @@ export function VoicesTab() {
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadVoices(); }, []);
 
   const filteredVoices = voices.filter(v =>

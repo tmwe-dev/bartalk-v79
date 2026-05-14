@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — Billing API Client
- * Wrapper per le chiamate alle API di billing.
+ * @module billingAPI
+ * Billing API client for Stripe integration.
+ * Handles subscription status checks, Stripe Checkout session creation,
+ * and Stripe Customer Portal access for subscription management.
  */
 
 import type { BillingStatus, SubscriptionTier } from '../types/billing';

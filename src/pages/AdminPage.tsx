@@ -40,8 +40,8 @@ export function AdminPage({ onBack }: AdminPageProps) {
   const [error, setError] = useState<string | null>(null);
 
   // Data
-  const [stats, setStats] = useState<any>(null);
-  const [invites, setInvites] = useState<any[]>([]);
+  const [stats, setStats] = useState<Record<string, unknown>>(null as unknown as Record<string, unknown>);
+  const [invites, setInvites] = useState<Record<string, unknown>[]>([]);
   const [inviteForm, setInviteForm] = useState<InviteFormData>(DEFAULT_FORM);
   const [creating, setCreating] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -79,8 +79,8 @@ export function AdminPage({ onBack }: AdminPageProps) {
 
       setStats(statsData);
       setInvites(invitesData.invites || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -104,8 +104,8 @@ export function AdminPage({ onBack }: AdminPageProps) {
       }
       setInviteForm(DEFAULT_FORM);
       await loadData();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setCreating(false);
     }
@@ -117,8 +117,8 @@ export function AdminPage({ onBack }: AdminPageProps) {
       const headers = await getAuthHeaders();
       await fetch(`/api/invites?id=${id}`, { method: 'DELETE', headers });
       await loadData();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -301,7 +301,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
               {invites.filter(i => i.invite_redemptions?.length > 0).map(inv => (
                 <div key={`r-${inv.id}`} className="admin-redemptions">
                   <strong>{inv.code}</strong> riscattato da:
-                  {inv.invite_redemptions.map((r: any) => (
+                  {inv.invite_redemptions.map((r: Record<string, unknown>) => (
                     <span key={r.id} className="admin-redeemer">
                       {r.email || r.user_id.slice(0, 8)} ({new Date(r.redeemed_at).toLocaleDateString()})
                     </span>
@@ -332,7 +332,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {(stats.users.list || []).map((u: any) => (
+                  {(stats.users.list || []).map((u: Record<string, unknown>) => (
                     <tr key={u.id}>
                       <td>{u.email}</td>
                       <td>{u.provider}</td>

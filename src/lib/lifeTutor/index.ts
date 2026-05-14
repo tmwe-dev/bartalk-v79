@@ -1,6 +1,7 @@
 /**
- * Life Tutor — Main Index
- * Barrel export per tutti i moduli del Life Tutor.
+ * @module lifeTutor/index
+ * Life Tutor barrel exports aggregating all submodules:
+ * config, memory, profile, KB, extraction, proactivity, prompt, and processor.
  */
 
 // Config

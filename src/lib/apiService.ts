@@ -1,6 +1,8 @@
 /**
- * BarTalk v8.2.5 — API Service Layer
- * Wraps fetch calls with typed errors, retry logic, and structured responses.
+ * @module apiService
+ * Type-safe fetch wrapper with structured error handling for API calls.
+ * Provides generic request/response types, AI provider calling,
+ * and health check functionality with automatic auth header injection.
  */
 
 import {
@@ -24,6 +26,7 @@ export interface APIRequestConfig {
   signal?: AbortSignal;
 }
 
+/** APIResponse interface. */
 export interface APIResponse<T = unknown> {
   ok: true;
   data: T;
@@ -31,12 +34,14 @@ export interface APIResponse<T = unknown> {
   headers: Headers;
 }
 
+/** APIErrorResponse interface. */
 export interface APIErrorResponse {
   ok: false;
   error: AppError;
   userMessage: string;
 }
 
+/** APIResult type alias. */
 export type APIResult<T = unknown> = APIResponse<T> | APIErrorResponse;
 
 // ── Configuration ──────────────────────────────────────────────────────
@@ -143,6 +148,7 @@ export async function apiRequest<T = unknown>(
 
 // ── AI Provider request ────────────────────────────────────────────────
 
+/** AIProviderRequest interface. */
 export interface AIProviderRequest {
   provider: ProviderType;
   model: string;
@@ -154,6 +160,7 @@ export interface AIProviderRequest {
   authToken?: string;
 }
 
+/** AIProviderResponse interface. */
 export interface AIProviderResponse {
   content: string;
   tokensIn: number;
@@ -211,6 +218,7 @@ export async function callAIProvider(
 
 // ── Health check ───────────────────────────────────────────────────────
 
+/** HealthResponse interface. */
 export interface HealthResponse {
   status: string;
   version: string;

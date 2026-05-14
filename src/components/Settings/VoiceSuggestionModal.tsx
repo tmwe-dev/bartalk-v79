@@ -11,7 +11,6 @@ interface VoiceSuggestionModalProps {
 
 export function VoiceSuggestionModal({
   suggestions,
-  targetLanguage: _targetLanguage,
   onAccept,
   onDismiss,
 }: VoiceSuggestionModalProps) {

@@ -1,4 +1,9 @@
-/** Genera un ID univoco */
+/**
+ * @module utils
+ * General-purpose utility functions.
+ * Provides ID generation, timestamps, string truncation, HTML stripping,
+ * duration/time formatting, async sleep, and Tailwind CSS class merging.
+ */
 export function generateId(): string {
   return crypto.randomUUID();
 }

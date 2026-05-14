@@ -136,7 +136,7 @@ export function CoursePanel() {
     setWizStep(2);
   }, []);
 
-  const handleOpenCourse = useCallback((course: any) => {
+  const handleOpenCourse = useCallback((course: { id: string }) => {
     setActiveCourse(course.id);
     setView('active');
   }, [setActiveCourse]);

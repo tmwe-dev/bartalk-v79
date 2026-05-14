@@ -21,7 +21,7 @@ export function APIKeysTab() {
       const entry = apiKeys.find(k => k.provider === p.id);
       init[p.id] = entry?.apiKey || '';
     }
-    setFields(init);
+    queueMicrotask(() => setFields(init));
   }, [apiKeys]);
 
   const handleChange = (provider: string, value: string) => {
@@ -54,6 +54,7 @@ export function APIKeysTab() {
             onChange={(e) => handleChange(p.id, e.target.value)}
             placeholder={p.placeholder}
             autoComplete="off"
+            aria-label={`Chiave API ${p.label}`}
           />
         </div>
       ))}

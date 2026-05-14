@@ -18,7 +18,9 @@ export function Skeleton({ width, height = '14px', borderRadius, className = '' 
     <div
       className={`skeleton ${className}`}
       style={{ width, height, borderRadius }}
-      aria-hidden="true"
+      role="status"
+      aria-label="Caricamento..."
+      aria-busy="true"
     />
   );
 }

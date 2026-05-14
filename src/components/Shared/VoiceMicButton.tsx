@@ -39,7 +39,7 @@ export function VoiceMicButton({
   const langConfig = getLangConfig(language);
 
   const handleResult = useCallback(
-    (text: string, _confidence: number) => {
+    (text: string) => {
       onResult?.(text);
     },
     [onResult],

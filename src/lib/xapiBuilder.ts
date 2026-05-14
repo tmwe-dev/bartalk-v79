@@ -1,7 +1,8 @@
 /**
- * BarTalk v8 — xAPI Statement Builder
- * Factory functions per costruire statement xAPI standard.
- * Riferimento: https://github.com/adlnet/xAPI-Spec
+ * @module xapiBuilder
+ * xAPI (Experience API) statement builder for learning analytics.
+ * Constructs xAPI-compliant statements for tracking learning activities,
+ * completions, assessments, and interactions in LRS systems.
  */
 
 import type {

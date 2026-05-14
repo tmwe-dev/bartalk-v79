@@ -1,10 +1,8 @@
 /**
- * BarTalk v8 — Life Tutor Memory (Backward Compatibility Barrel)
- *
- * Questo file re-esporta dal nuovo modulo lifeTutor/ per mantenere
- * la compatibilità con gli import esistenti.
- *
- * @deprecated Usare import da './lifeTutor' o './lifeTutor/memory' direttamente.
+ * @module lifeTutorMemory
+ * Backward compatibility barrel re-exporting Life Tutor modules from
+ * the new lifeTutor/ directory structure. Prefer importing from './lifeTutor' directly.
+ * @deprecated Use imports from './lifeTutor' or './lifeTutor/memory' instead.
  */
 
 // Config

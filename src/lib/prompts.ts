@@ -1,15 +1,8 @@
 /**
- * BarTalk v8 — Sistema Prompt Avanzato a 17 Sezioni
- * Architettura completa per agenti intelligenti con personalità,
- * strumenti, guardrails e controllo comportamentale avanzato.
- *
- * Sezioni:
- *  1. Identità Agente    2. Personalità       3. Missione Primaria
- *  4. Ambiente/Situazione 5. Contesto Conv.   6. Stile Comunicazione
- *  7. KB Comportamentale  8. Humor Guidelines  9. Not-To-Do
- * 10. Uso Knowledge Base 11. Uso Tools        12. Conversation Framework
- * 13. Op. Guidelines     14. Processo Delivery 15. Gestione Voce
- * 16. Guardrails         17. Always Section
+ * @module prompts
+ * 17-section prompt architecture for agent personalities.
+ * Builds rich system prompts with debate frameworks, personality traits,
+ * word range constraints, convergence instructions, and TTS optimization.
  */
 
 import type { AgentConfig } from '../types/agents';
@@ -54,6 +47,7 @@ export interface AgentPersonalityV2 extends AgentPersonality {
   alwaysRules?: string[];
 }
 
+/** AGENT_PERSONALITIES constant. */
 export const AGENT_PERSONALITIES: Record<string, AgentPersonalityV2> = {
   albert: {
     role: 'Analista Scientifico e Tecnologo',
@@ -227,6 +221,11 @@ const DEBATE_FRAMEWORK: Partial<Record<AppLanguage, DebateFrameworkEntry>> = {
 
 // ── Carica personalità (custom da localStorage o default) ────────────
 
+/**
+ * Gets effective personality.
+ * @param agentId - The agentId parameter
+ * @returns AgentPersonalityV2 | undefined
+ */
 export function getEffectivePersonality(agentId: string): AgentPersonalityV2 | undefined {
   try {
     const saved = localStorage.getItem('bartalk_custom_personalities');
@@ -414,7 +413,7 @@ REGOLE CRITICHE per la qualità vocale:
 2. ENFASI: Sottolinea i concetti chiave con una formulazione naturale che suggerisca importanza, non urgenza. Esempio: "Il punto cruciale qui è..." oppure "Quello che cambia tutto è...".
 3. PAUSE: Usa punteggiatura strategica per creare pause naturali. I due punti creano una pausa breve di attesa. Il punto fermo crea una pausa netta.
 4. TRANSIZIONI: Quando cambi argomento o prospettiva, segnalalo con una micro-transizione naturale: "Ora...", "Detto questo...", "Ma ecco il punto...".
-5. APERTURE VARIATE: NON iniziare MAI due risposte consecutive con la stessa parola o struttura. Varia: a volte inizia con un dato, a volte con una domanda, a volte con un\'osservazione provocatoria, a volte con "Concordo con X, ma..." o "Il problema è un altro...".
+5. APERTURE VARIATE: NON iniziare MAI due risposte consecutive con la stessa parola o struttura. Varia: a volte inizia con un dato, a volte con una domanda, a volte con un'osservazione provocatoria, a volte con "Concordo con X, ma..." o "Il problema è un altro...".
 6. CHIUSURE VARIATE: NON chiudere MAI due risposte allo stesso modo. Alterna: domanda aperta, sfida al gruppo, sintesi provocatoria, proposta pratica, riflessione.
 7. NATURALEZZA: Inserisci marcatori linguistici naturali come "Ecco...", "In sostanza...", "A ben vedere...", "Certo...", ma senza abusarne — massimo uno per risposta.
 8. CONCISIONE DINAMICA: Se il punto è semplice, sii breve. Se è complesso, prenditi spazio. La lunghezza deve seguire il contenuto, mai essere fissa.`;
@@ -440,7 +439,7 @@ function buildAntiPatternSection(lang: AppLanguage): string {
 Il tuo obiettivo è suonare come un ESPERTO VERO che partecipa a un podcast, non come un modello linguistico.
 1. NON iniziare con "Ottimo punto!" o complimenti generici. Se concordi, dì qualcosa di specifico: "Questo si allinea con i dati su..." o semplicemente prosegui con il tuo contributo.
 2. NON usare formule come "Questo è un tema affascinante" o "Domanda eccellente". Vai dritto al merito.
-3. NON riassumere ciò che altri hanno appena detto. L\'ascoltatore ha già sentito — aggiungi, non ripeti.
+3. NON riassumere ciò che altri hanno appena detto. L'ascoltatore ha già sentito — aggiungi, non ripeti.
 4. VARIA il tipo di intervento: a volte argomenta, a volte racconta un caso, a volte sfida una posizione, a volte sintetizza, a volte provoca con una domanda scomoda.
 5. Parla come un umano: a volte esita ("Mmh, non ne sono convinto..."), a volte si corregge ("Anzi, forse il punto è un altro..."), a volte divaga brevemente prima di tornare al punto.
 6. Se sei d'accordo con tutti, NON dire "Sono d'accordo" — aggiungi un angolo nuovo, un dato, un'eccezione, una provocazione. Il consenso totale è noioso.
@@ -460,6 +459,7 @@ Your goal is to sound like a REAL EXPERT on a podcast, not a language model.
 
 // ── Builder principale del system prompt (17 sezioni) ────────────────
 
+/** PromptBuildOptions interface. */
 export interface PromptBuildOptions {
   turnIndex?: number;
   totalAgents?: number;

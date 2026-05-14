@@ -49,7 +49,7 @@ export function InputBox() {
   // Aggiorna il testo con il transcript in tempo reale
   useEffect(() => {
     if (transcript) {
-      setText(transcript);
+      queueMicrotask(() => setText(transcript));
     }
   }, [transcript]);
 

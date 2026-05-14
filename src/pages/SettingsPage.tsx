@@ -4,7 +4,7 @@
  * Versione full-page delle impostazioni con tutte le sezioni.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettingsContext } from '../context/SettingsContext';
 import { useAgentContext } from '../context/AgentContext';
@@ -14,7 +14,13 @@ import { UI } from '../lib/constants';
 import { LANGUAGES } from '../types/settings';
 import './SettingsPage.css';
 
-type SettingsTab = 'general' | 'agents' | 'api' | 'account' | 'advanced';
+// Lazy-loaded settings sub-tabs
+const PromptTab = lazy(() => import('../components/Settings/PromptTab').then(m => ({ default: m.PromptTab })));
+const PromptSectionsTab = lazy(() => import('../components/Settings/PromptSectionsTab').then(m => ({ default: m.PromptSectionsTab })));
+const MemoryTab = lazy(() => import('../components/Settings/MemoryTab').then(m => ({ default: m.MemoryTab })));
+const VoicesTab = lazy(() => import('../components/Settings/VoicesTab').then(m => ({ default: m.VoicesTab })));
+
+type SettingsTab = 'general' | 'agents' | 'prompts' | 'api' | 'account' | 'advanced';
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -34,6 +40,7 @@ export function SettingsPage() {
   const tabs: { id: SettingsTab; label: string; icon: string }[] = [
     { id: 'general', label: 'Generale', icon: '⚙️' },
     { id: 'agents', label: 'Agenti', icon: '🤖' },
+    { id: 'prompts', label: 'Prompt & AI', icon: '🧠' },
     { id: 'api', label: 'API Keys', icon: '🔑' },
     { id: 'account', label: 'Account', icon: '👤' },
     { id: 'advanced', label: 'Avanzate', icon: '🔧' },
@@ -43,9 +50,6 @@ export function SettingsPage() {
     <div className="settings-page" role="main" aria-label="Impostazioni BarTalk">
       <a href="#settings-content" className="sr-only focus-visible">Salta al contenuto</a>
       <div className="settings-page-header">
-        <button className="settings-back-btn" onClick={() => navigate('/radio-chat')} aria-label="Torna alla chat">
-          ← Torna a BarTalk
-        </button>
         <h1 className="settings-page-title">Impostazioni</h1>
       </div>
 
@@ -99,7 +103,7 @@ export function SettingsPage() {
                 <h3>Lingua</h3>
                 <label className="settings-field">
                   <span>Lingua interfaccia</span>
-                  <select value={language} onChange={e => setLanguage(e.target.value as any)}>
+                  <select value={language} onChange={e => setLanguage(e.target.value as typeof language)}>
                     {LANGUAGES.filter(l => l.group === 'primary').map(l => (
                       <option key={l.value} value={l.value}>{l.flag} {l.label}</option>
                     ))}
@@ -149,6 +153,32 @@ export function SettingsPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── Prompt & AI ── */}
+          {activeTab === 'prompts' && (
+            <div className="settings-section" role="tabpanel" id="settings-panel-prompts" aria-labelledby="settings-tab-prompts">
+              <h2>Prompt & AI</h2>
+              <p className="settings-muted">Configura i prompt personalizzati, le sezioni di contesto, la memoria e le voci degli agenti.</p>
+              <Suspense fallback={<div className="settings-loading"><div className="settings-spinner" /></div>}>
+                <div className="settings-group">
+                  <h3>Prompt personalizzato</h3>
+                  <PromptTab />
+                </div>
+                <div className="settings-group">
+                  <h3>Sezioni prompt</h3>
+                  <PromptSectionsTab />
+                </div>
+                <div className="settings-group">
+                  <h3>Memoria conversazioni</h3>
+                  <MemoryTab />
+                </div>
+                <div className="settings-group">
+                  <h3>Voci agenti</h3>
+                  <VoicesTab />
+                </div>
+              </Suspense>
             </div>
           )}
 

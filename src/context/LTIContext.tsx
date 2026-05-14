@@ -64,16 +64,18 @@ export function LTIProvider({ children }: { children: ReactNode }) {
     const params = extractLTIFromURL();
 
     if (params.isLTI && params.token) {
-      setIsLTIMode(true);
-      setLtiToken(params.token);
-      setPlatformName(params.platformName);
-      setContextTitle(params.contextTitle);
+      queueMicrotask(() => {
+        setIsLTIMode(true);
+        setLtiToken(params.token!);
+        setPlatformName(params.platformName);
+        setContextTitle(params.contextTitle);
+      });
 
       // Decodifica launchId dal token (JWT payload)
       try {
         const payloadB64 = params.token.split('.')[1];
         const payload = JSON.parse(atob(payloadB64));
-        setLaunchId(payload.lti_launch_id || null);
+        queueMicrotask(() => setLaunchId(payload.lti_launch_id || null));
       } catch { /* token non decodificabile */ }
 
       // Persisti in localStorage
@@ -101,11 +103,13 @@ export function LTIProvider({ children }: { children: ReactNode }) {
         // Verifica che non sia scaduta (max 4h)
         const storedAt = new Date(session.storedAt).getTime();
         if (Date.now() - storedAt < 4 * 60 * 60 * 1000) {
-          setIsLTIMode(true);
-          setLtiToken(session.token);
-          setPlatformName(session.platformName);
-          setContextTitle(session.contextTitle);
-          setLaunchId(session.launchId);
+          queueMicrotask(() => {
+            setIsLTIMode(true);
+            setLtiToken(session.token);
+            setPlatformName(session.platformName);
+            setContextTitle(session.contextTitle);
+            setLaunchId(session.launchId);
+          });
           return;
         }
         // Scaduta — rimuovi
@@ -148,6 +152,7 @@ export function LTIProvider({ children }: { children: ReactNode }) {
 
 // ── Hook ────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLTI(): LTIContextValue {
   const ctx = useContext(LTICtx);
   if (!ctx) throw new Error('useLTI must be used within LTIProvider');

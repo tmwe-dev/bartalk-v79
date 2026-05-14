@@ -1,6 +1,8 @@
 /**
- * IndexedDB storage management for audio recordings
- * Handles CRUD operations and progress aggregation
+ * @module audioStorage
+ * IndexedDB-based audio recording storage for pronunciation exercises.
+ * Provides async CRUD operations for storing, retrieving, and managing
+ * recorded audio blobs with metadata (courseId, lessonIndex, phrase, score).
  */
 
 export interface AudioRecording {
@@ -17,6 +19,7 @@ export interface AudioRecording {
   language: string;
 }
 
+/** ProgressData interface. */
 export interface ProgressData {
   date: string;
   avgScore: number;

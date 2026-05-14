@@ -1,3 +1,11 @@
+/**
+ * @module convergence
+ * Conversation convergence analysis with multilingual keyword detection.
+ * Analyzes recent agent messages to determine if the conversation is in
+ * agreement, divergence, or stagnation across 20+ languages.
+ * Returns convergence state and localized instructions for agents.
+ */
+
 import type { Message } from '../types/conversation';
 import type { ConvergenceState } from '../types/orchestrator';
 import type { AppLanguage } from '../types/settings';
@@ -65,6 +73,15 @@ const STOP_WORDS = new Set([
 
 // ── Funzione principale ──────────────────────────────────────────────
 
+/**
+ * Analyzes the convergence state of a multi-agent conversation.
+ * Examines recent assistant messages for agreement/disagreement keywords
+ * and text similarity across 20+ languages.
+ *
+ * @param messages - Conversation message history
+ * @param language - Current UI language code for keyword selection
+ * @returns Convergence state: 'agreement', 'divergence', 'stagnation', or 'neutral'
+ */
 export function analyzeConvergence(messages: Message[], lang?: AppLanguage): ConvergenceState {
   const agentMessages = messages.filter(m => m.senderType === 'assistant');
   if (agentMessages.length < 4) return 'neutral';
@@ -171,6 +188,14 @@ const CONVERGENCE_INSTRUCTIONS: Partial<Record<AppLanguage, Record<ConvergenceSt
   },
 };
 
+/**
+ * Returns a localized instruction string for agents based on convergence state.
+ * Used to inject behavioral guidance into agent system prompts.
+ *
+ * @param state - Current convergence state
+ * @param language - Language code for localized instructions
+ * @returns Instruction text for agents, or empty string for neutral state
+ */
 export function getConvergenceInstruction(state: ConvergenceState, lang?: AppLanguage): string {
   const langKey = lang || 'it';
   const instructions = CONVERGENCE_INSTRUCTIONS[langKey] || CONVERGENCE_INSTRUCTIONS.en || CONVERGENCE_INSTRUCTIONS.it!;

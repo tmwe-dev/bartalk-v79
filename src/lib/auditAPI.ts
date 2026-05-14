@@ -1,8 +1,7 @@
 /**
- * BarTalk — Audit Log API Client
- *
- * Frontend interface for /api/audit serverless endpoint.
- * Requires authenticated Supabase session.
+ * @module auditAPI
+ * Audit log API client for tracking workspace activities.
+ * Fetches paginated audit logs from the server with authentication.
  */
 
 import type { AuditLogResponse, AuditExportFormat } from '../types/audit';
@@ -29,6 +28,10 @@ export async function fetchAuditLogs(
 
 // ─── Export ──────────────────────────────────────────────────
 
+/**
+ * Exports audit logs.
+ * @param format - The format parameter
+ */
 export async function exportAuditLogs(format: AuditExportFormat): Promise<void> {
   const url = `${AUDIT_URL}?export=${format}`;
   const res = await fetch(url, { headers: buildAuthHeaders() });
@@ -54,6 +57,9 @@ export async function exportAuditLogs(format: AuditExportFormat): Promise<void> 
 
 // ─── Delete / Purge ──────────────────────────────────────────
 
+/**
+ * Purges audit logs.
+ */
 export async function purgeAuditLogs(
   opts: { before?: string; all?: boolean },
 ): Promise<{ deleted: number }> {

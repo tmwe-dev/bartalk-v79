@@ -1,9 +1,19 @@
+/**
+ * @module proxy
+ * Proxy layer for calling the `/api/ai-proxy` endpoint with retry and exponential backoff.
+ *
+ * Handles authentication (Supabase JWT or skip-auth), retries on transient HTTP errors
+ * (429, 500, 502, 503, 504), exponential backoff with jitter, Retry-After header respect,
+ * and provider health tracking on success/failure.
+ */
+
 import type { ProviderType } from '../types/agents';
 import { PROXY_URL, ORCHESTRATOR } from './constants';
 import { supabase } from './supabase';
 import { captureAPIError } from './errorTracker';
 import { recordSuccess, recordFailure } from './providerHealth';
 
+/** Request payload sent to the AI proxy endpoint. */
 export interface ProxyRequest {
   provider: ProviderType;
   model: string;
@@ -14,12 +24,19 @@ export interface ProxyRequest {
   apiKey: string;
 }
 
+/** Response returned from the AI proxy endpoint. */
 export interface ProxyResponse {
+  /** Generated text content from the AI provider */
   content: string;
+  /** Number of input tokens consumed */
   tokensIn: number;
+  /** Number of output tokens generated */
   tokensOut: number;
+  /** Response duration in milliseconds */
   duration: number;
+  /** Error message if the request failed */
   error?: string;
+  /** Additional error detail or Retry-After value */
   detail?: string;
 }
 
@@ -52,8 +69,24 @@ function getRetryDelay(attempt: number, retryAfterHeader?: string | null): numbe
 }
 
 /**
- * Chiama il proxy /api/ai-proxy con i parametri dati.
- * Gestisce errori HTTP, retry con exponential backoff, e li converte in ProxyResponse.
+ * Calls the `/api/ai-proxy` endpoint with the given parameters.
+ * Handles HTTP errors, retry with exponential backoff, and converts results to ProxyResponse.
+ *
+ * @param req - The proxy request payload (provider, model, messages, etc.)
+ * @returns Proxy response with content and token counts, or error details on failure
+ *
+ * @example
+ * ```ts
+ * const result = await callProxy({
+ *   provider: 'openai',
+ *   model: 'gpt-4o',
+ *   messages: [{ role: 'user', content: 'Hello' }],
+ *   systemPrompt: 'You are helpful.',
+ *   apiKey: 'sk-...',
+ * });
+ * if (result.error) console.error(result.error);
+ * else console.log(result.content);
+ * ```
  */
 export async function callProxy(req: ProxyRequest): Promise<ProxyResponse> {
   const startTime = Date.now();

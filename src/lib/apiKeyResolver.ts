@@ -1,8 +1,8 @@
 /**
- * apiKeyResolver.ts — Centralizzazione lookup chiavi API
- *
- * Sostituisce le 5+ implementazioni duplicate di getApiKey/getApiKeyForProvider.
- * Supporta ordini di preferenza diversi per contesto d'uso.
+ * @module apiKeyResolver
+ * Centralized API key resolution with configurable priority orders.
+ * Resolves the best available provider/model/key combination by checking
+ * localStorage, Supabase vault, and server-side keys in priority order.
  */
 
 import { loadAPIKeys } from './storage';

@@ -1,3 +1,8 @@
+/**
+ * @module i18n/languages-european
+ * European language translations (Turkish, Polish, Romanian, Czech, etc.).
+ */
+
 export const europeanTranslations: Record<string, Record<string, string>> = {
   "tr": {
     "agents": "Ajanlar",

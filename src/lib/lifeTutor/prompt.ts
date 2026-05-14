@@ -1,12 +1,8 @@
 /**
- * Life Tutor — Prompt Builder Module
- * Costruisce il system prompt completo del Life Tutor combinando:
- * - Identità e personalità (da KB)
- * - Profilo utente
- * - Memoria (recente + rilevante)
- * - Obiettivi attivi
- * - Suggerimenti proattivi
- * - KB per tono, voce, numeri, lingue, scenari emotivi
+ * @module lifeTutor/prompt
+ * Life Tutor prompt builder.
+ * Constructs the complete Life Tutor system prompt by combining identity,
+ * user profile, memory, objectives, proactive suggestions, and behavioral rules.
  */
 
 import type {

@@ -1,11 +1,8 @@
 /**
- * BarTalk v8 — Tool Registry
- * Registro centralizzato dei tool disponibili per gli agenti.
- * Gestisce definizioni, formattazione per provider, e prompt instructions.
- *
- * @deprecated Modulo attualmente non integrato nel codebase.
- * Mantenuto per futura integrazione del sistema tool/function-calling.
- * Nessun file importa da questo modulo (verificato 2026-03-07).
+ * @module toolRegistry
+ * Tool registry with provider-specific formatting.
+ * Registers available tools and formats their definitions for different
+ * AI providers (OpenAI function calling, Anthropic tool use, etc.).
  */
 
 import type {
@@ -256,6 +253,10 @@ export function buildToolPromptSection(settings: ToolSettings, lang: string = 'i
 
 const TOOL_SETTINGS_KEY = 'bartalk_tool_settings';
 
+/**
+ * Loads tool settings from storage.
+ * @returns ToolSettings
+ */
 export function loadToolSettings(): ToolSettings {
   try {
     const saved = localStorage.getItem(TOOL_SETTINGS_KEY);

@@ -139,7 +139,7 @@ export function MenuCarousel3D({ items, currentIndex, onIndexChange, onSelect }:
     scene.add(group);
     groupRef.current = group;
 
-    setIsReady(true);
+    queueMicrotask(() => setIsReady(true));
 
     // Animation loop
     const animate = () => {

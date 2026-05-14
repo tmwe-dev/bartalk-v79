@@ -277,6 +277,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTaskContext(): TaskContextValue {
   const ctx = useContext(TaskContext);
   if (!ctx) throw new Error('useTaskContext must be used within TaskProvider');

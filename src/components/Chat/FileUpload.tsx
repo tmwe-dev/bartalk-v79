@@ -264,6 +264,7 @@ export function FileUpload({ onFilesParsed, disabled, compact }: FileUploadProps
           onClick={() => inputRef.current?.click()}
           disabled={disabled || isProcessing}
           title="Allega file"
+          aria-label="Carica file"
         >
           {isProcessing ? '⏳' : '📎'}
         </button>
@@ -274,6 +275,7 @@ export function FileUpload({ onFilesParsed, disabled, compact }: FileUploadProps
           multiple
           onChange={handleFileChange}
           className="file-upload-hidden-input"
+          aria-label="Carica file"
         />
       </>
     );
@@ -301,6 +303,7 @@ export function FileUpload({ onFilesParsed, disabled, compact }: FileUploadProps
           multiple
           onChange={handleFileChange}
           className="file-upload-hidden-input"
+          aria-label="Carica file"
         />
 
         {isProcessing ? (

@@ -1,7 +1,8 @@
 /**
- * BarTalk v8 — Education API Client
- * Client per /api/education — mirrors billingAPI.ts pattern.
- * Gestisce dual-layer: se autenticato → Supabase via API, altrimenti → localStorage.
+ * @module educationAPI
+ * Education system API client.
+ * Provides CRUD operations for courses, lessons, and student progress
+ * through the server-side education endpoints.
  */
 
 import type { StudentProfile, MaestroMemory, StudySession } from '../types/maestro';
@@ -38,6 +39,10 @@ async function callEducation<T>(action: string, payload: Record<string, unknown>
 
 // ── Student Profile ─────────────────────────────────────────────────
 
+/**
+ * Gets student profile cloud.
+ * @returns Promise<StudentProfile | null>
+ */
 export async function getStudentProfileCloud(): Promise<StudentProfile | null> {
   const res = await callEducation<StudentProfile>('get-profile');
   if (!res.ok || !res.data) return null;
@@ -60,6 +65,11 @@ export async function getStudentProfileCloud(): Promise<StudentProfile | null> {
   };
 }
 
+/**
+ * Saves student profile cloud to storage.
+ * @param profile - The profile parameter
+ * @returns Promise<boolean>
+ */
 export async function saveStudentProfileCloud(profile: Partial<StudentProfile>): Promise<boolean> {
   const res = await callEducation('save-profile', { profile });
   return res.ok;
@@ -67,6 +77,10 @@ export async function saveStudentProfileCloud(profile: Partial<StudentProfile>):
 
 // ── Courses ─────────────────────────────────────────────────────────
 
+/**
+ * Gets courses cloud.
+ * @returns Promise<CourseDefinition[]>
+ */
 export async function getCoursesCloud(): Promise<CourseDefinition[]> {
   const res = await callEducation<unknown[]>('get-courses');
   if (!res.ok || !res.data) return [];
@@ -74,6 +88,11 @@ export async function getCoursesCloud(): Promise<CourseDefinition[]> {
   return (res.data as Record<string, unknown>[]).map(mapCourseFromDB);
 }
 
+/**
+ * Saves course cloud to storage.
+ * @param course - The course parameter
+ * @returns Promise<boolean>
+ */
 export async function saveCourseCloud(course: CourseDefinition): Promise<boolean> {
   const res = await callEducation('save-course', { course });
   return res.ok;
@@ -81,6 +100,11 @@ export async function saveCourseCloud(course: CourseDefinition): Promise<boolean
 
 // ── Course Progress ─────────────────────────────────────────────────
 
+/**
+ * Gets course progress cloud.
+ * @param courseId - The courseId parameter
+ * @returns Promise<CourseProgress | CourseProgress[] | null>
+ */
 export async function getCourseProgressCloud(courseId?: string): Promise<CourseProgress | CourseProgress[] | null> {
   const res = await callEducation<unknown>('get-progress', { courseId });
   if (!res.ok) return courseId ? null : [];
@@ -93,6 +117,11 @@ export async function getCourseProgressCloud(courseId?: string): Promise<CourseP
   return courseId ? null : [];
 }
 
+/**
+ * Saves course progress cloud to storage.
+ * @param progress - The progress parameter
+ * @returns Promise<boolean>
+ */
 export async function saveCourseProgressCloud(progress: CourseProgress): Promise<boolean> {
   const res = await callEducation('save-progress', { progress });
   return res.ok;
@@ -100,6 +129,9 @@ export async function saveCourseProgressCloud(progress: CourseProgress): Promise
 
 // ── Assessment ──────────────────────────────────────────────────────
 
+/**
+ * Records assessment cloud.
+ */
 export async function recordAssessmentCloud(assessment: {
   courseId: string;
   lessonIndex: number;
@@ -112,12 +144,23 @@ export async function recordAssessmentCloud(assessment: {
 
 // ── Maestro Memories ────────────────────────────────────────────────
 
+/**
+ * Gets maestro memory cloud.
+ * @param courseId - The courseId parameter
+ * @param maestroId - The maestroId parameter
+ * @returns Promise<MaestroMemory | null>
+ */
 export async function getMaestroMemoryCloud(courseId: string, maestroId: string): Promise<MaestroMemory | null> {
   const res = await callEducation<Record<string, unknown>>('get-memories', { courseId, maestroId });
   if (!res.ok || !res.data) return null;
   return mapMemoryFromDB(res.data);
 }
 
+/**
+ * Synchronizes maestro memory cloud.
+ * @param memory - The memory parameter
+ * @returns Promise<boolean>
+ */
 export async function syncMaestroMemoryCloud(memory: MaestroMemory): Promise<boolean> {
   const res = await callEducation('sync-memory', { memory });
   return res.ok;
@@ -125,12 +168,22 @@ export async function syncMaestroMemoryCloud(memory: MaestroMemory): Promise<boo
 
 // ── Study Sessions ──────────────────────────────────────────────────
 
+/**
+ * Gets study sessions cloud.
+ * @param courseId - The courseId parameter
+ * @returns Promise<StudySession[]>
+ */
 export async function getStudySessionsCloud(courseId?: string): Promise<StudySession[]> {
   const res = await callEducation<unknown[]>('get-sessions', { courseId });
   if (!res.ok || !res.data) return [];
   return (res.data as Record<string, unknown>[]).map(mapSessionFromDB);
 }
 
+/**
+ * Saves study session cloud to storage.
+ * @param session - The session parameter
+ * @returns Promise<boolean>
+ */
 export async function saveStudySessionCloud(session: StudySession): Promise<boolean> {
   const res = await callEducation('save-session', { session });
   return res.ok;
@@ -138,6 +191,11 @@ export async function saveStudySessionCloud(session: StudySession): Promise<bool
 
 // ── xAPI Statements ─────────────────────────────────────────────────
 
+/**
+ * Sends x a p i statements to the server.
+ * @param statements - The statements parameter
+ * @returns Promise<boolean>
+ */
 export async function sendXAPIStatements(statements: unknown[]): Promise<boolean> {
   try {
     const headers = await buildAuthHeadersAsync();

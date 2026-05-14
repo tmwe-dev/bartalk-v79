@@ -418,6 +418,7 @@ export function MaestroProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useMaestroContext(): MaestroContextValue {
   const ctx = useContext(MaestroCtx);
   if (!ctx) throw new Error('useMaestroContext must be used within MaestroProvider');

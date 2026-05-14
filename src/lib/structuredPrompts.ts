@@ -1,14 +1,8 @@
 /**
- * BarTalk v8.2 — Structured Prompt System
- * Sistema di prompt strutturati ispirato a v7.9.
- *
- * Concetti:
- * - ComposedPrompt: prompt completo assemblato da sezioni
- * - PersonalitySection: sezione personalità per agente
- * - SystemPrompt: prompt di sistema globale
- * - CumulativeSummary: riassunto cumulativo conversazione
- *
- * Questo sistema si integra con promptSections.ts (v8.1) e agentFreedom.ts (v8.2).
+ * @module structuredPrompts
+ * Structured prompt composition system.
+ * Builds prompts from modular sections with support for task context,
+ * agent freedom levels, TTS optimization, and convergence awareness.
  */
 
 export interface SystemPromptTemplate {
@@ -28,6 +22,7 @@ export interface PersonalitySection {
   createdAt: string;
 }
 
+/** ComposedPrompt interface. */
 export interface ComposedPrompt {
   id: string;
   name: string;
@@ -38,6 +33,7 @@ export interface ComposedPrompt {
   updatedAt: string;
 }
 
+/** CumulativeSummary interface. */
 export interface CumulativeSummary {
   conversationId: string;
   summary: string;
@@ -81,10 +77,18 @@ function save<T>(key: string, data: T[]): void {
 }
 
 // System Prompts
+/**
+ * Loads system prompts from storage.
+ * @returns SystemPromptTemplate[]
+ */
 export function loadSystemPrompts(): SystemPromptTemplate[] {
   return load(KEYS.systemPrompts, [DEFAULT_SYSTEM_PROMPT]);
 }
 
+/**
+ * Saves system prompt to storage.
+ * @param prompt - The prompt parameter
+ */
 export function saveSystemPrompt(prompt: SystemPromptTemplate): void {
   const prompts = loadSystemPrompts();
   const idx = prompts.findIndex(p => p.id === prompt.id);
@@ -95,10 +99,18 @@ export function saveSystemPrompt(prompt: SystemPromptTemplate): void {
 }
 
 // Personality Sections
+/**
+ * Loads personality sections from storage.
+ * @returns PersonalitySection[]
+ */
 export function loadPersonalitySections(): PersonalitySection[] {
   return load(KEYS.personalities, []);
 }
 
+/**
+ * Saves personality section to storage.
+ * @param section - The section parameter
+ */
 export function savePersonalitySection(section: PersonalitySection): void {
   const sections = loadPersonalitySections();
   const idx = sections.findIndex(s => s.id === section.id);
@@ -108,6 +120,10 @@ export function savePersonalitySection(section: PersonalitySection): void {
   import('./dbSync').then(m => m.pushPersonalitySections()).catch(() => {});
 }
 
+/**
+ * Deletes personality section.
+ * @param id - The id parameter
+ */
 export function deletePersonalitySection(id: string): void {
   const sections = loadPersonalitySections().filter(s => s.id !== id);
   save(KEYS.personalities, sections);
@@ -115,10 +131,18 @@ export function deletePersonalitySection(id: string): void {
 }
 
 // Composed Prompts
+/**
+ * Loads composed prompts from storage.
+ * @returns ComposedPrompt[]
+ */
 export function loadComposedPrompts(): ComposedPrompt[] {
   return load(KEYS.composedPrompts, []);
 }
 
+/**
+ * Saves composed prompt to storage.
+ * @param prompt - The prompt parameter
+ */
 export function saveComposedPrompt(prompt: ComposedPrompt): void {
   const prompts = loadComposedPrompts();
   const idx = prompts.findIndex(p => p.id === prompt.id);
@@ -129,10 +153,18 @@ export function saveComposedPrompt(prompt: ComposedPrompt): void {
 }
 
 // Active composed prompt
+/**
+ * Gets active composed prompt id.
+ * @returns string | null
+ */
 export function getActiveComposedPromptId(): string | null {
   return localStorage.getItem(KEYS.activeComposed);
 }
 
+/**
+ * Sets active composed prompt id.
+ * @param id - The id parameter
+ */
 export function setActiveComposedPromptId(id: string | null): void {
   if (id) localStorage.setItem(KEYS.activeComposed, id);
   else localStorage.removeItem(KEYS.activeComposed);
@@ -140,11 +172,20 @@ export function setActiveComposedPromptId(id: string | null): void {
 }
 
 // Cumulative Summaries
+/**
+ * Loads cumulative summary from storage.
+ * @param conversationId - The conversationId parameter
+ * @returns CumulativeSummary | null
+ */
 export function loadCumulativeSummary(conversationId: string): CumulativeSummary | null {
   const summaries: CumulativeSummary[] = load(KEYS.summaries, []);
   return summaries.find(s => s.conversationId === conversationId) || null;
 }
 
+/**
+ * Saves cumulative summary to storage.
+ * @param summary - The summary parameter
+ */
 export function saveCumulativeSummary(summary: CumulativeSummary): void {
   const summaries: CumulativeSummary[] = load(KEYS.summaries, []);
   const idx = summaries.findIndex(s => s.conversationId === summary.conversationId);

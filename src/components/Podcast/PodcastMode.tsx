@@ -290,7 +290,7 @@ export function PodcastMode() {
   const currentPodMsg = podcastMessages[currentMsgIndex];
 
   return (
-    <div className="podcast-panel">
+    <div className="podcast-panel" role="region" aria-label="Modalità podcast">
       <div className="podcast-header">
         <span className="podcast-icon">🎙️</span>
         <h3>{t('podcastTitle')}</h3>
@@ -307,6 +307,7 @@ export function PodcastMode() {
               onChange={e => setTopic(e.target.value)}
               placeholder={t('podcastPlaceholder')}
               onKeyDown={e => e.key === 'Enter' && startPodcast()}
+              aria-label="Argomento podcast"
             />
             <VoiceMicButton onTranscript={setTopic} />
           </div>
@@ -321,6 +322,7 @@ export function PodcastMode() {
             value={rounds}
             onChange={e => setRounds(Number(e.target.value))}
             className="podcast-slider"
+            aria-label={`Numero round: ${rounds}`}
           />
 
           <div className="podcast-info">
@@ -432,7 +434,7 @@ export function PodcastMode() {
               ⏭
             </button>
 
-            <button className="podcast-ctrl-btn podcast-ctrl-stop" onClick={stopPodcast}>
+            <button className="podcast-ctrl-btn podcast-ctrl-stop" onClick={stopPodcast} aria-label="Ferma podcast">
               ⏹
             </button>
           </div>

@@ -1,3 +1,10 @@
+/**
+ * @module voiceSuggester
+ * ElevenLabs voice suggestion utility.
+ * Suggests optimal ElevenLabs voices based on the current UI language
+ * and agent gender preferences.
+ */
+
 import { TTS } from './constants';
 
 // ── Interface for ElevenLabs voice ──────────────────────────────────────

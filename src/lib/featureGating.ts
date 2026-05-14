@@ -1,6 +1,8 @@
 /**
- * RadioChat v8 — Feature Gating
- * Mappa quale tier ha accesso a quale feature/sezione.
+ * @module featureGating
+ * Feature gating system based on user subscription tier.
+ * Controls access to premium features (courses, TTS, file management, etc.)
+ * by checking the user's tier (free, pro, team) against feature requirements.
  */
 
 export type UserTier = 'free' | 'pro' | 'unlimited';
@@ -9,8 +11,10 @@ export type UserTier = 'free' | 'pro' | 'unlimited';
 const TIER_FEATURES: Record<string, UserTier[]> = {
   chat:       ['free', 'pro', 'unlimited'],
   tasks:      ['free', 'pro', 'unlimited'],
+  progress:   ['free', 'pro', 'unlimited'],
   podcast:    ['pro', 'unlimited'],
   courses:    ['pro', 'unlimited'],
+  maestro:    ['pro', 'unlimited'],
   freevoice:  ['pro', 'unlimited'],
   lifetutor:  ['unlimited'],
   carousel:   ['unlimited'],
@@ -47,7 +51,7 @@ export function getRequiredTier(feature: string): UserTier {
  */
 export function getLockedFeatures(tier: UserTier): string[] {
   return Object.entries(TIER_FEATURES)
-    .filter(([_, tiers]) => !tiers.includes(tier))
+    .filter(([, tiers]) => !tiers.includes(tier))
     .map(([feature]) => feature);
 }
 

@@ -45,3 +45,6 @@ export type * from './tools';
 
 // ── Menu types ────────────────────────────────────────────────────────
 export type * from './menu';
+
+// ── Database types (Supabase schema) ─────────────────────────────────
+export * from './database';

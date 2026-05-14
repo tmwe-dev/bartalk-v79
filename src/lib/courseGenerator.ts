@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — Course Syllabus Generator
- * Genera un syllabus strutturato via AI (Anthropic preferito per JSON affidabile).
+ * @module courseGenerator
+ * AI-powered course syllabus generator.
+ * Uses AI providers to generate structured course definitions including
+ * lessons, objectives, and sources based on a topic, level, and language.
  */
 
 import type { CourseLesson, CourseLevelType, CourseCategoryId, AssessmentQuestion, ContentSource } from '../types/courses';
@@ -141,6 +143,7 @@ function getLevelRequirements(level: CourseLevelType): string {
 
 // ── Risultato generazione con warning opzionale ─────────────────────
 
+/** SyllabusResult interface. */
 export interface SyllabusResult {
   lessons: CourseLesson[];
   /** Avviso non bloccante (es. syllabus troncato e parzialmente recuperato) */
@@ -400,7 +403,7 @@ function parseJsonResponse(content: string): RawLesson[] {
       throw new Error('Array JSON vuoto o non valido');
     }
     return parsed;
-  } catch (_firstErr) {
+  } catch {
     // Tentativo 2: riparazione JSON
     try {
       const repaired = repairJSON(jsonStr);

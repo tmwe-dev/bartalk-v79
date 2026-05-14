@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUIContext } from '../../context/UIContext';
 import { useAuthContext } from '../../context/AuthContext';
@@ -12,14 +12,23 @@ import { UI } from '../../lib/constants';
  * Le sezioni "core" (Chat) e funzionali (Podcast/Task/Studio)
  * sono gestite come tab nella ChatPage, non come route separate.
  */
+/**
+ * Complete navigation sections, grouped by category.
+ * Includes all app areas reachable via hamburger menu.
+ */
 const NAV_SECTIONS = [
-  { path: '/radio-chat', label: 'Chat', icon: '💬' },
-  { path: '/courses', label: 'Corsi', icon: '📚' },
-  { path: '/maestro', label: 'Maestro', icon: '🎓' },
-  { path: '/life-tutor', label: 'Life Tutor', icon: '🧠' },
-  { path: '/free-voice', label: 'Voce Libera', icon: '🎤' },
-  { path: '/progress', label: 'Progressi', icon: '📊' },
-  { path: '/billing', label: 'Abbonamento', icon: '💳' },
+  // Core
+  { path: '/radio-chat', label: 'Chat', icon: '💬', group: 'core' },
+  // Learning
+  { path: '/courses', label: 'Corsi', icon: '📚', group: 'learn' },
+  { path: '/maestro', label: 'Maestro', icon: '🎓', group: 'learn' },
+  { path: '/life-tutor', label: 'Life Tutor', icon: '🧠', group: 'learn' },
+  // Tools
+  { path: '/free-voice', label: 'Voce Libera', icon: '🎤', group: 'tools' },
+  // Account
+  { path: '/progress', label: 'Progressi', icon: '📊', group: 'account' },
+  { path: '/billing', label: 'Abbonamento', icon: '💳', group: 'account' },
+  { path: '/settings', label: 'Impostazioni', icon: '⚙️', group: 'account' },
 ] as const;
 
 interface NavbarProps {
@@ -52,6 +61,42 @@ export function Navbar({
   const { stop: stopTTS } = useTTS();
   const { theme, toggleTheme } = useThemeContext();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on Escape key
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [menuOpen]);
+
+  // Focus first menu item when menu opens
+  useEffect(() => {
+    if (menuOpen && menuRef.current) {
+      const firstItem = menuRef.current.querySelector<HTMLButtonElement>('.navbar-menu-item');
+      firstItem?.focus();
+    }
+  }, [menuOpen]);
+
+  // Arrow key navigation within menu
+  const handleMenuKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const items = menuRef.current?.querySelectorAll<HTMLButtonElement>('.navbar-menu-item');
+    if (!items?.length) return;
+    const current = document.activeElement as HTMLElement;
+    const idx = Array.from(items).indexOf(current as HTMLButtonElement);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      items[(idx + 1) % items.length].focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      items[(idx - 1 + items.length) % items.length].focus();
+    }
+  }, []);
 
   const handleNewChat = () => {
     stopTTS();
@@ -162,17 +207,21 @@ export function Navbar({
       {menuOpen && (
         <>
           <div className="navbar-menu-backdrop" onClick={() => setMenuOpen(false)} />
-          <div className="navbar-menu" role="menu" aria-label="Sezioni app">
-            {NAV_SECTIONS.map(s => (
-              <button
-                key={s.path}
-                className={`navbar-menu-item ${location.pathname === s.path ? 'active' : ''}`}
-                role="menuitem"
-                onClick={() => handleNavTo(s.path)}
-              >
-                <span className="navbar-menu-icon">{s.icon}</span>
-                {s.label}
-              </button>
+          <div className="navbar-menu" role="menu" aria-label="Sezioni app" ref={menuRef} onKeyDown={handleMenuKeyDown}>
+            {NAV_SECTIONS.map((s, i) => (
+              <React.Fragment key={s.path}>
+                {i > 0 && NAV_SECTIONS[i - 1].group !== s.group && (
+                  <div className="navbar-menu-divider" role="separator" />
+                )}
+                <button
+                  className={`navbar-menu-item ${location.pathname === s.path ? 'active' : ''}`}
+                  role="menuitem"
+                  onClick={() => handleNavTo(s.path)}
+                >
+                  <span className="navbar-menu-icon">{s.icon}</span>
+                  {s.label}
+                </button>
+              </React.Fragment>
             ))}
           </div>
         </>

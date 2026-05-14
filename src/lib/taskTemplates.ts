@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — Template Deliverable
- * Definizioni dei template per ogni tipo di deliverable.
+ * @module taskTemplates
+ * Deliverable task template definitions.
+ * Provides structured templates for various output types (analysis, report,
+ * comparison, tutorial, etc.) with format specifications and quality criteria.
  */
 
 import type { DeliverableTemplate, DeliverableType } from '../types/tasks';
@@ -161,6 +163,7 @@ export const DELIVERABLE_TEMPLATES: Record<DeliverableType, DeliverableTemplate>
   },
 };
 
+/** PHASE_LABELS constant. */
 export const PHASE_LABELS: Record<string, { icon: string; label: string }> = {
   setup: { icon: '🎯', label: 'Setup' },
   analysis: { icon: '🔎', label: 'Analisi' },

@@ -1,6 +1,8 @@
 /**
- * Life Tutor — Extraction Module
- * Estrazione AI-powered di memorie, insight e aggiornamenti profilo dalle conversazioni.
+ * @module lifeTutor/extraction
+ * Life Tutor AI-powered memory extraction.
+ * Analyzes conversations to extract personal memories, insights,
+ * profile updates, and objective changes using AI.
  */
 
 import type { MemorySource, ExtractionResult } from '../../types/lifeTutor';
@@ -56,6 +58,9 @@ NOTA: profileUpdates e objectiveUpdates sono opzionali. Includili solo se presen
 
 // ── Extract Memories from Conversation ───────────────────────────────
 
+/**
+ * Extracts memories from conversation.
+ */
 export async function extractMemoriesFromConversation(
   messages: { role: string; content: string }[],
   source: MemorySource,
@@ -113,6 +118,9 @@ export async function extractMemoriesFromConversation(
 
 // ── Process Conversation (extract + save + update profile) ───────────
 
+/**
+ * Processes conversation memories.
+ */
 export async function processConversationMemories(
   messages: { role: string; content: string }[],
   source: MemorySource,

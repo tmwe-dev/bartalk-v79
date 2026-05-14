@@ -1,6 +1,8 @@
 /**
- * BarTalk v8.2.5 — Provider Health Monitoring & Fallback Chain
- * Tracks provider health status and implements automatic fallback.
+ * @module providerHealth
+ * Provider health monitoring with fallback chains.
+ * Tracks success/failure rates for each AI provider, provides health scores,
+ * and suggests optimal fallback providers when the primary is degraded.
  */
 
 import type { ProviderType } from '../types/agents';

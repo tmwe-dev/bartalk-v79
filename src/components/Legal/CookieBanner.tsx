@@ -13,10 +13,11 @@ function getStoredConsent(): ConsentLevel | null {
   try {
     const v = localStorage.getItem(COOKIE_CONSENT_KEY);
     if (v === 'essential' || v === 'all') return v;
-  } catch {}
+  } catch { /* intentionally empty */ }
   return null;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCookieConsent() {
   const [consent, setConsent] = useState<ConsentLevel | null>(getStoredConsent);
   const analyticsAllowed = consent === 'all';
@@ -28,14 +29,14 @@ export function CookieBanner() {
 
   useEffect(() => {
     if (!getStoredConsent()) {
-      setVisible(true);
+      queueMicrotask(() => setVisible(true));
     }
   }, []);
 
   const accept = (level: ConsentLevel) => {
     try {
       localStorage.setItem(COOKIE_CONSENT_KEY, level);
-    } catch {}
+    } catch { /* intentionally empty */ }
     setVisible(false);
   };
 

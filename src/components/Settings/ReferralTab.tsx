@@ -48,8 +48,8 @@ export function ReferralTab() {
 
       const result = await res.json();
       setData(result);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -120,6 +120,7 @@ export function ReferralTab() {
               className="referral-link-input"
               value={data.link}
               readOnly
+              aria-label="Codice referral"
               onClick={e => (e.target as HTMLInputElement).select()}
             />
             <button className="referral-copy-btn" onClick={handleCopy}>

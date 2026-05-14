@@ -1,7 +1,7 @@
 /**
- * BarTalk — Monitor API Client
- *
- * Frontend interface for /api/monitor serverless endpoint.
+ * @module monitorAPI
+ * Monitor API client for system health and usage metrics.
+ * Fetches dashboard data, provider status, and real-time usage statistics.
  */
 
 import { getAuthToken, buildAuthHeaders } from './authToken';
@@ -19,6 +19,7 @@ export interface ProviderStats {
   tokensOut: number;
 }
 
+/** MonitorStats interface. */
 export interface MonitorStats {
   totalCalls: number;
   errorRate: number;
@@ -30,6 +31,7 @@ export interface MonitorStats {
   hoursBack: number;
 }
 
+/** ErrorEvent interface. */
 export interface ErrorEvent {
   id: string;
   workspace_id: string;
@@ -44,6 +46,7 @@ export interface ErrorEvent {
   created_at: string;
 }
 
+/** ErrorsResponse interface. */
 export interface ErrorsResponse {
   errors: ErrorEvent[];
   total: number;
@@ -54,6 +57,11 @@ export interface ErrorsResponse {
 
 // ─── Queries ─────────────────────────────────────────────────
 
+/**
+ * Fetches stats from the API.
+ * @param hours - The hours parameter
+ * @returns Promise<MonitorStats>
+ */
 export async function fetchStats(hours = 24): Promise<MonitorStats> {
   const res = await fetch(`${MONITOR_URL}?view=stats&hours=${hours}`, {
     headers: buildAuthHeaders(),
@@ -65,6 +73,12 @@ export async function fetchStats(hours = 24): Promise<MonitorStats> {
   return res.json();
 }
 
+/**
+ * Fetches errors from the API.
+ * @param page - The page parameter
+ * @param pageSize - The pageSize parameter
+ * @returns Promise<ErrorsResponse>
+ */
 export async function fetchErrors(page = 1, pageSize = 30): Promise<ErrorsResponse> {
   const res = await fetch(`${MONITOR_URL}?view=errors&page=${page}&pageSize=${pageSize}`, {
     headers: buildAuthHeaders(),
@@ -78,6 +92,9 @@ export async function fetchErrors(page = 1, pageSize = 30): Promise<ErrorsRespon
 
 // ─── Report client error ────────────────────────────────────
 
+/**
+ * Reports client error to the server.
+ */
 export async function reportClientError(params: {
   message: string;
   stack?: string;

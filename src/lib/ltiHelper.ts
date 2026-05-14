@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — LTI Helper
- * Utility per il frontend LTI: detect LTI mode, extract token, submit grades.
+ * @module ltiHelper
+ * LTI (Learning Tools Interoperability) frontend helper.
+ * Provides utilities for LTI launch detection, parameter extraction,
+ * grade passback, and LMS platform integration.
  */
 
 import { buildAuthHeadersAsync } from './authToken';
@@ -22,6 +24,10 @@ export interface LTIGradeResult {
 
 // ── Detect LTI mode da URL params ──────────────────────────────────
 
+/**
+ * Extracts l t i from u r l.
+ * @returns LTILaunchParams
+ */
 export function extractLTIFromURL(): LTILaunchParams {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -44,6 +50,9 @@ export function extractLTIFromURL(): LTILaunchParams {
 
 // ── Pulisci URL params LTI (dopo l'estrazione) ─────────────────────
 
+/**
+ * Cleans l t i params.
+ */
 export function cleanLTIParams(): void {
   try {
     const url = new URL(window.location.href);

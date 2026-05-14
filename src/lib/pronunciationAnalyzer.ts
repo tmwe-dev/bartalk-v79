@@ -1,7 +1,8 @@
 /**
- * BarTalk v8 — Pronunciation Analyzer
- * AI-powered pronunciation analysis using callProxy.
- * Compares expected text with spoken text from speech recognition.
+ * @module pronunciationAnalyzer
+ * AI-powered pronunciation analysis for language courses.
+ * Compares student audio recordings against expected phrases using
+ * speech-to-text and AI evaluation to provide scores and feedback.
  */
 
 import { callProxy } from './proxy';
@@ -18,6 +19,7 @@ export interface WordResult {
   spokenPhonetic?: string;
 }
 
+/** PronunciationResult interface. */
 export interface PronunciationResult {
   overallScore: number; // 0-100
   wordResults: WordResult[];

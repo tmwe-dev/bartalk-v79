@@ -53,7 +53,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
   const [activeTurnId, setActiveTurnId] = useState<string | null>(null);
   const isInitRef = useRef(false);
   const conversationIdRef = useRef(conversationId);
-  conversationIdRef.current = conversationId;
+  useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
 
   // ── Helper: è in modalità DB? ──
   const isDBMode = authState === 'authenticated' && !!workspaceId;
@@ -136,9 +136,9 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     const title = firstHuman ? truncate(firstHuman.content, 50) : 'Nuova conversazione';
     const lastMsg = messages[messages.length - 1];
 
-    setConversationTitle(title);
+    queueMicrotask(() => setConversationTitle(title));
 
-    setConversationList(prev => {
+    queueMicrotask(() => setConversationList(prev => {
       const existing = prev.findIndex(c => c.id === conversationId);
       const meta: ConversationMeta = {
         id: conversationId,
@@ -159,7 +159,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       }
       storage.saveConversationList(newList);
       return newList;
-    });
+    }));
 
     // Se autenticato, salva anche in DB
     if (isDBMode) {
@@ -198,7 +198,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     }
 
     return msg;
-  }, [isDBMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isDBMode]);
 
   const incrementTurn = useCallback(() => {
     setTurnIndex(prev => prev + 1);
@@ -317,6 +317,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useConversationContext() {
   const ctx = useContext(ConversationContext);
   if (!ctx) throw new Error('useConversationContext deve essere usato dentro ConversationProvider');

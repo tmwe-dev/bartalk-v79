@@ -1,3 +1,21 @@
+/**
+ * @module orchestrator
+ * Core orchestration engine for BarTalk multi-agent conversations.
+ *
+ * Coordinates sequential calls to up to 4 AI agents, managing:
+ * - Turn-based and consultation conversation modes
+ * - Skip logic to avoid redundant agent responses when consensus is detected
+ * - Automatic convergence analysis across 20+ languages
+ * - 3-level memory system integration (Full/Condensed/Summary)
+ * - Background auto-summarization of long conversations
+ * - User-friendly error messages for all provider failure types
+ *
+ * The orchestrator supports three turn strategies: round_robin, random, and smart
+ * (30% random / 70% sequential). In consultation mode, all enabled agents speak
+ * on every turn. The first N turns are forced into consultation mode to ensure
+ * diverse perspectives early in a conversation.
+ */
+
 import type { AgentConfig } from '../types/agents';
 import type { Message } from '../types/conversation';
 import type {
@@ -55,9 +73,24 @@ const SKIP_KEYWORDS = [
 ];
 
 /**
- * Motore principale dell'orchestratore.
- * Coordina le chiamate sequenziali ai 4 agenti AI.
- * Con: memoria a 3 livelli, skip logic, riassunto automatico.
+ * Main orchestration engine. Coordinates sequential calls to AI agents.
+ * Integrates 3-level memory, skip logic, convergence analysis, and auto-summary.
+ *
+ * @param input - Orchestrator input containing user message, history, enabled agents, and config
+ * @param onAgentResponse - Optional callback invoked after each agent responds (for streaming UI updates)
+ * @returns Result containing all agent responses, updated turn index, convergence state, and turn ID
+ *
+ * @example
+ * ```ts
+ * const result = await orchestrate({
+ *   userMessage: "What do you think about AI?",
+ *   messages: conversationHistory,
+ *   turnIndex: 0,
+ *   enabledAgents: [albert, archimede],
+ *   mode: 'consultation',
+ *   conversationId: 'conv-123',
+ * }, (response) => console.log(`${response.agentName}: ${response.content}`));
+ * ```
  */
 export async function orchestrate(
   input: OrchestratorInput,

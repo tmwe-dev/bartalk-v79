@@ -1,3 +1,8 @@
+/**
+ * @module i18n/languages-middle-east
+ * Middle Eastern language translations (Arabic, Hebrew, Persian, etc.).
+ */
+
 export const middleEastTranslations: Record<string, Record<string, string>> = {
   "ar": {
     "agents": "الوكلاء",

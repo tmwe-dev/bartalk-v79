@@ -1,6 +1,8 @@
 /**
- * BarTalk v8 — Usage Tracker
- * Traccia consumo token, richieste AI e TTS per sessione.
+ * @module usageTracker
+ * Token and request usage tracking system.
+ * Tracks cumulative token consumption and request counts per provider,
+ * with daily/monthly aggregation and localStorage persistence.
  */
 
 const USAGE_KEY = 'bt_usage_stats';
@@ -25,6 +27,10 @@ const DEFAULT_STATS: UsageStats = {
   lastRequestTime: '',
 };
 
+/**
+ * Loads usage stats from storage.
+ * @returns UsageStats
+ */
 export function loadUsageStats(): UsageStats {
   try {
     const raw = localStorage.getItem(USAGE_KEY);
@@ -76,6 +82,9 @@ export function estimateCost(): { usd: number; breakdown: { ai: number; tts: num
   };
 }
 
+/**
+ * Resets usage stats to defaults.
+ */
 export function resetUsageStats(): void {
   localStorage.removeItem(USAGE_KEY);
 }

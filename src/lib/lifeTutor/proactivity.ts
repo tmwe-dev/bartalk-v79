@@ -1,7 +1,8 @@
 /**
- * Life Tutor — Proactivity Module
- * L'AI propone autonomamente suggerimenti, sfide, argomenti.
- * Genera suggerimenti basati su: memorie, profilo, obiettivi, trend.
+ * @module lifeTutor/proactivity
+ * Life Tutor proactive suggestion engine.
+ * Generates AI-powered personalized suggestions based on user profile,
+ * memories, objectives, and emotional trends. Rate-limited to max once per 4 hours.
  */
 
 import type {
@@ -19,6 +20,10 @@ const LAST_SUGGESTION_KEY = 'bt_lt_last_suggestion_at';
 
 // ── Load / Save Suggestions ──────────────────────────────────────────
 
+/**
+ * Loads suggestions from storage.
+ * @returns LTAISuggestion[]
+ */
 export function loadSuggestions(): LTAISuggestion[] {
   try {
     const saved = localStorage.getItem(SUGGESTIONS_KEY);
@@ -45,6 +50,10 @@ export function respondToSuggestion(id: string, accepted: boolean): void {
   }
 }
 
+/**
+ * Marks suggestion shown.
+ * @param id - The id parameter
+ */
 export function markSuggestionShown(id: string): void {
   const all = loadSuggestions();
   const suggestion = all.find(s => s.id === id);
@@ -221,6 +230,11 @@ Rispondi SOLO con JSON:
 
 // ── Build Suggestions Prompt Section ─────────────────────────────────
 
+/**
+ * Builds suggestions prompt section.
+ * @param suggestions - The suggestions parameter
+ * @returns string
+ */
 export function buildSuggestionsPromptSection(suggestions: LTAISuggestion[]): string {
   const pending = suggestions.filter(s => s.status === 'pending' || s.status === 'shown');
   if (pending.length === 0) return '';

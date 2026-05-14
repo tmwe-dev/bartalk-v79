@@ -1,3 +1,10 @@
+/**
+ * @module commands
+ * Slash command handler for the chat interface.
+ * Processes user commands like /help, /voci, /keys, /stato, /voce
+ * and returns formatted response strings.
+ */
+
 import { AGENTS, getAgent } from './agents';
 import { loadAPIKeys, loadCustomVoices, loadExcludedAgents, saveCustomVoices } from './storage';
 import { DEFAULT_MODELS } from './constants';

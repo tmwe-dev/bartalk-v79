@@ -323,13 +323,13 @@ export function SectionPage({ sectionId, onBackToMenu, onSwitchToFull }: Section
 
   // Refs per closures fresche
   const validAgentMsgsRef = useRef(validAgentMsgs);
-  validAgentMsgsRef.current = validAgentMsgs;
   const messagesRef = useRef(messages);
-  messagesRef.current = messages;
   const agentTabIndexRef = useRef(agentTabIndex);
-  agentTabIndexRef.current = agentTabIndex;
   const carouselIndexRef = useRef(carouselIndex);
-  carouselIndexRef.current = carouselIndex;
+  useEffect(() => { validAgentMsgsRef.current = validAgentMsgs; }, [validAgentMsgs]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { agentTabIndexRef.current = agentTabIndex; }, [agentTabIndex]);
+  useEffect(() => { carouselIndexRef.current = carouselIndex; }, [carouselIndex]);
 
   // Persist carousel settings
   useEffect(() => {
@@ -353,9 +353,11 @@ export function SectionPage({ sectionId, onBackToMenu, onSwitchToFull }: Section
     if (count > prevMsgCountRef.current && count > 0) {
       if (prevMsgCountRef.current === 0) {
         ttsPlayingIndexRef.current = -1;
-        setAgentTabIndex(0);
-        const slice = getVisibleSlice(messages);
-        if (slice.length > 0) setCarouselIndex(0);
+        queueMicrotask(() => {
+          setAgentTabIndex(0);
+          const slice = getVisibleSlice(messages);
+          if (slice.length > 0) setCarouselIndex(0);
+        });
       }
     }
     prevMsgCountRef.current = count;

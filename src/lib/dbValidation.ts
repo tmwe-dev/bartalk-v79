@@ -1,6 +1,8 @@
 /**
- * BarTalk v8.2.5 — Database Validation
- * Validates data before sending to Supabase to prevent bad inserts.
+ * @module dbValidation
+ * Database validation utilities for Supabase inserts.
+ * Validates and sanitizes data before writing to the database,
+ * ensuring type safety and constraint compliance.
  */
 
 import { ValidationError } from './errors';

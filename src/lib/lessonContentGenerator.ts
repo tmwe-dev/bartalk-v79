@@ -1,3 +1,10 @@
+/**
+ * @module lessonContentGenerator
+ * AI-powered lesson content generator.
+ * Generates detailed lesson content, examples, and exercises
+ * for a given course lesson using the configured AI provider.
+ */
+
 import { callProxy } from './proxy';
 import { resolveApiKeyOrThrow } from './apiKeyResolver';
 
@@ -14,6 +21,9 @@ export interface LessonContent {
   keyTakeaways: string[];
 }
 
+/**
+ * Generates lesson content.
+ */
 export async function generateLessonContent(
   lessonTitle: string,
   lessonDescription: string,

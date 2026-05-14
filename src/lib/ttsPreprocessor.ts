@@ -1,12 +1,18 @@
 /**
- * TTS Preprocessor — Pulizia minimale del testo per lettura vocale.
+ * @module ttsPreprocessor
+ * TTS Preprocessor -- Minimal structural text cleanup for voice synthesis.
  *
- * Filosofia: il codice fa SOLO pulizia strutturale (markdown, emoji, whitespace).
- * Tutta l'intelligenza linguistica (sigle, formule, numeri, nomenclatura)
- * è delegata al prompt AI tramite buildTTSKnowledgeBase().
+ * Philosophy: code performs ONLY structural cleanup (markdown, emoji, whitespace).
+ * All linguistic intelligence (acronyms, formulas, numbers, nomenclature)
+ * is delegated to the AI prompt via {@link buildTTSKnowledgeBase}.
  *
- * Questo approccio è language-agnostic: funziona identicamente
- * per tutte le 70+ lingue supportate senza dati hard-coded per lingua.
+ * This approach is language-agnostic: works identically for all 70+ supported
+ * languages without hard-coded per-language data.
+ *
+ * Exports:
+ * - {@link preprocessForTTS} -- Main cleanup pipeline
+ * - {@link buildTTSKnowledgeBase} -- Full TTS prompt instructions for AI agents
+ * - {@link buildTTSLightSection} -- Compact TTS prompt for structured prompts
  */
 
 // ── Funzioni di pulizia strutturale ─────────────────────────────────
@@ -66,6 +72,7 @@ function stripMarkdown(text: string): string {
 
 /** Rimuovi emoji (mantieni solo testo) */
 function stripEmoji(text: string): string {
+  // eslint-disable-next-line no-misleading-character-class
   return text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{200D}\u{20E3}\u{FE0F}]+/gu, ' ');
 }
 
@@ -133,11 +140,21 @@ function cleanWhitespace(text: string): string {
 // ══════════════════════════════════════════════════════════════════════
 
 /**
- * Preprocessa il testo per la lettura TTS.
- * Solo pulizia strutturale — nessuna trasformazione linguistica.
- * L'intelligenza è nel prompt AI (buildTTSKnowledgeBase).
+ * Preprocesses text for TTS reading by applying structural cleanup only.
+ * No linguistic transformations -- that intelligence lives in the AI prompt.
+ *
+ * Pipeline: stripMarkdown -> stripEmoji -> normalizePunctuation -> cleanWhitespace
+ *
+ * @param text - Raw text to preprocess
+ * @param _lang - Language code (reserved for future use, currently unused)
+ * @returns Cleaned text suitable for TTS synthesis
+ *
+ * @example
+ * ```ts
+ * preprocessForTTS('## Hello **world**! 🎉') // => 'Hello world!'
+ * ```
  */
-export function preprocessForTTS(text: string, _lang: string = 'it'): string {
+export function preprocessForTTS(text: string, _lang = 'it'): string {
   if (!text || !text.trim()) return '';
 
   let processed = text;
@@ -155,14 +172,14 @@ export function preprocessForTTS(text: string, _lang: string = 'it'): string {
 // ══════════════════════════════════════════════════════════════════════
 
 /**
- * Genera il blocco di istruzioni da iniettare nel system prompt
- * per guidare gli agenti AI a scrivere testo ottimizzato per TTS.
+ * Generates the TTS instruction block to inject into AI agent system prompts.
+ * Guides agents to write text optimized for voice synthesis.
  *
- * APPROCCIO: regole generiche e obiettivi, NON dati fissi per lingua.
- * L'AI conosce già tutte le lingue — le istruzioni descrivono
- * COSA fare (obiettivo), non COME tradurre singoli elementi.
+ * Approach: generic rules and objectives, NOT fixed per-language data.
+ * The AI already knows all languages -- instructions describe WHAT to do, not HOW.
  *
- * @param lang - Codice lingua corrente (per contestualizzare le istruzioni)
+ * @param lang - Current language code (e.g., 'it', 'en') for contextualizing instructions
+ * @returns Multi-line prompt string with TTS writing rules
  */
 export function buildTTSKnowledgeBase(lang: string = 'it'): string {
   // Rileva la famiglia linguistica per adattare leggermente le istruzioni
@@ -287,7 +304,11 @@ function getLangDisplayName(code: string): string {
 // ── TTS Light Section (restored from backup2) ────────────────────────
 
 /**
- * Genera la sezione TTS-MODE per i prompt strutturati.
+ * Generates a compact TTS-MODE section for structured prompts.
+ * Lighter than buildTTSKnowledgeBase, suitable for embedding in larger prompt compositions.
+ *
+ * @param lang - Current language code (default: 'it')
+ * @returns Compact TTS instruction string
  */
 export function buildTTSLightSection(lang: string = 'it'): string {
   const l = lang.toLowerCase().slice(0, 2);

@@ -1,7 +1,8 @@
 /**
- * BarTalk v8 — Audio Analyzer
- * Web Audio API utilities for waveform extraction, reference audio generation,
- * and real-time audio visualization.
+ * @module audioAnalyzer
+ * Web Audio API waveform analyzer for real-time audio visualization.
+ * Creates and manages AnalyserNode instances connected to audio sources,
+ * providing frequency and time-domain data for visual waveform rendering.
  */
 
 import { getAPIKey } from './storage';

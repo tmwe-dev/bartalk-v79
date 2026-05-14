@@ -1,13 +1,8 @@
 /**
- * BarTalk v8.2 — Agent Freedom Levels
- * Sistema di livelli di libertà per agente.
- * Controlla quanto un agente può deviare dal system prompt.
- *
- * Livelli:
- * - strict: Segue rigidamente le istruzioni. Nessuna deviazione.
- * - balanced: Equilibrio tra istruzioni e creatività. Default.
- * - creative: Alta libertà. Può reinterpretare e espandere.
- * - autonomous: Massima libertà. Può ignorare istruzioni non essenziali.
+ * @module agentFreedom
+ * Agent freedom level system controlling how strictly agents follow prompts.
+ * Supports four levels: strict, balanced, creative, and autonomous.
+ * Each level adjusts temperature, word range, and behavioral instructions.
  */
 
 export type FreedomLevel = 'strict' | 'balanced' | 'creative' | 'autonomous';
@@ -61,6 +56,10 @@ export const FREEDOM_LEVELS: Record<FreedomLevel, {
 
 const STORAGE_KEY = 'bartalk_agent_freedom';
 
+/**
+ * Loads freedom configs from storage.
+ * @returns AgentFreedomConfig[]
+ */
 export function loadFreedomConfigs(): AgentFreedomConfig[] {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -68,16 +67,31 @@ export function loadFreedomConfigs(): AgentFreedomConfig[] {
   } catch { return []; }
 }
 
+/**
+ * Saves freedom configs to storage.
+ * @param configs - The configs parameter
+ */
 export function saveFreedomConfigs(configs: AgentFreedomConfig[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
 }
 
+/**
+ * Gets agent freedom.
+ * @param agentId - The agentId parameter
+ * @returns FreedomLevel
+ */
 export function getAgentFreedom(agentId: string): FreedomLevel {
   const configs = loadFreedomConfigs();
   const config = configs.find(c => c.agentId === agentId);
   return config?.level || 'balanced';
 }
 
+/**
+ * Sets agent freedom.
+ * @param agentId - The agentId parameter
+ * @param level - The level parameter
+ * @param customInstructions - The customInstructions parameter
+ */
 export function setAgentFreedom(agentId: string, level: FreedomLevel, customInstructions?: string): void {
   const configs = loadFreedomConfigs();
   const existing = configs.findIndex(c => c.agentId === agentId);
@@ -97,6 +111,11 @@ export function setAgentFreedom(agentId: string, level: FreedomLevel, customInst
 
 // ── Prompt injection per freedom level ──────────────────────────────
 
+/**
+ * Gets freedom prompt addition.
+ * @param level - The level parameter
+ * @returns string
+ */
 export function getFreedomPromptAddition(level: FreedomLevel): string {
   switch (level) {
     case 'strict':

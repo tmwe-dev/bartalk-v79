@@ -331,6 +331,7 @@ Basa il profilo sulle caratteristiche REALI della persona: modo di parlare, pens
                   onKeyDown={(e) => e.key === 'Enter' && clonePersonality()}
                   placeholder="Es: Einstein, Steve Jobs, Socrate, Trump..."
                   disabled={cloneLoading}
+                  aria-label="Clona personalità di un personaggio"
                 />
                 <button
                   className="prompt-clone-btn"
@@ -377,6 +378,11 @@ Basa il profilo sulle caratteristiche REALI della persona: modo di parlare, pens
                     value={personality[field]}
                     onChange={(e) => savePersonality(field, e.target.value)}
                     rows={field === 'approach' || field === 'debateRule' ? 3 : 2}
+                    aria-label={field === 'role' ? 'Ruolo agente' :
+                     field === 'style' ? 'Stile comunicativo' :
+                     field === 'strengths' ? 'Punti di forza' :
+                     field === 'approach' ? 'Approccio al dibattito' :
+                     'Regola dibattito'}
                   />
                 ) : (
                   <div className="prompt-field-value">{personality[field]}</div>

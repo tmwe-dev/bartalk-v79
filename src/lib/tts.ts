@@ -1,3 +1,10 @@
+/**
+ * @module tts
+ * Text-to-Speech engine with ElevenLabs and Web Speech API fallback.
+ * Manages a TTS queue with enqueue, stop, pause, resume, skip, and reset operations.
+ * Supports dual-voice mode for L2 language segments and state tracking.
+ */
+
 import { TTS, RATE_LIMITS } from './constants';
 import { loadSettings, isInSkipMode, getAPIKey } from './storage';
 import { stripHtml, truncate } from './utils';
@@ -81,6 +88,7 @@ let currentJobAgentName: string | null = null;
 let playGeneration = 0;
 
 // ── Result type per enqueueTTS ──────────────────────────────────────
+/** EnqueueResult interface. */
 export interface EnqueueResult {
   success: boolean;
   error?: string;
@@ -182,6 +190,7 @@ export function enqueueTTS(opts: EnqueueTTSOptions): EnqueueResult {
 
 // ── Dual-Voice TTS: segmenti L1/L2 con voci diverse ────────────────
 
+/** DualVoiceSegment interface. */
 export interface DualVoiceSegment {
   text: string;
   isL2: boolean;

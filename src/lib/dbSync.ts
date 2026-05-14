@@ -1,12 +1,8 @@
 /**
- * BarTalk v8.2 — DB ↔ localStorage Sync
- * Sincronizza agentFreedom e structuredPrompts con Supabase
- * quando l'utente è autenticato.
- *
- * Pattern: "DB-first, localStorage-cache"
- * - Pull: DB → localStorage al login
- * - Push: localStorage → DB ad ogni modifica
- * - Fallback: solo localStorage in skip mode
+ * @module dbSync
+ * Database synchronization layer between Supabase and localStorage.
+ * Handles bidirectional sync of conversations, messages, and settings,
+ * with conflict resolution favoring the most recent update.
  */
 
 import { supabase, isSupabaseConfigured } from './supabase';

@@ -1,3 +1,8 @@
+/**
+ * @module i18n/languages-other
+ * Other language translations (Indonesian, Malay, Swahili, etc.).
+ */
+
 export const otherTranslations: Record<string, Record<string, string>> = {
   "id": {
     "aiMessages": "AI",

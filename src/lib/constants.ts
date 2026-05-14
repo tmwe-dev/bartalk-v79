@@ -1,4 +1,10 @@
-// ── Testi UI (italiano) ──────────────────────────────────────────────
+/**
+ * @module constants
+ * Application-wide constants for BarTalk v8, including UI text, default AI models,
+ * TTS configuration, orchestrator parameters, skip-mode limits, and rate limits.
+ */
+
+/** UI text labels in Italian for the application interface. */
 export const UI = {
   appName: 'BarTalk',
   appVersion: '8.2.6',
@@ -35,7 +41,7 @@ export const UI = {
   convergenceDivergence: 'Gli agenti hanno opinioni diverse.',
 } as const;
 
-// ── Modelli predefiniti ──────────────────────────────────────────────
+/** Default AI model identifiers per provider. */
 export const DEFAULT_MODELS = {
   openai: 'gpt-4o',
   anthropic: 'claude-sonnet-4-20250514',
@@ -44,7 +50,7 @@ export const DEFAULT_MODELS = {
   xai: 'grok-3-mini',
 } as const;
 
-// ── TTS ──────────────────────────────────────────────────────────────
+/** ElevenLabs TTS configuration defaults (model, stability, output format, limits). */
 export const TTS = {
   model: 'eleven_multilingual_v2',
   stability: 0.5,
@@ -57,7 +63,7 @@ export const TTS = {
   apiBase: 'https://api.elevenlabs.io/v1',
 } as const;
 
-// ── Orchestrator — Defaults ottimali mixati ──────────────────────────
+/** Orchestrator defaults: forced consultation turns, temperature by mode, history slicing, word ranges. */
 export const ORCHESTRATOR = {
   forcedConsultationTurns: 4, // primi N turni = consultation forzata
   defaultTemperature: 0.7,
@@ -78,7 +84,7 @@ export const ORCHESTRATOR = {
   },
 } as const;
 
-// ── Skip Mode — Limiti per utenti non autenticati ──────────────────
+/** Quota limits for unauthenticated (skip-mode) users. */
 export const SKIP_MODE = {
   maxAIMessages: 500,
   maxTTSRequests: 10,
@@ -87,7 +93,7 @@ export const SKIP_MODE = {
   warningThresholdPercent: 80,
 } as const;
 
-// ── Rate Limits — Protezione anti-abuso ─────────────────────────────
+/** Client-side rate limiting thresholds for anti-abuse protection. */
 export const RATE_LIMITS = {
   aiRequestsPerMinute: 10,
   ttsRequestsPerMinute: 5,
@@ -96,5 +102,5 @@ export const RATE_LIMITS = {
   ttsMaxCharsPerItem: 2000,
 } as const;
 
-// ── Proxy ────────────────────────────────────────────────────────────
+/** URL path for the AI proxy API endpoint. */
 export const PROXY_URL = '/api/ai-proxy';

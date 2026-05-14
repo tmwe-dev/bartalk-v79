@@ -1,7 +1,8 @@
 /**
- * BarTalk v8 — Maestro Engine (Orchestration Layer)
- * Coordinates the maestro system by importing and re-exporting
- * from focused sub-modules, while keeping main orchestration functions.
+ * @module maestroEngine
+ * Maestro orchestration layer for the education system.
+ * Generates teaching responses and welcome messages by composing
+ * maestro prompts, KB injection, memory context, and AI provider calls.
  */
 
 import type {
@@ -41,6 +42,7 @@ import { buildMaestroSystemPrompt } from './maestro/prompts';
 import { parseResponse } from './maestro/parsing';
 import { detectContextTags } from './lifeTutorMemory';
 
+/** TeachingResponse interface. */
 export interface TeachingResponse {
   message: MaestroMessage;
   detectedEmotion: EmotionalState;
@@ -127,6 +129,9 @@ export async function generateTeachingResponse(
 
 // ── Welcome Message Generator ───────────────────────────────────────
 
+/**
+ * Generates welcome message.
+ */
 export function generateWelcomeMessage(
   maestro: MaestroDefinition,
   course: CourseDefinition,

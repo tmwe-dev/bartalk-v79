@@ -1,3 +1,8 @@
+/**
+ * @module i18n/languages-asian
+ * Asian language translations (Thai, Chinese, Japanese, Korean, Vietnamese, etc.).
+ */
+
 export const asianTranslations: Record<string, Record<string, string>> = {
   "th": {
     "agents": "ตัวแทน",

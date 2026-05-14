@@ -1,8 +1,8 @@
 /**
- * authToken.ts — Centralizzazione recupero token di autenticazione
- *
- * Sostituisce le implementazioni duplicate in auditAPI.ts e monitorAPI.ts.
- * Supporta sia pattern sincrono (localStorage) che asincrono (Supabase client).
+ * @module authToken
+ * Authentication token retrieval utilities.
+ * Provides both synchronous (cached) and asynchronous (fresh) methods
+ * to obtain the Supabase JWT access token for API authorization headers.
  */
 
 import { supabase } from './supabase';

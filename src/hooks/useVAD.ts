@@ -67,8 +67,8 @@ export function useVAD(options: UseVADOptions = {}): UseVADResult {
   // Stable callback refs
   const onSpeechEndRef = useRef(onSpeechEnd);
   const onSpeechStartRef = useRef(onSpeechStart);
-  onSpeechEndRef.current = onSpeechEnd;
-  onSpeechStartRef.current = onSpeechStart;
+  useEffect(() => { onSpeechEndRef.current = onSpeechEnd; }, [onSpeechEnd]);
+  useEffect(() => { onSpeechStartRef.current = onSpeechStart; }, [onSpeechStart]);
 
   const cleanup = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
